@@ -1,8 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // Assure-toi que le modèle User est bien importé
-
+const User = require('../models/User'); 
 const router = express.Router();
 
 // ✅ Route d'inscription
@@ -10,7 +9,7 @@ router.post('/signup', async (req, res) => {
     try {
         const { pseudo, email, numero_telephone, ville_residence, password } = req.body;
 
-        // Vérifier si le pseudo existe déjà
+        // Vérification de l'exitence du pseudo
         const userExists = await User.findOne({ pseudo });
         if (userExists) {
             return res.status(400).json({ message: "Ce pseudo est déjà pris" });

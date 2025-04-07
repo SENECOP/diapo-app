@@ -11,22 +11,7 @@ const userSchema = new mongoose.Schema({
   cree_le: { type: Date, default: Date.now }
 });
 
-// Méthodes supplémentaires si nécessaire
-userSchema.methods = {
-  cree_don: function() { /* Implémentation */ },
-  reserve_don: function() { /* Implémentation */ }
-};
 
-// Hachage du mot de passe avant sauvegarde
-userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) next();
-    this.password = await bcrypt.hash(this.password, 12);
-  });
-  
-  // Méthode pour comparer les mots de passe
-  userSchema.methods.comparePassword = async function(candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
-  };
-  const User = mongoose.model('User', userSchema);
+
 
 module.exports = mongoose.model('User', userSchema);

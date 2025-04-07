@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db.js"); // Importer la fonction de connexion
 const authRoutes = require('./routes/authRoutes'); 
+const donRoutes = require('./routes/donRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,6 +19,7 @@ if (!process.env.MONGO_URI) {
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', donRoutes);
 
 // Test route
 app.get("/", (req, res) => {
