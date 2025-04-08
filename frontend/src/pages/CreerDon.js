@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import axios from 'axios';
-const formData = new FormData();
 
 const CreerDon = () => {
+  const fileInput = useRef(null);
+
+  const handleClick = () => {
+    fileInput.current.click();
+  };
+
   const [formData, setFormData] = useState({
     titre: '',
     categorie: '',
@@ -13,7 +18,6 @@ const CreerDon = () => {
     url_image: null,
   });
 
-  // Fonction pour mettre à jour l'état local
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -22,7 +26,6 @@ const CreerDon = () => {
     });
   };
 
-  // Fonction pour gérer le changement de l'image
   const handleFileChange = (e) => {
     setFormData({
       ...formData,
@@ -30,34 +33,19 @@ const CreerDon = () => {
     });
   };
 
-formData.append('image', fileInput.files[0]); // 'image' doit être le même que dans Multer
-
-axios.post('http://localhost:5000/upload', formData)
-  .then(response => {
-    console.log('Fichier téléchargé avec succès:', response.data);
-  })
-  .catch(error => {
-    console.error('Erreur lors du téléchargement:', error);
-  });
-  
-  // Fonction pour envoyer le formulaire
   const handleSubmit = async (e) => {
-    
     e.preventDefault();
 
-    
-  // Vérifier que tous les champs sont remplis
-  if (!formData.titre || !formData.categorie|| !formData.ville_don) {
-    alert('Tous les champs doivent être remplis');
-    return;
-  }
+    if (!formData.titre || !formData.categorie || !formData.ville_don) {
+      alert('Tous les champs doivent être remplis');
+      return;
+    }
 
-  // Vérifier que l'image est bien sélectionnée si nécessaire
-  if (!formData.url_image) {
-    alert('Veuillez télécharger une image');
-    return;
-  }
-    // Créer un FormData pour envoyer le fichier
+    if (!formData.url_image) {
+      alert('Veuillez télécharger une image');
+      return;
+    }
+
     const data = new FormData();
     data.append('titre', formData.titre);
     data.append('categorie', formData.categorie);
@@ -66,8 +54,7 @@ axios.post('http://localhost:5000/upload', formData)
     data.append('image', formData.url_image);
 
     try {
-      // Envoi de la requête POST pour créer un don
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/dons`, formData, {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/dons`, data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -75,7 +62,7 @@ axios.post('http://localhost:5000/upload', formData)
 
       if (response.status === 200) {
         console.log('Don créé avec succès:', response.data);
-        // Ajouter ici une action après la réussite (ex: redirection ou message de succès)
+        // Redirection ou feedback ici
       }
     } catch (error) {
       console.error('Erreur lors de la création du don:', error);
@@ -86,13 +73,11 @@ axios.post('http://localhost:5000/upload', formData)
     <div className="min-h-screen flex flex-col justify-between">
       <Header />
 
-      {/* Bandeau bleu */}
       <div className="bg-blue-800 text-white p-24 min-h-[350px] text-xl font-semibold">
         Bonjour ! Nous allons vous aider à créer votre première annonce.
       </div>
 
-      {/* Formulaire de création */}
-      <main className="flex justify-center py-10 mt-[-110PX]"> 
+      <main className="flex justify-center py-10 mt-[-110px]">
         <form onSubmit={handleSubmit} className="bg-white p-10 shadow-lg rounded-md w-full max-w-2xl space-y-6">
           <div>
             <label className="block font-semibold mb-1">Titre</label>
@@ -136,7 +121,7 @@ axios.post('http://localhost:5000/upload', formData)
           </div>
 
           <div>
-            <label className="block font-semibold mb-1"> Adresse</label>
+            <label className="block font-semibold mb-1">Adresse</label>
             <input
               type="text"
               name="ville_don"
@@ -149,11 +134,22 @@ axios.post('http://localhost:5000/upload', formData)
 
           <div>
             <label className="block font-semibold mb-1">Image</label>
+            <button
+              type="button"
+              onClick={handleClick}
+              className="bg-gray-100 border px-4 py-2 rounded hover:bg-gray-200"
+            >
+              Choisir une image
+            </button>
             <input
               type="file"
+              ref={fileInput}
               onChange={handleFileChange}
-              className="w-full"
+              style={{ display: 'none' }}
             />
+            {formData.url_image && (
+              <p className="mt-2 text-sm text-green-600">{formData.url_image.name} sélectionné</p>
+            )}
           </div>
 
           <button

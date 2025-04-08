@@ -23,9 +23,6 @@ const Home = () => {
             Faire un don
           </button>
         </Link>
-        <Link to="/login">
-          <button className="text-gray-700 hover:underline">Mon compte</button>
-        </Link>
       </div>
         </div>
         <img src= '/assets/Charity-rafiki.png' alt="charity" className="md:w-1/3 w-full" />
