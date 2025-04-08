@@ -1,76 +1,46 @@
 const express = require('express');
-const Don = require('../models/Don');  // Import du modèle Don
+const multer = require('multer');
+const path = require('path');
+const Don = require('../models/don'); // Importer votre modèle Don si vous en avez un
 const router = express.Router();
 
-// Ajouter un don
-router.post('/dons', async (req, res) => {
-  const { titre, description, url_image, ville_don, categorie_id, cree_par } = req.body;
-  
+// Configurer multer pour stocker l'image
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Dossier où les fichiers seront stockés
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Ajouter un timestamp pour éviter les conflits
+  }
+});
+
+const upload = multer({ storage: storage });
+
+
+router.post('/dons', upload.single('image'), async (req, res) => {
   try {
-    const don = new Don({
+    // Récupérer les données du formulaire et l'image
+    console.log("Données reçues :", req.body); // Vérifier les données envoyées
+    console.log("Fichier :", req.file);
+    const { titre, categorie, description, ville_don } = req.body;
+    const imageUrl = req.file ? req.file.path : null; // Si un fichier a été téléchargé, l'URL de l'image est ici
+
+    // Créer un don dans la base de données
+    const newDon = new Don({
       titre,
+      categorie,
       description,
-      url_image,
       ville_don,
-      categorie_id,
-      cree_par
+      url_image: imageUrl
     });
-    
-    await don.save();
-    res.status(201).json(don);
-  } catch (error) {
-    res.status(400).json({ message: 'Erreur lors de la création du don', error });
-  }
-});
 
-// Modifier un don
-router.put('/dons/:id', async (req, res) => {
-  try {
-    const don = await Don.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!don) return res.status(404).json({ message: 'Don introuvable' });
-    res.status(200).json(don);
-  } catch (error) {
-    res.status(400).json({ message: 'Erreur lors de la mise à jour du don', error });
-  }
-});
+    // Sauvegarder le don
+    await newDon.save();
 
-// Supprimer un don
-router.delete('/dons/:id', async (req, res) => {
-  try {
-    const don = await Don.findByIdAndDelete(req.params.id);
-    if (!don) return res.status(404).json({ message: 'Don introuvable' });
-    res.status(200).json({ message: 'Don supprimé avec succès' });
+    res.status(200).json({ message: 'Don créé avec succès', don: newDon });
   } catch (error) {
-    res.status(400).json({ message: 'Erreur lors de la suppression du don', error });
-  }
-});
-
-// Réserver un don
-router.put('/dons/:id/reserver', async (req, res) => {
-  const { reserve_par } = req.body;
-  
-  try {
-    const don = await Don.findById(req.params.id);
-    if (!don) return res.status(404).json({ message: 'Don introuvable' });
-    
-    don.statut = 'reserve';
-    don.reserve_par = reserve_par;
-    don.mis_a_jour_le = Date.now();
-    
-    await don.save();
-    res.status(200).json(don);
-  } catch (error) {
-    res.status(400).json({ message: 'Erreur lors de la réservation du don', error });
-  }
-});
-
-// Lister les dons (actifs et archivés)
-router.get('/dons', async (req, res) => {
-  try {
-    const dons = await Don.find({ statut: { $in: ['actif', 'archive'] } });
-    res.status(200).json(dons);
-  } catch (error) {
-    res.status(400).json({ message: 'Erreur lors de la récupération des dons', error });
+    console.error('Erreur lors de la création du don:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 });
 

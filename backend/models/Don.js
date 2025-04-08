@@ -11,20 +11,6 @@ const donSchema = new mongoose.Schema({
     type: String, 
     enum: ['actif', 'reserve', 'archive'], 
     default: 'actif' 
-  },
-  categorie_id: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Categorie', 
-    required: true 
-  },
-  cree_par: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
-  },
-  reserve_par: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User' 
   }
 });
 

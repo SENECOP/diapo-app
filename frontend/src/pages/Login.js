@@ -24,10 +24,9 @@ const Login = () => {
 
     try {
       await axios.post('http://localhost:5000/api/auth/login', user);
-      alert('Connexion réussie !');
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur de connexion');
+      setError(err.response?.data?.message || 'ce pseudo n\'a pas de compte, créer un compte ');
     }
   };
 
@@ -50,11 +49,12 @@ const Login = () => {
 
         {error && <p className="text-gray-900 text-sm text-center mb-4">{error}</p>}
 
-        <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-md">
+        <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 w-full max-w-md">
           <div>
             <label className="block text-gray-700">Pseudo <span className="text-red-500">*</span></label>
             <input 
               type="text" 
+              autoComplete="off"
               className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               value={pseudo} 
               onChange={(e) => setPseudo(e.target.value)}
@@ -66,6 +66,7 @@ const Login = () => {
             <label className="block text-gray-700">Mot de passe <span className="text-red-500">*</span></label>
             <input 
               type="password" 
+              autoComplete="off"
               className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               value={password} 
               onChange={(e) => setPassword(e.target.value)}

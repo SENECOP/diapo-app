@@ -31,9 +31,9 @@ const SignUp = () => {
     const newUser = { pseudo, email, numero_telephone, ville_residence, password };
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/signup', newUser);
-      alert(response.data.message);
+      await axios.post('http://localhost:5000/api/auth/signup', newUser);
       navigate('/login');
+
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors de l’inscription.');
     }

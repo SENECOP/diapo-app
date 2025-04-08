@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000/api/dons";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api/dons";
 
 export const fetchDons = async () => {
   const response = await axios.get(API_URL);
