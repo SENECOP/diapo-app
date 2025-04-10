@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const Don = require('../models/don'); // Importer votre modèle Don si vous en avez un
+const Don = require('../models/Don'); 
 const router = express.Router();
 
 // Configurer multer pour stocker l'image
@@ -37,7 +37,7 @@ router.post('/dons', upload.single('image'), async (req, res) => {
     // Sauvegarder le don
     await newDon.save();
 
-    res.status(200).json({ message: 'Don créé avec succès', don: newDon });
+    res.status(200).json({ message: 'Don créé avec succès', Don: newDon });
   } catch (error) {
     console.error('Erreur lors de la création du don:', error);
     res.status(500).json({ message: 'Erreur serveur' });

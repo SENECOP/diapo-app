@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const connectDB = require("./config/db.js"); // Importer la fonction de connexion
+const connectDB = require("./config/db.js"); 
 const authRoutes = require('./routes/authRoutes'); 
 const donRoutes = require('./routes/donRoutes');
 

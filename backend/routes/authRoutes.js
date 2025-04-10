@@ -43,7 +43,7 @@ router.post('/login', async (req, res) => {
         // Vérifier si l'utilisateur existe
         const user = await User.findOne({ pseudo });
         if (!user) {
-            return res.status(400).json({ message: "Pseudo incorrect" });
+            return res.status(400).json({ message: "ce compte n\'existe pas. Créer un compte" });
         }
 
         // Vérifier le mot de passe
