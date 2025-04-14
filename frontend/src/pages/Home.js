@@ -32,7 +32,7 @@ const Home = () => {
       <section className="p-10">
         {/* Nouveautés */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Les nouveautés</h2>
+          <h2 className="text-xl font-bold text-gray-800" >Les nouveautés</h2>
           <Link to="/nouveautes" className="text-blue-600 hover:underline text-sm">
             Voir tout
           </Link>
@@ -46,7 +46,7 @@ const Home = () => {
 
         {/* Technologie */}
         <div className="flex justify-between items-center mt-10 mb-4">
-          <h2 className="text-xl font-bold">Technologie</h2>
+          <h2 className="text-xl font-bold  text-gray-800">Technologie</h2>
           <Link to="/technologie" className="text-blue-600 hover:underline text-sm">
             Voir tout
           </Link>
@@ -60,7 +60,7 @@ const Home = () => {
 
         {/* Vêtements */}
         <div className="flex justify-between items-center mt-10 mb-4">
-          <h2 className="text-xl font-bold">Vêtements</h2>
+          <h2 className="text-xl font-bold  text-gray-800">Vêtements</h2>
           <Link to="/vetements" className="text-blue-600 hover:underline text-sm">
             Voir tout
           </Link>

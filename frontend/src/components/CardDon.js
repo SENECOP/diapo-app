@@ -15,7 +15,7 @@ const CardDon = () => {
           <span>Dakar</span>
         </div>
         <div className="flex items-center gap-2">
-          <GiSofa className="text-green-500" />
+          <GiSofa className="text-gray-800" />
           <span>Meuble</span>
         </div>
         <div className="flex items-center gap-2">
