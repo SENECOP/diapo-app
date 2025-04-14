@@ -15,22 +15,28 @@ const Home = () => {
             Donner et recevoir gratuitement des produits divers
           </h1>
           <p className="mb-4 text-gray-600">
-          Dans un monde où le gaspillage est un enjeu majeur et où de nombreuses personnes sont dans le besoin, Diapo vise à créer un pont entre ceux qui veulent donner et ceux qui ont besoin de recevoir
+            Dans un monde où le gaspillage est un enjeu majeur et où de nombreuses personnes sont dans le besoin, Diapo vise à créer un pont entre ceux qui veulent donner et ceux qui ont besoin de recevoir
           </p>
           <div className="flex items-center gap-4">
-        <Link to="/Login">
-          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
-            Faire un don
-          </button>
-        </Link>
-      </div>
+            <Link to="/Login">
+              <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                Faire un don
+              </button>
+            </Link>
+          </div>
         </div>
-        <img src= '/assets/Charity-rafiki.png' alt="charity" className="md:w-1/3 w-full" />
+        <img src="/assets/Charity-rafiki.png" alt="charity" className="md:w-1/3 w-full" />
       </section>
 
       {/* Sections de dons */}
       <section className="p-10">
-        <h2 className="text-xl font-bold mb-4">Les nouveautés</h2>
+        {/* Nouveautés */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Les nouveautés</h2>
+          <Link to="/nouveautes" className="text-blue-600 hover:underline text-sm">
+            Voir tout
+          </Link>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <CardDon />
           <CardDon />
@@ -38,7 +44,13 @@ const Home = () => {
           <CardDon />
         </div>
 
-        <h2 className="text-xl font-bold mt-10 mb-4">Technologie</h2>
+        {/* Technologie */}
+        <div className="flex justify-between items-center mt-10 mb-4">
+          <h2 className="text-xl font-bold">Technologie</h2>
+          <Link to="/technologie" className="text-blue-600 hover:underline text-sm">
+            Voir tout
+          </Link>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <CardDon />
           <CardDon />
@@ -46,7 +58,13 @@ const Home = () => {
           <CardDon />
         </div>
 
-        <h2 className="text-xl font-bold mt-10 mb-4">Vêtements</h2>
+        {/* Vêtements */}
+        <div className="flex justify-between items-center mt-10 mb-4">
+          <h2 className="text-xl font-bold">Vêtements</h2>
+          <Link to="/vetements" className="text-blue-600 hover:underline text-sm">
+            Voir tout
+          </Link>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <CardDon />
           <CardDon />

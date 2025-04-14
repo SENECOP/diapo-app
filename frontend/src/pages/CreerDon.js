@@ -2,9 +2,11 @@ import React, { useState, useRef } from 'react';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';  // Importer useNavigate
 
 const CreerDon = () => {
   const fileInput = useRef(null);
+  const navigate = useNavigate(); // Initialiser le hook useNavigate
 
   const handleClick = () => {
     fileInput.current.click();
@@ -27,11 +29,17 @@ const CreerDon = () => {
   };
 
   const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && !file.type.startsWith('image/')) {
+      alert('Veuillez sélectionner un fichier image');
+      return;
+    }
     setFormData({
       ...formData,
-      url_image: e.target.files[0],
+      url_image: file,
     });
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,7 +58,7 @@ const CreerDon = () => {
     data.append('titre', formData.titre);
     data.append('categorie', formData.categorie);
     data.append('description', formData.description);
-    data.append('adresse', formData.ville_don);
+    data.append('ville_don', formData.ville_don);
     data.append('image', formData.url_image);
 
     try {
@@ -62,7 +70,8 @@ const CreerDon = () => {
 
       if (response.status === 200) {
         console.log('Don créé avec succès:', response.data);
-        // Redirection ou feedback ici
+        // Rediriger vers la page Liste des Dons
+        navigate('/ListeDons'); // Utiliser navigate pour rediriger
       }
     } catch (error) {
       console.error('Erreur lors de la création du don:', error);

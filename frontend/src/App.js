@@ -4,6 +4,7 @@ import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import Home from "./pages/Home";
 import CreerDon from './pages/CreerDon';
+import ListeDons from './pages/ListeDons';
 import './index.css'; 
 import "./styles/tailwind.css";
 
@@ -21,6 +22,7 @@ const App = () => {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
           <Route path="/creer-don" element={<CreerDon />} />
+          <Route path="/ListeDons" element={<ListeDons />} />
         
           
           {/* Autres routes */}
