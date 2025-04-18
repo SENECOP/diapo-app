@@ -24,8 +24,11 @@ const createDon = async (req, res) => {
   }
 };
 
+
 const getDons = async (req, res) => {
   const { categorie } = req.query;
+  const dons = await Don.find().sort({ createdAt: -1 });
+
 
   try {
     let dons;
@@ -43,8 +46,9 @@ const getDons = async (req, res) => {
 
 const getDonById = async (req, res) => {
   try {
-    const don = await Don.findById(req.params.id).populate("utilisateur"); // 👈 on récupère le donneur ici
+    const don = await Don.findById(req.params.id).populate("user"); // 👈 on récupère le donneur ici
     if (!don) return res.status(404).json({ message: "Don non trouvé" });
+    
     res.json(don);
   } catch (err) {
     console.error(err);
@@ -72,18 +76,24 @@ const updateDon = async (req, res) => {
 };
 
 const deleteDon = async (req, res) => {
+  console.log("Suppression demandée pour :", req.params.id);
   try {
     const don = await Don.findById(req.params.id);
     if (!don) {
+      console.log("Don introuvable");
       return res.status(404).json({ message: 'Don non trouvé' });
     }
 
     await don.remove();
+    console.log("Don supprimé avec succès");
     res.json({ message: 'Don supprimé avec succès' });
   } catch (error) {
+    console.error("Erreur dans deleteDon:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 module.exports = {
   createDon,

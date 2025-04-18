@@ -22,15 +22,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 
- 
-router.post('/dons', upload.single('url_image'), (req, res) => {
-  const don = {
-    titre: req.body.titre,
-    description: req.body.description,
-    url_image: req.file.filename, // Le nom du fichier téléchargé
-  };
-  res.status(201).json(don); // Réponse avec les infos du don
-});
 
 // Route pour créer un don
 router.post('/dons', upload.single('url_image'), createDon);
@@ -69,7 +60,23 @@ router.get('/dons/:id', async (req, res) => {
 router.put('/dons/:id', updateDon);
 
 // Route pour supprimer un don
-router.delete('/dons/:id', deleteDon);
+// Exemple d'une route de suppression dans ton backend
+router.delete('/api/dons/:id', async (req, res) => {
+  const { id } = req.params.id;
+
+  try {
+    const don = await Don.findByIdAndDelete(id); // Suppression du don avec son ID
+
+    if (!don) {
+      return res.status(404).json({ message: 'Don non trouvé' });
+    }
+
+    res.status(200).json({ message: 'Don supprimé avec succès' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+});
+
 
 router.get('/dons/categorie/:categorie', async (req, res) => {
   try {

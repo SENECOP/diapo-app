@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchDons } from "../Services/donService";
 import DonDetails from "../pages/DonDetails";
 
-const ListeDon = () => {
+const ListeDon = ({don}) => {
   const [dons, setDons] = useState([]);
 
   useEffect(() => {
