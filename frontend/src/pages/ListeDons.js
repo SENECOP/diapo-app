@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom'; // ✅ Ajouté
+import { Link } from 'react-router-dom'; 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 const ListeDons = ({ allDons }) => {
   const [dons, setDons] = useState([]);
-  const [currentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const donsParPage = 6;
 
   useEffect(() => {
     const fetchDons = async () => {
@@ -26,16 +24,11 @@ const ListeDons = ({ allDons }) => {
     fetchDons();
   }, []);
 
-  const indexOfLastDon = currentPage * donsParPage;
-  const indexOfFirstDon = indexOfLastDon - donsParPage;
-  const currentDons = dons.slice(indexOfFirstDon, indexOfLastDon);
 
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-black">
       <Header />
-
-      {/* Bande bleue avec flèche de retour et Dashboard */}
       <div className="bg-blue-700 text-white px-10 py-10 flex items-center space-x-4">
         <Link
           to="/"
@@ -68,7 +61,7 @@ const ListeDons = ({ allDons }) => {
 
         {/* CONTENU PRINCIPAL */}
         <main className="flex-1 -mt-5 ml-6 mr-10">
-          <div className="bg-white rounded-lg shadow-md p-6 h-[600px] overflow-y-scroll">
+          <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-semibold mb-2">Liste des Dons</h2>
             {loading ? (
               <div className="text-center py-10 text-blue-600 font-semibold animate-pulse">
@@ -76,13 +69,12 @@ const ListeDons = ({ allDons }) => {
               </div>
             ) : (
               <div className="space-y-6">
-                {currentDons.map((don, index) => (
+                {dons.map((don) => (
                   <div
-                    key={index}
-                    className="border p-4 rounded-xl shadow-sm hover:shadow-md transition flex items-start space-x-4"
-                  >
+                    key={don._id}
+                    className="border p-4 rounded-xl shadow-sm hover:shadow-md transition flex items-start space-x-4">
                     <img
-                      src={`${process.env.REACT_APP_API_URL}/${don.url_image}`}
+                      src={`${process.env.REACT_APP_API_URL}/uploads/${don.url_image}`}
                       alt={don.titre}
                       className="w-24 h-24 object-cover rounded-lg"
                     />
@@ -91,6 +83,7 @@ const ListeDons = ({ allDons }) => {
                       <p className="text-gray-600 text-sm mt-1">
                         {don.description || 'Lorem ipsum dolor sit amet...'}
                       </p>
+                      <p className="text-sm text-gray-500">{don.categorie}</p>
                       <div className="mt-4 flex items-center space-x-2">
                         <div className="w-6 h-6 rounded-full bg-gray-300 text-xs flex items-center justify-center">
                           MC

@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { UserContext } from '../context/UserContext';
 import { Link } from "react-router-dom";
 
 const Header = () => {
+  const { user } = useContext(UserContext);
   const [showDropdown, setShowDropdown] = useState(false);
 
   const toggleDropdown = () => {
@@ -51,16 +53,30 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Right - "Faire un don" + Mon compte */}
+      {/* Right - Faire un don + Profil utilisateur ou Mon compte */}
       <div className="flex items-center gap-4">
         <Link to="/creer-don">
           <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
             Faire un don
           </button>
         </Link>
-        <Link to="/login">
-          <button className="text-gray-700 hover:underline">Mon compte</button>
-        </Link>
+
+        {user ? (
+          <div className="flex items-center gap-2">
+            <span className="text-gray-800 font-semibold">{user.pseudo}</span>
+            {user.avatar && (
+              <img
+                src={user.avatar}
+                alt="avatar"
+                className="w-8 h-8 rounded-full border object-cover"
+              />
+            )}
+          </div>
+        ) : (
+          <Link to="/login">
+            <button className="text-gray-700 hover:underline">Mon compte</button>
+          </Link>
+        )}
       </div>
     </header>
   );

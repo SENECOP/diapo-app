@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { UserContext } from '../context/UserContext'; // Import du UserContext
 
 const Login = () => {
   const [pseudo, setPseudo] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const { setUser } = useContext(UserContext); // Accéder à setUser du UserContext
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -16,17 +18,23 @@ const Login = () => {
     }
   }, [location.state]);
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const user = { pseudo, password };
 
     try {
-      await axios.post('http://localhost:5000/api/auth/login', user);
-      navigate('/dashboard');
+      const response = await axios.post('http://localhost:5000/api/auth/login', user);
+      const loggedInUser = response.data.user;
+
+      // Sauvegarde dans le contexte et dans le localStorage
+      setUser(loggedInUser);
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
+
+      // Redirection vers le Dashboard
+      navigate('/Dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'ce pseudo n\'a pas de compte, créer un compte ');
+      setError(err.response?.data?.message || "Ce pseudo n'a pas de compte, créer un compte.");
     }
   };
 
@@ -37,7 +45,9 @@ const Login = () => {
         {/* Logo */}
         <img src="/logo_diapo.png" alt="Logo" className="absolute top-4 left-4 max-w-[150px]" />
 
-        <p className="text-lg text-center text-gray-950 mb-6">"Ensemble, partageons l’espoir et semons la générosité : chaque don, aussi petit soit-il, change une vie." </p>
+        <p className="text-lg text-center text-gray-950 mb-6">
+          "Ensemble, partageons l’espoir et semons la générosité : chaque don, aussi petit soit-il, change une vie."
+        </p>
 
         {/* Image d'illustration */}
         <img src="/assets/charity1.png" alt="Illustration" className="w-3/4 max-w-md" />

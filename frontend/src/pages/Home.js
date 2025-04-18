@@ -1,9 +1,35 @@
+import { useEffect, useState } from "react";
 import Header from "../components/Header";
+import axios from "axios";
 import CardDon from "../components/CardDon";
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
 
 const Home = () => {
+  const [dons, setDons] = useState([]);
+
+  useEffect(() => {
+    const fetchDons = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/dons"); // adapte l'URL
+        setDons(response.data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des dons", error);
+      }
+    };
+
+    fetchDons();
+  }, []);
+
+  const nouveautes = [...dons]
+  .sort((a, b) => new Date(b.date) - new Date(a.date)) // tri par date décroissante
+  .slice(0, 5); // prendre les 5 plus récents
+
+  const Technologie = dons.filter(d => d.categorie?.toLowerCase() === "technologie");
+  const Vêtements = dons.filter(d => d.categorie?.toLowerCase() === "vêtements");
+  const Meubles = dons.filter(d => d.categorie?.toLowerCase() === "meubles");
+  
+
   return (
     <div>
       <Header />
@@ -33,45 +59,59 @@ const Home = () => {
         {/* Nouveautés */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-800" >Les nouveautés</h2>
-          <Link to="/nouveautes" className="text-blue-600 hover:underline text-sm">
-            Voir tout
-          </Link>
+          <Link to={`/dons/${encodeURIComponent("nouveautes")}`} className="text-blue-600 hover:underline text-sm">
+  Voir tout
+</Link>
+
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <CardDon />
-          <CardDon />
-          <CardDon />
-          <CardDon />
+        {nouveautes.map(don => (
+          <CardDon key={don._id} don={don} />
+        ))}
         </div>
 
         {/* Technologie */}
         <div className="flex justify-between items-center mt-10 mb-4">
           <h2 className="text-xl font-bold  text-gray-800">Technologie</h2>
-          <Link to="/technologie" className="text-blue-600 hover:underline text-sm">
+          <Link to={`/dons/${encodeURIComponent("Technologie")}`} className="text-blue-600 hover:underline text-sm">
             Voir tout
           </Link>
+
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <CardDon />
-          <CardDon />
-          <CardDon />
-          <CardDon />
+        {Technologie.map(don => (
+          <CardDon key={don._id} don={don} />
+        ))}
+        
         </div>
 
         {/* Vêtements */}
         <div className="flex justify-between items-center mt-10 mb-4">
           <h2 className="text-xl font-bold  text-gray-800">Vêtements</h2>
-          <Link to="/vetements" className="text-blue-600 hover:underline text-sm">
+          <Link to={`dons/${encodeURIComponent("vêtements")}`} className="text-blue-600 hover:underline text-sm">
             Voir tout
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <CardDon />
-          <CardDon />
-          <CardDon />
-          <CardDon />
+        {Vêtements.map(don => (
+          <CardDon key={don._id} don={don} />
+        ))}
+          
+        </div>
+        <div className="flex justify-between items-center mt-10 mb-4">
+          <h2 className="text-xl font-bold  text-gray-800">Meubles</h2>
+          <Link to={`/dons/${encodeURIComponent("meubles")}`} className="text-blue-600 hover:underline text-sm">
+            Voir tout
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {Meubles.map(don => (
+          <CardDon key={don._id} don={don} />
+        ))}
+          
         </div>
       </section>
+     
 
       <Footer />
     </div>

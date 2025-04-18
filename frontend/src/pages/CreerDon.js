@@ -43,6 +43,7 @@ const CreerDon = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Formulaire soumis");
 
     if (!formData.titre || !formData.categorie || !formData.ville_don) {
       alert('Tous les champs doivent être remplis');
@@ -59,7 +60,7 @@ const CreerDon = () => {
     data.append('categorie', formData.categorie);
     data.append('description', formData.description);
     data.append('ville_don', formData.ville_don);
-    data.append('image', formData.url_image);
+    data.append('url_image', formData.url_image);
 
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/dons`, data, {
@@ -71,7 +72,7 @@ const CreerDon = () => {
       if (response.status === 200) {
         console.log('Don créé avec succès:', response.data);
         // Rediriger vers la page Liste des Dons
-        navigate('/ListeDons'); // Utiliser navigate pour rediriger
+        navigate('/ListeDons'); 
       }
     } catch (error) {
       console.error('Erreur lors de la création du don:', error);
@@ -120,7 +121,7 @@ const CreerDon = () => {
             <textarea
               name="description"
               rows="4"
-              maxLength="500"
+              maxLength="300"
               value={formData.description}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-md px-4 py-2"
