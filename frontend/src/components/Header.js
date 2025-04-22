@@ -119,7 +119,7 @@ const Header = () => {
             <Link to="/login">
               <button className="text-gray-700 hover:underline">Se connecter</button>
             </Link>
-            <Link to="/register">
+            <Link to="/signup">
               <button className="text-gray-700 hover:underline">S'inscrire</button>
             </Link>
           </div>
