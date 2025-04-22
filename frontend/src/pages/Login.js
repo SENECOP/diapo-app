@@ -41,6 +41,8 @@ const Login = () => {
         const completeUser = {
           ...userData.user,
           pseudo: userData.user.pseudo || pseudo,
+          numero_telephone: userData.user.numero_telephone || '',
+          ville_residence: userData.user.ville_residence || '',
           avatar: userData.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(pseudo)}`,
           token: userData.token,
         };

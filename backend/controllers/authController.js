@@ -61,8 +61,10 @@ const register = async (req, res) => {
           id: user._id,
           pseudo: user.pseudo,
           email: user.email || '',
+          numero_telephone: user.numero_telephone || '',
           avatar: user.avatar || '',
           ville_residence: user.ville_residence || '',
+
         }
       });
     } catch (error) {

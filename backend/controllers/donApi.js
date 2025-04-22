@@ -12,6 +12,8 @@ const createDon = async (req, res) => {
       categorie,
       ville_don,
       url_image: imageFilename,
+      user: req.user?.id 
+
     });
 
     await newDon.save();
@@ -44,7 +46,9 @@ const getDons = async (req, res) => {
 
 const getDonById = async (req, res) => {
   try {
-    const don = await Don.findById(req.params.id).populate("user"); // 👈 on récupère le donneur ici
+    const don = await Don.findById(req.params.id).populate("user", "pseudo ville_residence email");
+
+    console.log("Détails du don avec donneur peuplé : ", don); 
     if (!don) return res.status(404).json({ message: "Don non trouvé" });
     
     res.json(don);

@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useContext } from 'react';
+import { useEffect, useState, useContext } from "react";
 import { UserContext } from '../context/UserContext';
 import Header from "../components/Header";
 import axios from "axios";
@@ -10,14 +9,19 @@ import { Link } from "react-router-dom";
 const Dashboard = () => {
   const { user } = useContext(UserContext);
   const [dons, setDons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchDons = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/dons"); // adapte l'URL
+        const response = await axios.get("http://localhost:5000/api/dons");
         setDons(response.data);
-      } catch (error) {
-        console.error("Erreur lors du chargement des dons", error);
+      } catch (err) {
+        console.error("Erreur lors du chargement des dons", err);
+        setError("Impossible de charger les dons.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -25,11 +29,11 @@ const Dashboard = () => {
   }, []);
 
   const nouveautes = [...dons]
-    .sort((a, b) => new Date(b.date) - new Date(a.date)) // tri par date décroissante
-    .slice(0, 5); // prendre les 5 plus récents
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5);
 
   const Technologie = dons.filter(d => d.categorie?.toLowerCase() === "technologie");
-  const Vêtements = dons.filter(d => d.categorie?.toLowerCase() === "vêtements");
+  const Vetements = dons.filter(d => d.categorie?.toLowerCase() === "vêtements");
   const Meubles = dons.filter(d => d.categorie?.toLowerCase() === "meubles");
 
   return (
@@ -48,7 +52,6 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Section intro */}
       <section className="flex flex-col md:flex-row justify-between items-center bg-white p-10">
         <div className="md:w-1/2 mb-6 md:mb-0">
           <h1 className="text-3xl font-bold mb-4">
@@ -68,9 +71,10 @@ const Dashboard = () => {
         <img src="/assets/Charity-rafiki.png" alt="charity" className="md:w-1/3 w-full" />
       </section>
 
-      {/* Sections de dons */}
+      {loading && <p className="text-center text-gray-500">Chargement des dons...</p>}
+      {error && <p className="text-center text-red-500">{error}</p>}
+
       <section className="p-10">
-        {/* Nouveautés */}
         {nouveautes.length > 0 && (
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -79,7 +83,7 @@ const Dashboard = () => {
                 Voir tout
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {nouveautes.map(don => (
                 <CardDon key={don._id} don={don} />
               ))}
@@ -87,7 +91,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Technologie */}
         {Technologie.length > 0 && (
           <div>
             <div className="flex justify-between items-center mt-10 mb-4">
@@ -96,7 +99,7 @@ const Dashboard = () => {
                 Voir tout
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {Technologie.map(don => (
                 <CardDon key={don._id} don={don} />
               ))}
@@ -104,8 +107,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Vêtements */}
-        {Vêtements.length > 0 && (
+        {Vetements.length > 0 && (
           <div>
             <div className="flex justify-between items-center mt-10 mb-4">
               <h2 className="text-xl font-bold text-gray-800">Vêtements</h2>
@@ -113,15 +115,14 @@ const Dashboard = () => {
                 Voir tout
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Vêtements.map(don => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {Vetements.map(don => (
                 <CardDon key={don._id} don={don} />
               ))}
             </div>
           </div>
         )}
 
-        {/* Meubles */}
         {Meubles.length > 0 && (
           <div>
             <div className="flex justify-between items-center mt-10 mb-4">
@@ -130,7 +131,7 @@ const Dashboard = () => {
                 Voir tout
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {Meubles.map(don => (
                 <CardDon key={don._id} don={don} />
               ))}

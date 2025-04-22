@@ -1,22 +1,30 @@
 const jwt = require('jsonwebtoken');
 
 function verifyToken(req, res, next) {
-  const token = req.headers['authorization'];
-  if (!token) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) {
     return res.status(401).json({ message: 'Token non fourni' });
   }
 
-  // Vérifie que le token commence par "Bearer"
-  const bearerToken = token.split(' ')[1];
-  if (!bearerToken) {
+  // S'assurer que le header commence par "Bearer "
+  if (!authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Format de token invalide (Bearer attendu)' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  if (!token) {
     return res.status(401).json({ message: 'Token mal formé' });
   }
 
-  jwt.verify(bearerToken, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).json({ message: 'Token invalide' });
     }
-    req.user = decoded; // Ajoute l'utilisateur au request object
+
+    console.log('✅ Utilisateur décodé :', decoded);
+    req.user = decoded;
     next();
   });
 }
+
+module.exports = verifyToken;
