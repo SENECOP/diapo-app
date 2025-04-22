@@ -141,7 +141,7 @@ const ListeDons = () => {
                   <Link
                     key={don._id}
                     to={`/don/${don._id}`}
-                    className="block border p-4 rounded-xl shadow-sm hover:shadow-md transition flex items-start space-x-4 hover:bg-gray-50"
+                    className=" border p-4 rounded-xl shadow-sm hover:shadow-md transition flex items-start space-x-4 hover:bg-gray-50"
                   >
                     {don.url_image && (
                       <img

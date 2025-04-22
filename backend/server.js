@@ -19,7 +19,10 @@ if (!process.env.MONGO_URI) {
 
  // Connexion à la base de données MongoDB
 
-app.use(cors());
+ app.use(cors({
+  origin: 'https://ton-site.netlify.app',
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
@@ -36,6 +39,7 @@ app.post('/', (req, res) => {
   
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Serveur lancé sur http://0.0.0.0:${PORT}`);
+
+app.listen(5000, '0.0.0.0', () => {
+  console.log("Serveur backend lancé sur le port 5000");
 });
