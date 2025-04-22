@@ -48,7 +48,7 @@ const Dashboard = () => {
       ) : (
         <div className="text-center my-4">
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-red-500">Connexion requise</p>
+          
         </div>
       )}
 
@@ -70,7 +70,7 @@ const Dashboard = () => {
             <Link to="/ListeDons" className="text-blue-600 hover:underline">
             Aller à la liste des dons
           </Link>
-          
+
           </div>
         </div>
         <img src="/assets/Charity-rafiki.png" alt="charity" className="md:w-1/3 w-full" />

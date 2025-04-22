@@ -49,6 +49,10 @@ const Home = () => {
                 Faire un don
               </button>
             </Link>
+            
+            <Link to="/ListeDons" className="text-blue-600 hover:underline">
+           Aller à la liste des dons
+          </Link>
           </div>
         </div>
         <img src="/assets/Charity-rafiki.png" alt="charity" className="md:w-1/3 w-full" />
