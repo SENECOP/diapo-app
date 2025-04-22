@@ -11,6 +11,7 @@ import DonCategorie from './pages/DonCategorie';
 import DonDetails from './pages/DonDetails';
 import Dashboard from './pages/Dashboard';
 import { UserProvider } from './context/UserContext';
+import Profil from "./pages/Profil";
 
 
 
@@ -28,6 +29,8 @@ const App = () => {
           <Route path="/dons/:categorie" element={<DonCategorie />} />
           <Route path="/don/:id" element={<DonDetails />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profil" element={<Profil />} />
+
       </Routes>
         </Router>
     </UserProvider>

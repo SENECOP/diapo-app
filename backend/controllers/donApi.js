@@ -1,26 +1,24 @@
 const Don = require('../models/Don');
 
-// Créer un don (image déjà traitée par multer dans les routes)
+
 const createDon = async (req, res) => {
   try {
-    const { titre, categorie, description, ville_don } = req.body;
-    const imageUrl = req.file ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` : null;
-
+    const { titre, description, categorie, ville_don } = req.body;
+    const imageFilename = req.file?.filename || '';
 
     const newDon = new Don({
       titre,
-      categorie,
       description,
+      categorie,
       ville_don,
-      url_image: req.file.filename
-      
+      url_image: imageFilename,
     });
 
     await newDon.save();
     res.status(200).json({ message: 'Don créé avec succès', Don: newDon });
   } catch (error) {
     console.error('Erreur lors de la création du don:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -65,15 +63,21 @@ const updateDon = async (req, res) => {
 
     don.titre = req.body.titre || don.titre;
     don.description = req.body.description || don.description;
-    don.url_image = req.body.url_image || don.url_image;
     don.ville_don = req.body.ville_don || don.ville_don;
 
+    // Si une nouvelle image est envoyée
+    if (req.file) {
+      don.url_image = `${req.protocol}://${req.get('host')}/${req.file.filename}`; // ou `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
+    }
+
     await don.save();
-    res.json(don);
+    res.json({ message: 'Don modifié avec succès', don });
   } catch (error) {
+    console.error('Erreur dans updateDon :', error);
     res.status(500).json({ message: error.message });
   }
-};
+}; 
+
 
 const deleteDon = async (req, res) => {
   console.log("Suppression demandée pour :", req.params.id);

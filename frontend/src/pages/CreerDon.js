@@ -4,10 +4,12 @@ import Header from '../components/Header';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 
+
 const CreerDon = () => {
+
   const fileInput = useRef(null);
   const navigate = useNavigate();
-  const { id } = useParams(); // ID du don à modifier
+  const { id } = useParams();
   const [existingImage, setExistingImage] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -18,7 +20,6 @@ const CreerDon = () => {
     url_image: null,
   });
 
-  // Chargement des données si en mode édition
   useEffect(() => {
     if (id) {
       axios.get(`http://localhost:5000/api/dons/${id}`)
@@ -29,9 +30,9 @@ const CreerDon = () => {
             categorie: don.categorie || '',
             description: don.description || '',
             ville_don: don.ville_don || '',
-            url_image: null, // L'utilisateur peut choisir de modifier ou non l'image
+            url_image: null,
           });
-          setExistingImage(don.url_image); // Conserver le nom de l'image
+          setExistingImage(don.url_image);
         })
         .catch((err) => {
           console.error('Erreur lors du chargement du don à modifier :', err);
@@ -61,46 +62,58 @@ const CreerDon = () => {
       ...prev,
       url_image: file,
     }));
-    setExistingImage(null); // Supprimer l'image existante affichée
+    setExistingImage(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.titre || !formData.categorie || !formData.ville_don) {
-      alert('Tous les champs doivent être remplis');
+    const token = localStorage.getItem('token');
+
+    const champsManquants = [];
+    if (!formData.titre) champsManquants.push("le titre");
+    if (!formData.description) champsManquants.push("la description");
+    if (!formData.categorie) champsManquants.push("la catégorie");
+    if (!formData.ville_don) champsManquants.push("la ville");
+    if (!formData.url_image && !id) champsManquants.push("l'image");
+
+    if (champsManquants.length > 0) {
+      alert(`Merci de remplir ${champsManquants.join(', ')}.`);
       return;
     }
 
-    const data = new FormData();
-    data.append('titre', formData.titre);
-    data.append('categorie', formData.categorie);
-    data.append('description', formData.description);
-    data.append('ville_don', formData.ville_don);
-
-    if (formData.url_image) {
-      data.append('url_image', formData.url_image);
-    }
-
     try {
-      if (id) {
-        // 🔄 Mode modification
-        await axios.put(`http://localhost:5000/api/dons/${id}`, data, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        alert('Don modifié avec succès');
-      } else {
-        // ➕ Mode création
-        await axios.post(`${process.env.REACT_APP_API_URL}/api/dons`, data, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        alert('Don créé avec succès');
+      const data = new FormData();
+      data.append('titre', formData.titre);
+      data.append('categorie', formData.categorie);
+      data.append('description', formData.description);
+      data.append('ville_don', formData.ville_don);
+      if (formData.url_image) {
+        data.append('url_image', formData.url_image);
       }
 
-      navigate('/ListeDons');
+      if (id) {
+        await axios.put(`http://localhost:5000/api/dons/${id}`, data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        alert("Don modifié avec succès !");
+      } else {
+        await axios.post(`http://localhost:5000/api/dons`, data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        alert("Don créé avec succès !");
+      }
+
+      navigate("/Listedons");
     } catch (error) {
-      console.error('Erreur lors de la soumission du formulaire :', error);
-      alert('Erreur lors de l\'enregistrement');
+      console.error("Erreur lors de l'envoi du formulaire :", error);
+      alert("Une erreur est survenue. Veuillez réessayer.");
     }
   };
 
@@ -189,8 +202,8 @@ const CreerDon = () => {
               <div className="mt-4">
                 <p className="text-sm text-gray-600">Image actuelle :</p>
                 <img
-                  src={`http://localhost:5000/uploads/${existingImage}`}
-                  alt="Image actuelle"
+                  src={`http://localhost:5000/${existingImage}`}
+                  alt="don"
                   className="w-full max-w-xs rounded"
                 />
               </div>

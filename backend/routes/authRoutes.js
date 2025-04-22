@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); 
 const router = express.Router();
+const { login } = require('../controllers/authController');
+
 
 // ✅ Route d'inscription
 router.post('/signup', async (req, res) => {
@@ -35,32 +37,7 @@ router.post('/signup', async (req, res) => {
     }
 });
 
-// ✅ Route de connexion
-router.post('/login', async (req, res) => {
-    try {
-        const { pseudo, password } = req.body;
-
-        // Vérifier si l'utilisateur existe
-        const user = await User.findOne({ pseudo });
-        if (!user) {
-            return res.status(400).json({ message: "ce compte n\'existe pas. Créer un compte" });
-        }
-
-        // Vérifier le mot de passe
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: "Mot de passe incorrect" });
-        }
-
-        // Générer un token JWT
-        const token = jwt.sign({ id: user._id }, "SECRET_KEY", { expiresIn: "7d" });
-
-        res.json({ message: "Connexion réussie", token });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erreur serveur" });
-    }
-});
+router.post('/login', login);
 
 // ✅ Route de récupération de mot de passe (email obligatoire)
 router.post('/reset-password', async (req, res) => {

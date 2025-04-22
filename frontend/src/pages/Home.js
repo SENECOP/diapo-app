@@ -60,8 +60,8 @@ const Home = () => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-800" >Les nouveautés</h2>
           <Link to={`/dons/${encodeURIComponent("nouveautes")}`} className="text-blue-600 hover:underline text-sm">
-  Voir tout
-</Link>
+           Voir tout
+          </Link>
 
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
