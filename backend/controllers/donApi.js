@@ -35,7 +35,7 @@ const getDons = async (req, res) => {
     if (categorie) {
       dons = await Don.find({ categorie: categorie });
     } else {
-      dons = await Don.find(); // tout afficher si aucune catégorie
+      dons = await Don.find(); 
     }
 
     res.status(200).json(dons);

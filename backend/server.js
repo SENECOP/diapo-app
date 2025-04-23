@@ -18,8 +18,9 @@ if (!process.env.MONGO_URI) {
 }
 
 app.use(cors({
-  origin: 'https://68096a9fe30f2176d71bd4ce--diapo-app.netlify.app',
-  credentials: true,
+    origin:  '*',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 
