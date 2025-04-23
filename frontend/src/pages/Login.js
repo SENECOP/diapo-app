@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const Login = () => {
   const [pseudo, setPseudo] = useState('');
   const [password, setPassword] = useState('');
@@ -17,49 +19,54 @@ const Login = () => {
   }, [location.state]);
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
+  e.preventDefault();
+  setError('');
 
-    try {
-      const response = await fetch('http://16.171.25.67:5000/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ pseudo, password }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // indispensable pour les cookies JWT
+      body: JSON.stringify({
+        pseudo,
+        password,
+      }),
+    });
 
-      const userData = await response.json();
-      console.log("Réponse backend:", userData);
+    const userData = await response.json();
+    console.log("Réponse backend:", userData);
 
-      if (response.ok) {
-        if (!userData.user) {
-          setError("Réponse inattendue du serveur. L'utilisateur est manquant.");
-          return;
-        }
-
-        const completeUser = {
-          ...userData.user,
-          pseudo: userData.user.pseudo || pseudo,
-          numero_telephone: userData.user.numero_telephone || '',
-          ville_residence: userData.user.ville_residence || '',
-          avatar: userData.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(pseudo)}`,
-          token: userData.token,
-        };
-
-        login(completeUser);
-        localStorage.setItem('user', JSON.stringify(completeUser));
-        localStorage.setItem("userId", userData.user._id);
-
-        navigate('/Dashboard');
-      } else {
-        setError(userData.message || 'Erreur lors de la connexion.');
+    if (response.ok) {
+      if (!userData.user) {
+        setError("Réponse inattendue du serveur. L'utilisateur est manquant.");
+        return;
       }
-    } catch (err) {
-      console.error("Erreur réseau ou serveur :", err);
-      setError('Une erreur est survenue. Veuillez réessayer.');
+
+      const completeUser = {
+        ...userData.user,
+        pseudo: userData.user.pseudo || pseudo,
+        numero_telephone: userData.user.numero_telephone || '',
+        ville_residence: userData.user.ville_residence || '',
+        avatar: userData.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(pseudo)}`,
+        token: userData.token,
+      };
+
+      login(completeUser);
+      localStorage.setItem('user', JSON.stringify(completeUser));
+      localStorage.setItem("userId", userData.user._id);
+
+      navigate('/Dashboard');
+    } else {
+      setError(userData.message || 'Erreur lors de la connexion.');
     }
-  }; 
+  } catch (err) {
+    console.error("Erreur réseau ou serveur :", err);
+    setError('Une erreur est survenue. Veuillez réessayer.');
+  }
+};
+
 
   const handleLogout = () => {
     logout(null);

@@ -101,7 +101,7 @@ const Profil = () => {
                 {!isEditing && (
                   <button
                     onClick={handleEditToggle}
-                    className="absolute top-0 right-0 text-gray-800 p-2"
+                    className="absolute top-0 right-0 text-gray-800 p-6"
                     title="Modifier profil"
                   >
                     <FaEdit size={18} />
