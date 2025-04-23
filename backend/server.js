@@ -18,14 +18,12 @@ if (!process.env.MONGO_URI) {
 }
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://diapo-app.netlify.app',
-  'https://6807e3441990cc5285c01a17--diapo-app.netlify.app',
-  'https://68095d33d377240008e417d7--diapo-app.netlify.app'
+  'https://diapo-app.netlify.app'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin) || origin.includes('netlify.app')) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -35,7 +33,6 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 
 app.use(express.json());
 
