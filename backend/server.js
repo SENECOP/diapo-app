@@ -16,7 +16,12 @@ if (!process.env.MONGO_URI) {
   console.error("❌ Erreur : La variable d'environnement MONGODB_URI est introuvable.");
   process.exit(1);
 }
-app.use(cors());
+
+app.use(cors({
+  origin: 'https://68096a9fe30f2176d71bd4ce--diapo-app.netlify.app',
+  credentials: true,
+}));
+
 
   
 
@@ -28,7 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/dons', donRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.options("*", cors());
+app.options('*', cors());
 
 
 
