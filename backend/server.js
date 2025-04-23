@@ -16,17 +16,12 @@ if (!process.env.MONGO_URI) {
   console.error("❌ Erreur : La variable d'environnement MONGODB_URI est introuvable.");
   process.exit(1);
 }
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://diapo-app.netlify.app'
-];
-
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin) || origin.includes('netlify.app')) {
+    if (!origin || origin.includes("netlify.app") || origin === "https://diapo-app.netlify.app" || origin === "http://localhost:3000") {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
@@ -44,6 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/dons', donRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.options("*", cors());
 
 
 // Test route
