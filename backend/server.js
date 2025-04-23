@@ -38,9 +38,6 @@ app.use(express.json());
 
 // ... tes routes ici
 
-app.listen(5000, () => {
-  console.log("Serveur démarré sur le port 5000");
-});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
