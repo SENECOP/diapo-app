@@ -10,7 +10,7 @@ const DonCategorie = () => {
   useEffect(() => {
     const fetchDons = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/dons/categorie/${categorie}`);
+        const res = await axios.get(`https://diapo-app.onrender.com/api/dons/categorie/${categorie}`);
         setDons(res.data);
       } catch (err) {
         console.error("Erreur lors du chargement des dons :", err);

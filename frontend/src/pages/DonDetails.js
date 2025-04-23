@@ -26,7 +26,7 @@ const DonDetails = () => {
     if (window.confirm("Voulez-vous vraiment supprimer ce don ?")) {
       setIsDeleting(true);
       try {
-        await axios.delete(`http://localhost:5000/api/dons/${don._id}`, {
+        await axios.delete(`https://diapo-app.onrender.com/api/dons/${don._id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -43,7 +43,7 @@ const DonDetails = () => {
   };
 
   useEffect(() => {
-    axios.get(`http://localhost:5000/api/dons/${id}`)
+    axios.get(`https://diapo-app.onrender.com/api/dons/${id}`)
       .then((res) => {
         setDon(res.data);
       })
@@ -60,7 +60,7 @@ const DonDetails = () => {
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow mt-6 relative">
       {don.url_image && (
         <img
-          src={`http://localhost:5000/${don.url_image}`}
+          src={`https://diapo-app.onrender.com/${don.url_image}`}
           alt={don.titre || "don"}
           className="w-full h-64 object-cover rounded mb-4"
         />

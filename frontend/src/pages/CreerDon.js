@@ -22,7 +22,7 @@ const CreerDon = () => {
 
   useEffect(() => {
     if (id) {
-      axios.get(`http://localhost:5000/api/dons/${id}`)
+      axios.get(`https://diapo-app.onrender.com/api/dons/${id}`)
         .then((res) => {
           const don = res.data;
           setFormData({
@@ -93,7 +93,7 @@ const CreerDon = () => {
       }
 
       if (id) {
-        await axios.put(`http://localhost:5000/api/dons/${id}`, data, {
+        await axios.put(`https://diapo-app.onrender.com/api/dons/${id}`, data, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`,
@@ -101,7 +101,7 @@ const CreerDon = () => {
         });
         alert("Don modifié avec succès !");
       } else {
-        await axios.post(`http://localhost:5000/api/dons`, data, {
+        await axios.post(`https://diapo-app.onrender.com/api/dons`, data, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`,
@@ -202,7 +202,7 @@ const CreerDon = () => {
               <div className="mt-4">
                 <p className="text-sm text-gray-600">Image actuelle :</p>
                 <img
-                  src={`http://localhost:5000/${existingImage}`}
+                  src={`https://diapo-app.onrender.com/${existingImage}`}
                   alt="don"
                   className="w-full max-w-xs rounded"
                 />

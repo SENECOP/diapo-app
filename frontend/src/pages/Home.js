@@ -11,7 +11,7 @@ const Home = () => {
   useEffect(() => {
     const fetchDons = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/dons"); // adapte l'URL
+        const response = await axios.get("https://diapo-app.onrender.com/api/dons"); // adapte l'URL
         setDons(response.data);
       } catch (error) {
         console.error("Erreur lors du chargement des dons", error);

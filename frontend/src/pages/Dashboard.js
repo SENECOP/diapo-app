@@ -15,7 +15,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDons = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/dons");
+        const response = await axios.get("https://diapo-app.onrender.com/api/dons");
         setDons(response.data);
       } catch (err) {
         console.error("Erreur lors du chargement des dons", err);

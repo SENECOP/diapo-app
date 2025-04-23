@@ -16,7 +16,7 @@ const ListeDons = () => {
     const fetchDons = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/dons`);
+        const response = await axios.get('https://diapo-app.onrender.com/api/dons');
         if (Array.isArray(response.data)) {
           setDons(response.data);
         } else if (Array.isArray(response.data.data)) {
@@ -145,7 +145,7 @@ const ListeDons = () => {
                   >
                     {don.url_image && (
                       <img
-                        src={`${process.env.REACT_APP_API_URL}/${don.url_image}`}
+                        src={`https://diapo-app.onrender.com/${don.url_image}`}
                         alt={don.titre || 'Image du don'}
                         className="w-28 h-28 object-cover rounded-lg"
                       />
