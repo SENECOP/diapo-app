@@ -23,14 +23,7 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn('CORS bloqué :', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: 'https://68095d33d377240008e417d7--diapo-app.netlify.app/',
   credentials: true
 }));
 
