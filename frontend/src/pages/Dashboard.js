@@ -29,8 +29,9 @@ const Dashboard = () => {
   }, []);
 
   const nouveautes = [...dons]
-  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // ✅ utilise createdAt
-  .slice(0, 10);
+  .filter(d => d.createdAt) 
+  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  .slice(0, 5);
 
 
   const Technologie = dons.filter(d => d.categorie?.toLowerCase() === "technologie");
