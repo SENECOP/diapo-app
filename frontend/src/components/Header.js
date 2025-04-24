@@ -1,7 +1,7 @@
-import { useContext, useState, useEffect, useRef } from "react";
-import { UserContext } from '../context/UserContext';
+import React, { useContext, useState, useEffect, useRef } from "react";
+import { UserContext } from "../context/UserContext";
 import { Link } from "react-router-dom";
-import { FiFilter, FiX, FiBell, FiMail } from 'react-icons/fi'; // Ajout des nouvelles icônes
+import { FiFilter, FiX, FiBell, FiMail } from "react-icons/fi";
 
 const Header = () => {
   const { user } = useContext(UserContext);
@@ -10,6 +10,9 @@ const Header = () => {
   const [searchCategory, setSearchCategory] = useState('');
   const [searchCity, setSearchCity] = useState('');
   const filterMenuRef = useRef(null);
+
+  const categories = ["Technologie", "Vêtements", "Électroménager", "Livres"];
+  const villes = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack"];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -53,29 +56,39 @@ const Header = () => {
         </button>
 
         {showFilters && (
-          <div ref={filterMenuRef} className="absolute right-0 mt-2 w-48 bg-white shadow-md border rounded p-4 z-10">
+          <div ref={filterMenuRef} className="absolute right-0 mt-2 w-60 bg-white shadow-md border rounded p-4 z-10">
+            {/* Catégories */}
             <div className="mb-4">
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Filtrer par catégorie</label>
-              <input
-                type="text"
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+              <select
                 id="category"
-                placeholder="Recherche catégorie"
                 value={searchCategory}
                 onChange={handleSearchCategory}
-                className="border px-3 py-2 mt-1 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
-              />
+                className="border px-3 py-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                <option value="">Toutes les catégories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
             </div>
+
+            {/* Villes */}
             <div className="mb-4">
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">Filtrer par ville</label>
-              <input
-                type="text"
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
+              <select
                 id="city"
-                placeholder="Recherche ville"
                 value={searchCity}
                 onChange={handleSearchCity}
-                className="border px-3 py-2 mt-1 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
-              />
+                className="border px-3 py-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                <option value="">Toutes les villes</option>
+                {villes.map((ville) => (
+                  <option key={ville} value={ville}>{ville}</option>
+                ))}
+              </select>
             </div>
+
             <button onClick={() => setShowFilters(false)} className="absolute top-2 right-2 p-2 rounded-full text-gray-600 hover:text-gray-800">
               <FiX size={20} />
             </button>
@@ -83,15 +96,15 @@ const Header = () => {
         )}
       </div>
 
-      {/* Droite : boutons + user info */}
+      {/* Boutons droite */}
       <div className="flex items-center gap-4">
-        <Link to="/creer-don">
+       <Link to={user ? "/CreerDon" : "/login"}>
           <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
             Faire un don
           </button>
         </Link>
 
-        {/* Icônes de notification et message */}
+        {/* Notifications */}
         <button className="relative p-2 text-gray-600 hover:text-blue-600">
           <FiBell size={22} />
         </button>
@@ -99,7 +112,7 @@ const Header = () => {
           <FiMail size={22} />
         </button>
 
-        {/* Profil utilisateur ou liens de connexion */}
+        {/* Utilisateur connecté ou liens */}
         {user && user.pseudo ? (
           <Link to="/profil" className="flex items-center gap-2 cursor-pointer">
             {user.avatar ? (

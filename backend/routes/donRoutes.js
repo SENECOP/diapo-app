@@ -24,13 +24,15 @@ const upload = multer({ storage });
  */
 
 // ✅ Créer un don
-router.post('/', upload.single('url_image'), async (req, res) => {
+router.post('/', verifyToken, upload.single('url_image'), async (req, res) => {
   try {
     // Récupérer les données du formulaire
     const { titre, categorie, description, ville_don, user } = req.body;
     
     // Gérer l'image téléchargée
     const imagePath = req.file ? `uploads/${req.file.filename}` : null;
+
+    const userId = req.user._id;
 
     // Créer le don dans la base de données
     const newDon = await Don.create({
@@ -39,7 +41,7 @@ router.post('/', upload.single('url_image'), async (req, res) => {
       description,
       ville_don,
       url_image: imagePath,
-      user,
+      user:userId
     });
 
     // Retourner la réponse

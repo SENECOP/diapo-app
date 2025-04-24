@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { FiMoreVertical } from 'react-icons/fi';
+import { UserContext } from "../context/UserContext"; // 🔁 Ajout du contexte utilisateur
 
 const DonDetails = () => {
   const { id } = useParams();
@@ -12,7 +13,8 @@ const DonDetails = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const token = localStorage.getItem('token'); // si tu utilises un token
+  const { user } = useContext(UserContext); // 👈 Récupère l'utilisateur connecté
+  const token = localStorage.getItem('token');
 
   const handleEdit = () => {
     if (don?._id) {
@@ -32,7 +34,7 @@ const DonDetails = () => {
           }
         });
         alert('Don supprimé avec succès');
-        navigate('/ListeDons'); // Redirection vers la liste
+        navigate('/ListeDons');
       } catch (error) {
         console.error('Erreur lors de la suppression :', error.response?.data || error.message);
         alert('Erreur lors de la suppression');
@@ -56,6 +58,8 @@ const DonDetails = () => {
   if (error) return <div className="p-6 text-red-600">{error}</div>;
   if (!don) return <div className="p-6">Chargement...</div>;
 
+  const isOwner = user && user._id === don.userId; // ✅ Vérifie si c’est le créateur
+
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow mt-6 relative">
       {don.url_image && (
@@ -66,26 +70,30 @@ const DonDetails = () => {
         />
       )}
 
-      <button onClick={() => setShowMenu(!showMenu)} className="absolute top-2 right-2">
-        <FiMoreVertical size={24} />
-      </button>
+      {isOwner && (
+        <>
+          <button onClick={() => setShowMenu(!showMenu)} className="absolute top-2 right-2">
+            <FiMoreVertical size={24} />
+          </button>
 
-      {showMenu && (
-        <div className="absolute top-10 right-2 bg-white border shadow-md rounded-md z-10">
-          <button
-            onClick={handleEdit}
-            className="block px-4 py-2 hover:bg-gray-100 w-full text-left"
-          >
-            Modifier
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="block px-4 py-2 hover:bg-gray-100 w-full text-left text-red-600 disabled:opacity-50"
-          >
-            {isDeleting ? 'Suppression...' : 'Supprimer'}
-          </button>
-        </div>
+          {showMenu && (
+            <div className="absolute top-10 right-2 bg-white border shadow-md rounded-md z-10">
+              <button
+                onClick={handleEdit}
+                className="block px-4 py-2 hover:bg-gray-100 w-full text-left"
+              >
+                Modifier
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="block px-4 py-2 hover:bg-gray-100 w-full text-left text-red-600 disabled:opacity-50"
+              >
+                {isDeleting ? 'Suppression...' : 'Supprimer'}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       <h1 className="text-2xl font-bold mb-2">{don.titre || "Titre non disponible"}</h1>
@@ -94,20 +102,6 @@ const DonDetails = () => {
       <p className="mb-2 text-gray-700"><strong>Ville :</strong> {don.ville_don}</p>
 
       <hr className="my-6" />
-
-      <h2 className="text-xl font-semibold mb-2">Profil du donneur</h2>
-      <p><strong>Pseudo :</strong> {don.user?.pseudo || "Inconnu"}</p>
-      <p><strong>Ville de résidence :</strong> {don.user?.ville_residence || "Non renseignée"}</p>
-      <p><strong>Email :</strong> {don.user?.email || "Non disponible"}</p>
-
-      {don.user?.email && (
-        <a
-          href={`mailto:${don.user.email}`}
-          className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Contacter le donneur
-        </a>
-      )}
     </div>
   );
 };

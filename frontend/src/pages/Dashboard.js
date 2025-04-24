@@ -61,16 +61,11 @@ const Dashboard = () => {
             Dans un monde où le gaspillage est un enjeu majeur et où de nombreuses personnes sont dans le besoin, Diapo vise à créer un pont entre ceux qui veulent donner et ceux qui ont besoin de recevoir
           </p>
           <div className="flex items-center gap-4">
-            <Link to="/CreerDon">
+            <Link to={user ? "/CreerDon" : "/login"}>
               <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
                 Faire un don
               </button>
             </Link>
-
-            <Link to="/ListeDons" className="text-blue-600 hover:underline">
-            Aller à la liste des dons
-          </Link>
-
           </div>
         </div>
         <img src="/assets/Charity-rafiki.png" alt="charity" className="md:w-1/3 w-full" />
