@@ -27,7 +27,6 @@ const Login = () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include', // indispensable pour les cookies JWT
       body: JSON.stringify({
         pseudo,
         password,
