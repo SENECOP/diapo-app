@@ -16,9 +16,10 @@ if (!process.env.MONGO_URI) {
 }
 
 app.use(cors({
-    origin:  '*',
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+  origin:  '*',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+ credentials: true 
 }));
 
 
