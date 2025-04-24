@@ -1,13 +1,12 @@
-import { FaMapMarkerAlt, FaClock } from "react-icons/fa";
+import { useState } from "react";
+import { FaMapMarkerAlt, FaClock, FaBookmark, FaRegBookmark } from "react-icons/fa";
 import { GiSofa } from "react-icons/gi";
 import { useNavigate } from "react-router-dom";
-
 
 const formatRelativeTime = (dateString) => {
   const now = new Date();
   const date = new Date(dateString);
-  const diff = Math.floor((now - date) / 1000); // en secondes
-
+  const diff = Math.floor((now - date) / 1000);
   if (isNaN(diff)) return "Date invalide";
 
   if (diff < 60) return `Il y a ${diff} seconde${diff > 1 ? 's' : ''}`;
@@ -23,17 +22,28 @@ const formatRelativeTime = (dateString) => {
   return `Il y a ${days} jour${days > 1 ? 's' : ''}`;
 };
 
-
 const CardDon = ({ don }) => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const [favori, setFavori] = useState(false);
 
-  if (!don) return null; 
+  if (!don) return null;
+
+  const handleFavoriToggle = (e) => {
+    e.stopPropagation();
+    setFavori((prev) => !prev);
+  };
+
+  const handleReserveClick = (e) => {
+    e.stopPropagation();
+    navigate(`/reserve/${don._id}`);
+  };
 
   return (
     <div
       onClick={() => navigate(`/don/${don._id}`)}
       className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"
-    >      <img
+    >
+      <img
         src={`https://diapo-app.onrender.com/${don.url_image}`}
         alt={don.titre || " "}
         className="w-full h-32 object-cover rounded"
@@ -49,16 +59,34 @@ const CardDon = ({ don }) => {
         </div>
         <div className="flex items-center gap-2">
           <GiSofa className="text-gray-800" />
-          <span>{don.categorie || "Cate gorie"}</span>
+          <span>{don.categorie || "Catégorie"}</span>
         </div>
         <div className="flex items-center gap-2">
           <FaClock className="text-orange-500" />
           <span>{formatRelativeTime(don.createdAt)}</span>
         </div>
       </div>
+
+      {/* Boutons en bas */}
+      <div className="mt-4 flex justify-between items-center gap-2">
+        <button
+          onClick={handleReserveClick}
+          className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+        >
+          Je prends
+        </button>
+        <button
+          onClick={handleFavoriToggle}
+          className="text-gray-400 text-xl p-2 hover:text-gray-800 transition cursor-pointer bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent"
+          title="Ajouter aux favoris"
+        >
+          {favori ? <FaBookmark /> : <FaRegBookmark />}
+        </button>
+      </div>
     </div>
   );
 };
+
 CardDon.defaultProps = {
   don: {
     url_image: "/assets/default.jpg",
@@ -68,4 +96,5 @@ CardDon.defaultProps = {
     ville: "Lieu inconnu",
   }
 };
+
 export default CardDon;

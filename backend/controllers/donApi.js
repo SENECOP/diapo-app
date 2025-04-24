@@ -9,7 +9,7 @@ const createDon = async (req, res) => {
     const newDon = new Don({
       titre,
       description,
-      categorie,
+      categorie: categorie?.toLowerCase(),
       ville_don,
       url_image: imageFilename,
       user: req.user?.id 
@@ -27,15 +27,16 @@ const createDon = async (req, res) => {
 
 const getDons = async (req, res) => {
   const { categorie } = req.query;
-  const dons = await Don.find().sort({ createdAt: -1 });
-
 
   try {
     let dons;
+
     if (categorie) {
-      dons = await Don.find({ categorie: categorie });
+      dons = await Don.find({
+        categorie: { $regex: new RegExp(`^${categorie}$`, 'i') } // insensitive case
+      }).sort({ createdAt: -1 });
     } else {
-      dons = await Don.find(); 
+      dons = await Don.find().sort({ createdAt: -1 });
     }
 
     res.status(200).json(dons);
@@ -43,6 +44,8 @@ const getDons = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
+
+
 
 const getDonById = async (req, res) => {
   try {
