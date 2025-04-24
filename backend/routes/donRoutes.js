@@ -59,6 +59,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+
 router.get('/:id', async (req, res) => {
   try {
     const don = await Don.findById(req.params.id);
@@ -72,18 +73,6 @@ router.get('/:id', async (req, res) => {
 });
 
 
-// Exemple route "nouveautés"
-router.get('/nouveautes', async (req, res) => {
-  try {
-    const derniersDons = await Don.find()
-      .sort({ createdAt: -1 })
-      .limit(10); // par exemple les 10 derniers
-
-    res.status(200).json(derniersDons);
-  } catch (error) {
-    res.status(500).json({ message: "Erreur serveur" });
-  }
-});
 
 
 // ✅ Modifier un don

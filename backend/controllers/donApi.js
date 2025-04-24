@@ -61,10 +61,6 @@ const getDonById = async (req, res) => {
   }
 };
 
-const nouveautes = allDons
-  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  .slice(0, 10);
-
 
 const updateDon = async (req, res) => {
   try {
