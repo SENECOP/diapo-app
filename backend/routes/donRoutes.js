@@ -9,6 +9,7 @@ const {
   updateDon,
   deleteDon,
   archiveDon,
+  unarchiveDon
 } = require('../controllers/donApi');
 
 // Configuration Multer
@@ -57,6 +58,7 @@ router.get('/', async (req, res) => {
 // ✅ Archiver un don (via le contrôleur `archiveDon`)
 router.put('/:id/archives', verifyToken, archiveDon);
 
+router.put('/:id/desarchiver', verifyToken, unarchiveDon);
 
 // ✅ Récupérer les dons archivés
 router.get('/archives', async (req, res) => {

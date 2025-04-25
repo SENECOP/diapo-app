@@ -122,6 +122,22 @@ const archiveDon = async (req, res) => {
   }
 };
 
+const unarchiveDon = async (req, res) => {
+  try {
+    const don = await Don.findById(req.params.id);
+    if (!don) {
+      return res.status(404).json({ message: "Don non trouvé" });
+    }
+
+    don.archived = false;
+    await don.save();
+
+    res.status(200).json({ message: "Don désarchivé avec succès", don });
+  } catch (error) {
+    console.error("Erreur lors du désarchivage :", error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 
 module.exports = {
@@ -130,5 +146,6 @@ module.exports = {
   getDonById,
   updateDon,
   deleteDon,
-  archiveDon
+  archiveDon,
+  unarchiveDon
 };

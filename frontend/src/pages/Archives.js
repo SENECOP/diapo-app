@@ -2,10 +2,31 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { useNavigate } from "react-router-dom"; // ✅ import navigation
 
 const Archives = () => {
   const [archives, setArchives] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // ✅ initialise useNavigate
+
+  const handleUnarchive = async (id) => {
+    if (window.confirm("Voulez-vous désarchiver ce don ?")) {
+      try {
+        await axios.put(`https://diapo-app.onrender.com/api/dons/${id}/desarchiver`, {}, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+
+        alert("Don désarchivé avec succès !");
+        // ✅ redirection vers la liste des dons
+        navigate("/ListeDons");
+      } catch (err) {
+        console.error("Erreur lors du désarchivage :", err);
+        alert("Échec du désarchivage");
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchArchives = async () => {
@@ -17,7 +38,6 @@ const Archives = () => {
       } finally {
         setLoading(false);
       }
-      
     };
 
     fetchArchives();
@@ -35,10 +55,25 @@ const Archives = () => {
         ) : (
           <div className="space-y-4">
             {archives.map((don) => (
-              <div key={don._id} className="border p-4 rounded-lg shadow-sm">
-                <h3 className="font-semibold text-lg">{don.titre}</h3>
-                <p className="text-sm text-gray-600">{don.description}</p>
-                <p className="text-sm text-gray-500 italic">{don.ville_don}</p>
+              <div key={don._id} className="border p-4 rounded-lg shadow-sm flex items-start space-x-4">
+                {don.url_image && (
+                  <img
+                    src={`https://diapo-app.onrender.com/${don.url_image}`}
+                    alt={don.titre || 'Image du don'}
+                    className="w-28 h-28 object-cover rounded-lg"
+                  />
+                )}
+                <div>
+                  <h3 className="font-semibold text-lg">{don.titre}</h3>
+                  <p className="text-sm text-gray-600">{don.description}</p>
+                  <p className="text-sm text-gray-500 italic">{don.ville_don}</p>
+                  <button
+                    onClick={() => handleUnarchive(don._id)}
+                    className="mt-3 inline-block px-4 py-1 bg-blue-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                  >
+                    Désarchiver
+                  </button>
+                </div>
               </div>
             ))}
           </div>
