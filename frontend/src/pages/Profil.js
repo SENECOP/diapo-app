@@ -1,15 +1,18 @@
 import React, { useContext, useRef, useState, useEffect } from 'react';
 import { UserContext } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
+import Header from '../components/Header'; // À créer si ce n’est pas encore fait
 import { FaEdit } from 'react-icons/fa';
+import { MdCameraAlt } from 'react-icons/md';
 
 const Profil = () => {
   const { user, logout, updateUser } = useContext(UserContext);
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
     if (user) {
@@ -21,9 +24,6 @@ const Profil = () => {
       });
     }
   }, [user]);
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ ...user });
 
   const handleLogout = () => {
     logout();
@@ -38,7 +38,6 @@ const Profil = () => {
     const file = e.target.files[0];
     if (file) {
       console.log("Photo sélectionnée :", file);
-      // Traitement backend
     }
   };
 
@@ -56,108 +55,97 @@ const Profil = () => {
   };
 
   return (
-    <div>
+    <div className="bg-gray-100 min-h-screen flex flex-col">
+      <Header />
 
+      {/* Bande bleue avec photo et titre */}
+      <div className="bg-blue-700 text-white px-10 py-16 relative flex items-center gap-6">
+        <div className="absolute left-10 bottom-[-40px]">
+        <div className="relative">
+          <img
+            src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.pseudo)}`}
+            alt="avatar"
+            className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-lg"
+          />
 
-        <div className="bg-blue-700 text-white px-10 py-24 relative">
-          <Link
-            to="/"
-            className="absolute left-10 top-1/2 transform -translate-y-1/2 text-white text-2xl hover:text-gray-200 transition-transform hover:-translate-x-1"
+          {/* Bouton caméra */}
+          <button
+            onClick={handlePhotoClick}
+            className="absolute bottom-0 left-0 bg-white border border-gray-300 p-2 rounded-full shadow hover:bg-gray-100"
+            title="Changer la photo"
           >
-            ←
-          </Link>
-          <h1 className="text-3xl font-semibold text-center">Profil</h1>
+            <MdCameraAlt className="text-black w-4 h-4" />
+          </button>
+
+          {/* Bouton modifier */}
+          <button
+            onClick={handleEditToggle}
+            className="absolute bottom-0 right-0 bg-yellow-400 p-2 rounded-full shadow hover:bg-yellow-500"
+            title="Modifier profil"
+          >
+            <FaEdit className="text-white w-4 h-4" />
+          </button>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            className="hidden"
+          />
         </div>
-      <div className="flex justify-center mt-[-40px]">
-        <div className="bg-white shadow-lg rounded-md p-8 w-full max-w-2xl relative">
+        </div>
+        <h1 className="text-3xl font-semibold">Profile</h1>
+      </div>
 
-          {user ? (
-            <>
-              {/* Photo + bouton modifier */}
-              <div className="flex justify-center mb-4 relative">
-                <img
-                  src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.pseudo)}`}
-                  alt="Avatar utilisateur"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-white shadow"
-                />
-                
-                {/* Icône caméra pour changer photo */}
-                <button
-                  onClick={handlePhotoClick}
-                  className="absolute bottom-0 right-[42%] bg-yellow-400 rounded-full p-2 hover:bg-yellow-500"
-                  title="Changer la photo"
-                >
-                  <img src="/camera-icon.png" alt="Avatar" className="w-5 h-5" />
-                </button>
+      {/* Formulaire centré */}
+      <div className="flex justify-center px-4 mt-6">
+      <div className="bg-white shadow-lg rounded-md p-8 w-full max-w-2xl relative mt-10">
+        <h2 className="text-xl font-semibold border-b border-gray-300 pb-2 mb-6">Info personnel</h2>
+
+          <form className="space-y-4">
+            {['pseudo', 'email', 'numero_telephone', 'ville_residence'].map((field, index) => (
+              <div key={index}>
+                <label className="block text-sm text-gray-600 capitalize mb-1">
+                  {field.replace('_', ' ')}
+                </label>
                 <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  className="hidden"
+                  type={field === 'email' ? 'email' : 'text'}
+                  value={formData[field] || ''}
+                  onChange={(e) => handleChange(field, e.target.value)}
+                  disabled={!isEditing}
+                  className={`w-full border px-4 py-2 rounded-md ${isEditing ? 'bg-white border-blue-400' : 'bg-gray-100 border-gray-300'}`}
                 />
-
-                {/* Petit bouton modifier */}
-                {!isEditing && (
-                  <button
-                    onClick={handleEditToggle}
-                    className="absolute top-0 right-0 text-gray-800 p-6"
-                    title="Modifier profil"
-                  >
-                    <FaEdit size={18} />
-                  </button>
-                )}
               </div>
+            ))}
+          </form>
 
-              {/* Formulaire d'infos */}
-              <form className="space-y-4">
-                {['pseudo', 'email', 'numero_telephone', 'ville_residence'].map((field, index) => (
-                  <div key={index}>
-                    <label className="text-sm text-gray-600 capitalize">
-                      {field.replace('_', ' ')}
-                    </label>
-                    <input
-                      type={field === 'email' ? 'email' : 'text'}
-                      value={formData[field] || ''}
-                      onChange={(e) => handleChange(field, e.target.value)}
-                      disabled={!isEditing}
-                      className={`w-full border px-4 py-2 rounded-md ${isEditing ? 'bg-white border-blue-400' : 'bg-gray-100 border-gray-300'}`}
-                    />
-                  </div>
-                ))}
-              </form>
-
-              {/* Bouton enregistrer */}
-              {isEditing && (
-                <div className="text-center mt-6">
-                  <button
-                    onClick={handleSave}
-                    className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
-                  >
-                    Enregistrer
-                  </button>
-                </div>
-              )}
-
-              {/* Bouton déconnexion */}
-              <div className="text-center mt-4">
-                <button
-                  onClick={handleLogout}
-                  className="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-400 transition"
-                >
-                  Se déconnecter
-                </button>
-              </div>
-            </>
-          ) : (
-            <p className="text-red-500 text-center">
-              Vous devez être connecté(e) pour accéder à votre profil.
-            </p>
+          {/* Boutons */}
+          {isEditing && (
+            <div className="text-center mt-6">
+              <button
+                onClick={handleSave}
+                className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
+              >
+                Enregistrer
+              </button>
+            </div>
           )}
+
+          <div className="text-center mt-4">
+            <button
+              onClick={handleLogout}
+              className="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-400 transition"
+            >
+              Se déconnecter
+            </button>
+          </div>
         </div>
       </div>
 
-      <Footer />
+      <div className="mt-auto">
+        <Footer />
+      </div>
     </div>
   );
 };

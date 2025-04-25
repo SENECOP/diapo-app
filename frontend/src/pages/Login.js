@@ -52,6 +52,7 @@ const Login = () => {
       };
 
       login(completeUser);
+      localStorage.setItem("token", userData.token);
       localStorage.setItem('user', JSON.stringify(completeUser));
       localStorage.setItem("userId", userData.user._id);
 

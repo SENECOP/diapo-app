@@ -32,8 +32,6 @@ router.post('/', verifyToken, upload.single('url_image'), async (req, res) => {
     // Gérer l'image téléchargée
     const imagePath = req.file ? `uploads/${req.file.filename}` : null;
 
-    const userId = req.user._id;
-
     // Créer le don dans la base de données
     const newDon = await Don.create({
       titre,
@@ -41,7 +39,7 @@ router.post('/', verifyToken, upload.single('url_image'), async (req, res) => {
       description,
       ville_don,
       url_image: imagePath,
-      user:userId
+      user,
     });
 
     // Retourner la réponse
@@ -60,7 +58,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
-
 
 router.get('/:id', async (req, res) => {
   try {

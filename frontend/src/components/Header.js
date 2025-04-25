@@ -2,11 +2,14 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import { UserContext } from "../context/UserContext";
 import { Link } from "react-router-dom";
 import { FiFilter, FiX, FiBell, FiMail } from "react-icons/fi";
+import { IoChevronDown, IoChevronUp } from "react-icons/io5";
 
 const Header = () => {
   const { user } = useContext(UserContext);
 
   const [showFilters, setShowFilters] = useState(false);
+  const [openCategory, setOpenCategory] = useState(false);
+  const [openCity, setOpenCity] = useState(false);
   const [searchCategory, setSearchCategory] = useState('');
   const [searchCity, setSearchCity] = useState('');
   const filterMenuRef = useRef(null);
@@ -18,6 +21,8 @@ const Header = () => {
     const handleClickOutside = (event) => {
       if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
         setShowFilters(false);
+        setOpenCategory(false);
+        setOpenCity(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -25,9 +30,6 @@ const Header = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  const handleSearchCategory = (event) => setSearchCategory(event.target.value);
-  const handleSearchCity = (event) => setSearchCity(event.target.value);
 
   const getInitials = (name) => {
     if (!name) return "XX";
@@ -56,37 +58,65 @@ const Header = () => {
         </button>
 
         {showFilters && (
-          <div ref={filterMenuRef} className="absolute right-0 mt-2 w-60 bg-white shadow-md border rounded p-4 z-10">
-            {/* Catégories */}
-            <div className="mb-4">
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-              <select
-                id="category"
-                value={searchCategory}
-                onChange={handleSearchCategory}
-                className="border px-3 py-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
+          <div ref={filterMenuRef} className="absolute right-0 mt-2 w-64 bg-white shadow-md border rounded p-4 z-10">
+            {/* Catégorie */}
+            <div className="mb-2">
+              <button
+                onClick={() => {
+                  setOpenCategory(!openCategory);
+                  setOpenCity(false);
+                }}
+                className="w-full text-left flex items-center justify-between text-sm font-medium text-gray-700 py-2"
               >
-                <option value="">Toutes les catégories</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+                Catégorie
+                {openCategory ? <IoChevronUp /> : <IoChevronDown />}
+              </button>
+              {openCategory && (
+                <ul className="mt-1 ml-2 text-sm">
+                  {categories.map((cat) => (
+                    <li
+                      key={cat}
+                      onClick={() => {
+                        setSearchCategory(cat);
+                        setOpenCategory(false);
+                      }}
+                      className="cursor-pointer py-1 hover:text-blue-600"
+                    >
+                      {cat}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
-            {/* Villes */}
-            <div className="mb-4">
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
-              <select
-                id="city"
-                value={searchCity}
-                onChange={handleSearchCity}
-                className="border px-3 py-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
+            {/* Ville */}
+            <div className="mb-2">
+              <button
+                onClick={() => {
+                  setOpenCity(!openCity);
+                  setOpenCategory(false);
+                }}
+                className="w-full text-left flex items-center justify-between text-sm font-medium text-gray-700 py-2"
               >
-                <option value="">Toutes les villes</option>
-                {villes.map((ville) => (
-                  <option key={ville} value={ville}>{ville}</option>
-                ))}
-              </select>
+                Ville
+                {openCity ? <IoChevronUp /> : <IoChevronDown />}
+              </button>
+              {openCity && (
+                <ul className="mt-1 ml-2 text-sm">
+                  {villes.map((ville) => (
+                    <li
+                      key={ville}
+                      onClick={() => {
+                        setSearchCity(ville);
+                        setOpenCity(false);
+                      }}
+                      className="cursor-pointer py-1 hover:text-blue-600"
+                    >
+                      {ville}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <button onClick={() => setShowFilters(false)} className="absolute top-2 right-2 p-2 rounded-full text-gray-600 hover:text-gray-800">
@@ -98,7 +128,7 @@ const Header = () => {
 
       {/* Boutons droite */}
       <div className="flex items-center gap-4">
-       <Link to={user ? "/CreerDon" : "/login"}>
+        <Link to={user ? "/creer-don" : "/login"}>
           <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
             Faire un don
           </button>
@@ -112,7 +142,7 @@ const Header = () => {
           <FiMail size={22} />
         </button>
 
-        {/* Utilisateur connecté ou liens */}
+        {/* Utilisateur */}
         {user && user.pseudo ? (
           <Link to="/profil" className="flex items-center gap-2 cursor-pointer">
             {user.avatar ? (
