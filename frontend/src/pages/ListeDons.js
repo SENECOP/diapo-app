@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { FiMenu, FiX, FiMoreVertical } from 'react-icons/fi';
+import { FiMenu, FiX, FiMoreVertical, FiEdit, FiTrash2, FiArchive } from 'react-icons/fi';
 import { UserContext } from '../context/UserContext';
 
 const ListeDons = () => {
@@ -62,6 +62,24 @@ const ListeDons = () => {
     }
   };
 
+  const handleArchive = async (id) => {
+    console.log("ID du don à archiver :", id);
+    if (window.confirm("Voulez-vous archiver ce don ?")) {
+      try {
+        await axios.put(`https://diapo-app.onrender.com/api/dons/${id}/archives`, {}, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        alert('Don archivé avec succès');
+        setDons((prev) => prev.filter((don) => don._id !== id)); // Supposons que l'archivage implique de supprimer le don de la liste actuelle
+      } catch (error) {
+        console.error('Erreur lors de l\'archivage :', error);
+        alert('Erreur lors de l\'archivage');
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-white text-black">
       <Header />
@@ -97,7 +115,13 @@ const ListeDons = () => {
         {/* Contenu principal */}
         <main className="flex-1 -mt-5 ml-6 mr-10">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-semibold mb-4">Liste des Dons</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold">Liste des Dons</h2>
+            <Link to="/archives" className="text-blue-600 hover:text-blue-800 flex items-center space-x-1">
+              <FiArchive size={20} />
+              <span className="text-sm font-medium">Archives</span>
+            </Link>
+          </div>
 
             {loading ? (
               <div className="text-center py-10 text-blue-600 font-semibold animate-pulse">Chargement des dons...</div>
@@ -137,15 +161,24 @@ const ListeDons = () => {
                             <div className="absolute right-0 top-6 bg-white border shadow-md rounded-md z-10">
                               <button
                                 onClick={() => handleEdit(don._id)}
-                                className="block px-4 py-2 hover:bg-gray-100 w-full text-left"
+                                className="px-4 py-2 hover:bg-gray-100 w-full text-left flex items-center space-x-2"
                               >
-                                Modifier
+                                <FiEdit />
+                                <span>Modifier</span>
                               </button>
                               <button
                                 onClick={() => handleDelete(don._id)}
-                                className="block px-4 py-2 hover:bg-gray-100 w-full text-left text-red-600"
+                                className=" px-4 py-2 hover:bg-gray-100 w-full text-left text-red-600 flex items-center space-x-2"
                               >
-                                Supprimer
+                                <FiTrash2 />
+                                <span>Supprimer</span>
+                              </button>
+                              <button
+                                onClick={() => handleArchive(don._id)}
+                                className=" px-4 py-2 hover:bg-gray-100 w-full text-left text-yellow-600 flex items-center space-x-2"
+                              >
+                                <FiArchive />
+                                <span>Archiver</span>
                               </button>
                             </div>
                           )}

@@ -19,7 +19,7 @@ body {
 
 h2 {
   font-size: 2rem;
-  color: #4CAF50;
+  color: #000000;
   margin-bottom: 20px;
 }
 
@@ -48,7 +48,7 @@ button {
 }
 
 button:hover {
-  background-color: #45a049;
+  background-color: #d3d3d3;
 }
 
 /* Gestion des erreurs */

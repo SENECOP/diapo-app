@@ -8,10 +8,14 @@ import ListeDons from './pages/ListeDons';
 import './index.css'; 
 import "./styles/tailwind.css";
 import DonCategorie from './pages/DonCategorie';
-import DonDetails from './pages/DonDetails';
 import Dashboard from './pages/Dashboard';
 import { UserProvider } from './context/UserContext';
 import Profil from "./pages/Profil";
+import Message from './pages/Messages';
+import Archives from './pages/Archives';
+
+
+
 
 
 
@@ -27,9 +31,12 @@ const App = () => {
           <Route path="/creer-don/:id" element={<CreerDon />} />
           <Route path="/ListeDons" element={<ListeDons />} />
           <Route path="/dons/:categorie" element={<DonCategorie />} />
-          <Route path="/don/:id" element={<DonDetails />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profil" element={<Profil />} />
+          <Route path="/message" element={<Message />} />
+          <Route path="/archives" element={<Archives />} />
+
+
 
       </Routes>
         </Router>

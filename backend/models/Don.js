@@ -7,7 +7,12 @@ const donSchema = new mongoose.Schema(
     categorie: { type: String, required: true },
     url_image: { type: String, required: true },
     ville_don: { type: String, required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // 👈 ceci est essentiel
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
+    archived: {
+      type: Boolean,
+      default: false
+    },
+    
 
     statut: { 
       type: String, 
@@ -17,7 +22,7 @@ const donSchema = new mongoose.Schema(
   },
   {
     timestamps: true 
-  } 
+  }
 
 );
 

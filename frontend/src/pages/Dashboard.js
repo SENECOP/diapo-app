@@ -39,19 +39,6 @@ const Dashboard = () => {
   return (
     <div>
       <Header />
-
-      {user ? (
-        <div className="text-center my-4">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-gray-700">Bienvenue, {user.pseudo}</p>
-        </div>
-      ) : (
-        <div className="text-center my-4">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          
-        </div>
-      )}
-
       <section className="flex flex-col md:flex-row justify-between items-center bg-white p-10">
         <div className="md:w-1/2 mb-6 md:mb-0">
           <h1 className="text-3xl font-bold mb-4">

@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { FaMapMarkerAlt, FaClock, FaBookmark, FaRegBookmark } from "react-icons/fa";
+import {
+  FaMapMarkerAlt,
+  FaClock,
+  FaBookmark,
+  FaRegBookmark,
+} from "react-icons/fa";
 import { GiSofa } from "react-icons/gi";
 import { useNavigate } from "react-router-dom";
 
@@ -9,17 +14,17 @@ const formatRelativeTime = (dateString) => {
   const diff = Math.floor((now - date) / 1000);
   if (isNaN(diff)) return "Date invalide";
 
-  if (diff < 60) return `Il y a ${diff} seconde${diff > 1 ? 's' : ''}`;
+  if (diff < 60) return `Il y a ${diff} seconde${diff > 1 ? "s" : ""}`;
   if (diff < 3600) {
     const minutes = Math.floor(diff / 60);
-    return `Il y a ${minutes} minute${minutes > 1 ? 's' : ''}`;
+    return `Il y a ${minutes} minute${minutes > 1 ? "s" : ""}`;
   }
   if (diff < 86400) {
     const hours = Math.floor(diff / 3600);
-    return `Il y a ${hours} heure${hours > 1 ? 's' : ''}`;
+    return `Il y a ${hours} heure${hours > 1 ? "s" : ""}`;
   }
   const days = Math.floor(diff / 86400);
-  return `Il y a ${days} jour${days > 1 ? 's' : ''}`;
+  return `Il y a ${days} jour${days > 1 ? "s" : ""}`;
 };
 
 const CardDon = ({ don }) => {
@@ -33,14 +38,14 @@ const CardDon = ({ don }) => {
     setFavori((prev) => !prev);
   };
 
-  const handleReserveClick = (e) => {
-    e.stopPropagation();
-    navigate(`/reserve/${don._id}`);
+  const handleTake = (e) => {
+    e.stopPropagation(); // Pour éviter que le clic déclenche la redirection vers les détails
+    localStorage.setItem("AlerteReservation", "true");
+    navigate("/message");
   };
 
   return (
     <div
-      onClick={() => navigate(`/don/${don._id}`)}
       className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"
     >
       <img
@@ -48,9 +53,13 @@ const CardDon = ({ don }) => {
         alt={don.titre || " "}
         className="w-full h-32 object-cover rounded"
       />
-      <h3 className="font-semibold text-lg mt-2">{don.titre || "Titre inconnu"}</h3>
+      <h3 className="font-semibold text-lg mt-2">
+        {don.titre || "Titre inconnu"}
+      </h3>
       <p className="text-sm text-gray-500">{don.categorie || "Catégorie inconnue"}</p>
-      <p className="text-sm text-gray-600">{don.description || "Pas de description"}</p>
+      <p className="text-sm text-gray-600">
+        {don.description || "Pas de description"}
+      </p>
 
       <div className="flex flex-col gap-1 mt-2 text-sm text-gray-600">
         <div className="flex items-center gap-2">
@@ -70,14 +79,14 @@ const CardDon = ({ don }) => {
       {/* Boutons en bas */}
       <div className="mt-4 flex justify-between items-center gap-2">
         <button
-          onClick={handleReserveClick}
+          onClick={handleTake}
           className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
         >
           Je prends
         </button>
         <button
           onClick={handleFavoriToggle}
-          className="text-gray-400 text-xl p-2 hover:text-gray-800 transition cursor-pointer bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent"
+          className="text-gray-400 text-xl p-2 hover:text-gray-800 transition cursor-pointer"
           title="Ajouter aux favoris"
         >
           {favori ? <FaBookmark /> : <FaRegBookmark />}
@@ -87,14 +96,5 @@ const CardDon = ({ don }) => {
   );
 };
 
-CardDon.defaultProps = {
-  don: {
-    url_image: "/assets/default.jpg",
-    titre: "Don sans titre",
-    description: "Pas de description",
-    categorie: "Inconnue",
-    ville: "Lieu inconnu",
-  }
-};
 
 export default CardDon;
