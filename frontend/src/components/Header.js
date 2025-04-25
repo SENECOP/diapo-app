@@ -1,17 +1,15 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import { UserContext } from "../context/UserContext";
 import { Link } from "react-router-dom";
-import { FiFilter, FiX, FiBell, FiMail } from "react-icons/fi";
-import { IoChevronDown, IoChevronUp } from "react-icons/io5";
+import { FiFilter, FiX, FiBell, FiMail, FiChevronDown } from "react-icons/fi";
 
 const Header = () => {
   const { user } = useContext(UserContext);
 
   const [showFilters, setShowFilters] = useState(false);
-  const [openCategory, setOpenCategory] = useState(false);
-  const [openCity, setOpenCity] = useState(false);
   const [searchCategory, setSearchCategory] = useState('');
   const [searchCity, setSearchCity] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState({ category: false, city: false });
   const filterMenuRef = useRef(null);
 
   const categories = ["Technologie", "Vêtements", "Électroménager", "Livres"];
@@ -21,15 +19,22 @@ const Header = () => {
     const handleClickOutside = (event) => {
       if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
         setShowFilters(false);
-        setOpenCategory(false);
-        setOpenCity(false);
+        setDropdownOpen({ category: false, city: false });
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const toggleDropdown = (type) => {
+    setDropdownOpen(prev => ({ ...prev, [type]: !prev[type] }));
+  };
+
+  const handleSelection = (type, value) => {
+    if (type === 'category') setSearchCategory(value);
+    else setSearchCity(value);
+    toggleDropdown(type);
+  };
 
   const getInitials = (name) => {
     if (!name) return "XX";
@@ -41,12 +46,10 @@ const Header = () => {
 
   return (
     <header className="bg-white shadow p-3 flex items-center justify-between">
-      {/* Logo */}
       <div className="flex items-center gap-4">
         <img src="/logo_diapo.png" alt="Diapo Logo" className="h-16 w-auto" />
       </div>
 
-      {/* Barre de recherche et filtre */}
       <div className="flex items-center gap-2 flex-1 max-w-3xl mx-4 relative">
         <input
           type="text"
@@ -59,28 +62,27 @@ const Header = () => {
 
         {showFilters && (
           <div ref={filterMenuRef} className="absolute right-0 mt-2 w-64 bg-white shadow-md border rounded p-4 z-10">
-            {/* Catégorie */}
-            <div className="mb-2">
+            {/* Catégorie dropdown */}
+            <div className="mb-4 relative">
               <button
-                onClick={() => {
-                  setOpenCategory(!openCategory);
-                  setOpenCity(false);
-                }}
-                className="w-full text-left flex items-center justify-between text-sm font-medium text-gray-700 py-2"
+                onClick={() => toggleDropdown('category')}
+                className="w-full flex justify-between items-center border px-4 py-2 rounded text-gray-700 hover:bg-gray-50"
               >
-                Catégorie
-                {openCategory ? <IoChevronUp /> : <IoChevronDown />}
+                {searchCategory || "Catégorie"} <FiChevronDown />
               </button>
-              {openCategory && (
-                <ul className="mt-1 ml-2 text-sm">
+              {dropdownOpen.category && (
+                <ul className="absolute left-0 w-full mt-1 bg-white border rounded shadow z-20">
+                  <li
+                    onClick={() => handleSelection('category', '')}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    Toutes les catégories
+                  </li>
                   {categories.map((cat) => (
                     <li
                       key={cat}
-                      onClick={() => {
-                        setSearchCategory(cat);
-                        setOpenCategory(false);
-                      }}
-                      className="cursor-pointer py-1 hover:text-blue-600"
+                      onClick={() => handleSelection('category', cat)}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                     >
                       {cat}
                     </li>
@@ -89,28 +91,27 @@ const Header = () => {
               )}
             </div>
 
-            {/* Ville */}
-            <div className="mb-2">
+            {/* Ville dropdown */}
+            <div className="mb-4 relative">
               <button
-                onClick={() => {
-                  setOpenCity(!openCity);
-                  setOpenCategory(false);
-                }}
-                className="w-full text-left flex items-center justify-between text-sm font-medium text-gray-700 py-2"
+                onClick={() => toggleDropdown('city')}
+                className="w-full flex justify-between items-center border px-4 py-2 rounded text-gray-700 hover:bg-gray-50"
               >
-                Ville
-                {openCity ? <IoChevronUp /> : <IoChevronDown />}
+                {searchCity || "Ville"} <FiChevronDown />
               </button>
-              {openCity && (
-                <ul className="mt-1 ml-2 text-sm">
+              {dropdownOpen.city && (
+                <ul className="absolute left-0 w-full mt-1 bg-white border rounded shadow z-20">
+                  <li
+                    onClick={() => handleSelection('city', '')}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    Toutes les villes
+                  </li>
                   {villes.map((ville) => (
                     <li
                       key={ville}
-                      onClick={() => {
-                        setSearchCity(ville);
-                        setOpenCity(false);
-                      }}
-                      className="cursor-pointer py-1 hover:text-blue-600"
+                      onClick={() => handleSelection('city', ville)}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                     >
                       {ville}
                     </li>
@@ -126,15 +127,13 @@ const Header = () => {
         )}
       </div>
 
-      {/* Boutons droite */}
       <div className="flex items-center gap-4">
-        <Link to={user ? "/creer-don" : "/login"}>
+        <Link to={user ? "/CreerDon" : "/login"}>
           <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
             Faire un don
           </button>
         </Link>
 
-        {/* Notifications */}
         <button className="relative p-2 text-gray-600 hover:text-blue-600">
           <FiBell size={22} />
         </button>
@@ -142,7 +141,6 @@ const Header = () => {
           <FiMail size={22} />
         </button>
 
-        {/* Utilisateur */}
         {user && user.pseudo ? (
           <Link to="/profil" className="flex items-center gap-2 cursor-pointer">
             {user.avatar ? (
