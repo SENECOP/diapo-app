@@ -125,14 +125,7 @@ const Login = () => {
           </p>
         </form>
 
-        {user && (
-          <button
-            onClick={handleLogout}
-            className="mt-4 text-sm text-red-500 underline"
-          >
-            Se déconnecter
-          </button>
-        )}
+
       </div>
     </div>
   );
