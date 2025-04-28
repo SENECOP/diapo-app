@@ -134,12 +134,13 @@ const Header = () => {
           </button>
         </Link>
 
-        <button className="relative p-2 text-gray-600 hover:text-blue-600">
+        <Link to="/notifications" className="relative p-2 text-gray-600 hover:text-blue-600">
           <FiBell size={22} />
-        </button>
-        <button className="relative p-2 text-gray-600 hover:text-blue-600">
+        </Link>
+
+        <Link to="/messages" className="relative p-2 text-gray-600 hover:text-blue-600">
           <FiMail size={22} />
-        </button>
+        </Link>
 
         {user && user.pseudo ? (
           <Link to="/profil" className="flex items-center gap-2 cursor-pointer">

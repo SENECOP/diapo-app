@@ -168,14 +168,14 @@ const ListeDons = () => {
                               </button>
                               <button
                                 onClick={() => handleDelete(don._id)}
-                                className=" px-4 py-2 hover:bg-gray-100 w-full text-left text-red-600 flex items-center space-x-2"
+                                className=" px-4 py-2 hover:bg-gray-100 w-full text-left text-gray-900 flex items-center space-x-2"
                               >
                                 <FiTrash2 />
                                 <span>Supprimer</span>
                               </button>
                               <button
                                 onClick={() => handleArchive(don._id)}
-                                className=" px-4 py-2 hover:bg-gray-100 w-full text-left text-yellow-600 flex items-center space-x-2"
+                                className=" px-4 py-2 hover:bg-gray-100 w-full text-left text-gray-900 flex items-center space-x-2"
                               >
                                 <FiArchive />
                                 <span>Archiver</span>
