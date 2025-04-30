@@ -5,6 +5,9 @@ const Don = require('../models/Don');
 const router = express.Router();
 const verifyToken = require('../middlewares/authMiddleware');
 const {
+  getDons,
+  updateDon,
+  deleteDon,
   archiveDon,
   unarchiveDon
 } = require('../controllers/donApi');
@@ -23,7 +26,7 @@ const upload = multer({ storage });
 // ✅ Créer un don
 router.post('/', verifyToken, upload.single('url_image'), async (req, res) => {
   try {
-    const { titre, categorie, description, ville_don, createur } = req.body;
+    const { titre, categorie, description, ville_don, user} = req.body;
     const imagePath = req.file ? `uploads/${req.file.filename}` : null;
 
     const newDon = await Don.create({
@@ -32,7 +35,7 @@ router.post('/', verifyToken, upload.single('url_image'), async (req, res) => {
       description,
       ville_don,
       url_image: imagePath,
-      createur: req.user._id, 
+      user,
       
     });
 
@@ -98,7 +101,7 @@ router.put('/:id', upload.single('url_image'), async (req, res) => {
     don.description = description || don.description;
     don.ville_don = ville_don || don.ville_don;
     don.url_image = imagePath || don.url_image;
-    don.user = user || don.user;
+    don.createur = req.user._id || don.createur;
 
     await don.save();
     res.status(200).json(don);

@@ -12,8 +12,8 @@ const createDon = async (req, res) => {
       categorie: categorie?.toLowerCase(),
       ville_don,
       url_image: imageFilename,
-      user: req.user?.id,
-      createur: req.user._id
+      user: req.user?._id,
+
       
 
     });
