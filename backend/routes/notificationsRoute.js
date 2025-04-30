@@ -10,6 +10,11 @@ router.post('/', async (req, res) => {
 
   try {
     const { emetteur, destinataire, message, don } = req.body;
+    
+    if (!emetteur || !destinataire || !message || !don) {
+        console.error("Champs manquants :", { emetteur, destinataire, message, don });
+        return res.status(400).json({ message: "Champs requis manquants." });
+      }
 
     const nouvelleNotif = new Notification({
       emetteur,

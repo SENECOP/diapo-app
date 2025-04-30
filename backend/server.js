@@ -5,7 +5,7 @@ const cors = require("cors");
 const connectDB = require("./config/db.js"); 
 const authRoutes = require('./routes/authRoutes'); 
 const donRoutes = require('./routes/donRoutes');
-const notificationRoutes = require('./routes/notificationsRoute');
+const notificationsRoutes = require('./routes/notificationsRoute');
 
 
 const app = express();
@@ -29,7 +29,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/dons', donRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 //app.options('*', cors());

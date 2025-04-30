@@ -41,36 +41,41 @@ const CardDon = ({ don }) => {
   const handleTake = async (e) => {
     e.stopPropagation();
 
-    // 1. Vérifier si l'utilisateur est connecté
-    const currentUser = JSON.parse(localStorage.getItem('user'));
+    const currentUser = JSON.parse(localStorage.getItem("user"));
     if (!currentUser) {
-      // Rediriger vers la page de connexion
       navigate("/login");
       return;
     }
 
-    // 2. Marquer une alerte locale
     localStorage.setItem("AlerteReservation", "true");
+    navigate("/message");
 
     try {
-      const donId = don._id; 
+      const donId = don._id;
       const createurId = don.createur?._id;
 
-      // 3. Envoyer la notification
-      await fetch('https://diapo-app.onrender.com/api/notifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          destinataire: createurId,
-          emetteur: currentUser._id,
-          message: `${currentUser.pseudo} a exprimé son intérêt pour votre don.`,
-          don: donId
-        })
+      if (!createurId) {
+        console.warn("Aucun ID de créateur trouvé dans le don.");
+        return;
+      }
+
+      console.log("Notification à envoyer :", {
+        emetteur: currentUser._id,
+        destinataire: createurId,
+        message: `${currentUser.pseudo} a exprimé son intérêt pour votre don.`,
+        don: donId,
       });
 
-      // 4. Rediriger vers la messagerie
-      localStorage.setItem("AlerteReservation", "true");
-      navigate("/message");
+      await fetch("https://diapo-app.onrender.com/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          emetteur: currentUser._id,
+          destinataire: createurId,
+          message: `${currentUser.pseudo} a exprimé son intérêt pour votre don.`,
+          don: donId,
+        }),
+      });
     } catch (error) {
       console.error("Erreur lors de la prise de don ou de la notification :", error);
       alert("Une erreur est survenue.");
@@ -109,7 +114,6 @@ const CardDon = ({ don }) => {
         </div>
       </div>
 
-      {/* Boutons en bas */}
       <div className="mt-4 flex justify-between items-center gap-2">
         <button
           onClick={handleTake}
