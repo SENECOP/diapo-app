@@ -40,6 +40,7 @@ const CardDon = ({ don }) => {
   };
 
   const handleTake = async (e) => {
+    console.log(don);
     e.stopPropagation();
   
     // 1. Marquer une alerte locale pour l'utilisateur qui prend le don
@@ -47,11 +48,12 @@ const CardDon = ({ don }) => {
   
     try {
       // 2. Récupérer les infos nécessaires
-      const currentUser = JSON.parse(localStorage.getItem('user')); // ou via ton contexte auth
-      const donId = don._id; // depuis les props du don dans la carte
-      const createurId = don.user?._id; // assure-toi que le createur est peuplé
+      const currentUser = JSON.parse(localStorage.getItem('user')); 
+      const donId = don._id; 
+      const createurId = don.createur?._id;
   
       // 3. Appeler l'API pour envoyer une notification au créateur du don
+      
       await fetch('https://diapo-app.onrender.com/api/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

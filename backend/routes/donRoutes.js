@@ -5,9 +5,6 @@ const Don = require('../models/Don');
 const router = express.Router();
 const verifyToken = require('../middlewares/authMiddleware');
 const {
-  getDons,
-  updateDon,
-  deleteDon,
   archiveDon,
   unarchiveDon
 } = require('../controllers/donApi');
