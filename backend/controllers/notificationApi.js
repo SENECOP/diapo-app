@@ -28,6 +28,7 @@ exports.createNotification = async (req, res) => {
 
 // 🔽 Obtenir toutes les notifications
 exports.getNotifications = async (req, res) => {
+    
   try {
     const notifications = await Notification.find().populate('don destinataire');
     res.status(200).json(notifications);
