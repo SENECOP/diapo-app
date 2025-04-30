@@ -5,6 +5,8 @@ const cors = require("cors");
 const connectDB = require("./config/db.js"); 
 const authRoutes = require('./routes/authRoutes'); 
 const donRoutes = require('./routes/donRoutes');
+const notificationRoutes = require('./routes/notifications');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +29,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/dons', donRoutes);
+app.use('/api/notifications', notificationRoutes);
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 //app.options('*', cors());
 

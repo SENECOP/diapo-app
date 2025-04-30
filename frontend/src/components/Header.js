@@ -132,7 +132,7 @@ const Header = () => {
           <FiBell size={22} />
         </Link>
 
-        <Link to="/messages" className="relative p-2 text-gray-600 hover:text-blue-600">
+        <Link to="/message" className="relative p-2 text-gray-600 hover:text-blue-600">
           <FiMail size={22} />
         </Link>
 

@@ -5,6 +5,12 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { FiMenu, FiX, FiMoreVertical, FiEdit, FiTrash2, FiArchive } from 'react-icons/fi';
 import { UserContext } from '../context/UserContext';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+
+const MySwal = withReactContent(Swal);
+
+
 
 const ListeDons = () => {
   const [dons, setDons] = useState([]);
@@ -45,23 +51,39 @@ const ListeDons = () => {
     navigate(`/creer-don/${id}`);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Voulez-vous vraiment supprimer ce don ?")) {
-      try {
-        await axios.delete(`https://diapo-app.onrender.com/api/dons/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        alert('Don supprimé avec succès');
-        setDons((prev) => prev.filter((don) => don._id !== id));
-      } catch (error) {
-        console.error('Erreur lors de la suppression :', error);
-        alert('Erreur lors de la suppression');
+  const handleDelete = (id) => {
+    MySwal.fire({
+      title: 'Êtes-vous sûr de vouloir supprimer cet article ?',
+      html: 'Cette action est irréversible. Une fois supprimé, cet article ne pourra pas être récupéré.',
+      showCancelButton: true,
+      confirmButtonText: 'Supprimer',
+      cancelButtonText: 'Annuler',
+      icon: null, // supprime l'icône
+      customClass: {
+        popup: 'custom-swal-popup',
+        confirmButton: 'custom-confirm-button',
+        cancelButton: 'custom-cancel-button',
+        title: 'custom-swal-title',
+        htmlContainer: 'custom-swal-html',
+        actions: 'custom-swal-actions'
+      },
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete(`https://diapo-app.onrender.com/api/dons/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          Swal.fire('Supprimé', 'Don supprimé avec succès.', 'success');
+          setDons((prev) => prev.filter((don) => don._id !== id));
+        } catch (error) {
+          console.error('Erreur lors de la suppression :', error);
+          Swal.fire('Erreur', 'Erreur lors de la suppression', 'error');
+        }
       }
-    }
+    });
   };
-
   const handleArchive = async (id) => {
     console.log("ID du don à archiver :", id);
     if (window.confirm("Voulez-vous archiver ce don ?")) {

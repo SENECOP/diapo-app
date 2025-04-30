@@ -38,11 +38,41 @@ const CardDon = ({ don }) => {
     setFavori((prev) => !prev);
   };
 
-  const handleTake = (e) => {
-    e.stopPropagation(); // Pour éviter que le clic déclenche la redirection vers les détails
+  const handleTake = async (e) => {
+    e.stopPropagation();
+  
+    // 1. Marquer une alerte locale pour l'utilisateur qui prend le don
     localStorage.setItem("AlerteReservation", "true");
-    navigate("/message");
+  
+    try {
+      // 2. Récupérer les infos nécessaires
+      const currentUser = JSON.parse(localStorage.getItem('user')); // ou via ton contexte auth
+      const donId = don._id; // depuis les props du don dans la carte
+      const createurId = don.user?._id; // assure-toi que le createur est peuplé
+  
+      // 3. Appeler l'API pour envoyer une notification au créateur du don
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destinataire: createurId,
+          emetteur: currentUser._id,
+          message: `${currentUser.pseudo} a exprimé son intérêt pour votre don.`,
+          don: donId
+        })
+      });
+  
+      // 4. Rediriger l'utilisateur vers la page de messagerie
+      localStorage.setItem("AlerteReservation", "true");
+
+      navigate("/message");
+  
+    } catch (error) {
+      console.error("Erreur lors de la prise de don ou de la notification :", error);
+      alert("Une erreur est survenue.");
+    }
   };
+  
 
   return (
     <div

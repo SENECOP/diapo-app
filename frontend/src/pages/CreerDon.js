@@ -4,13 +4,13 @@ import Header from '../components/Header';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 
-
 const CreerDon = () => {
 
   const fileInput = useRef(null);
   const navigate = useNavigate();
   const { id } = useParams();
   const [existingImage, setExistingImage] = useState(null);
+  const [user, setUser] = useState('');
 
   const [formData, setFormData] = useState({
     titre: '',
@@ -21,6 +21,11 @@ const CreerDon = () => {
   });
 
   useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));  
+    }
+
     if (id) {
       axios.get(`https://diapo-app.onrender.com/api/dons/${id}`)
         .then((res) => {
@@ -67,21 +72,20 @@ const CreerDon = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const token = localStorage.getItem('token');
-
+  
     const champsManquants = [];
     if (!formData.titre) champsManquants.push("le titre");
     if (!formData.description) champsManquants.push("la description");
     if (!formData.categorie) champsManquants.push("la catégorie");
     if (!formData.ville_don) champsManquants.push("la ville");
-    if (!formData.url_image && !id) champsManquants.push("l'image");
-
+  
     if (champsManquants.length > 0) {
       alert(`Merci de remplir ${champsManquants.join(', ')}.`);
       return;
     }
-
+  
     try {
       const data = new FormData();
       data.append('titre', formData.titre);
@@ -91,7 +95,7 @@ const CreerDon = () => {
       if (formData.url_image) {
         data.append('url_image', formData.url_image);
       }
-
+  
       if (id) { 
         await axios.put(`https://diapo-app.onrender.com/api/dons/${id}`, data, {
           headers: {
@@ -109,7 +113,7 @@ const CreerDon = () => {
         });
         alert("Don créé avec succès !");
       }
-
+  
       navigate("/Listedons");
     } catch (error) {
       console.error("Erreur lors de l'envoi du formulaire :", error);
@@ -121,8 +125,16 @@ const CreerDon = () => {
     <div className="min-h-screen flex flex-col justify-between">
       <Header />
 
-      <div className="bg-blue-800 text-white p-24 min-h-[350px] text-xl font-semibold">
-        {id ? "Modifier votre annonce" : "Bonjour ! Nous allons vous aider à créer votre première annonce."}
+      <div className="bg-blue-800 text-white p-28 min-h-[350px] text-xl font-semibold flex items-center justify-between">
+        
+        <span>
+          {user ? `Bonjour ${user.pseudo},` : "Bonjour !"} Nous allons vous aider à créer votre annonce.
+        </span>
+        <img
+          src="/assets/Charity1.png" 
+          alt=""
+          className="w-52 h-53 ml-auto object-cover rounded-full"
+          />
       </div>
 
       <main className="flex justify-center py-10 mt-[-110px]">

@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { UserContext } from '../context/UserContext';
-
 
 const Login = () => {
   const [pseudo, setPseudo] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { user, login, logout } = useContext(UserContext);
+  const { login } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -18,58 +19,52 @@ const Login = () => {
   }, [location.state]);
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  setError('');
+    e.preventDefault();
+    setError('');
 
-  try {
-    const response = await fetch('https://diapo-app.onrender.com/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      }, 
-      body: JSON.stringify({
-        pseudo,
-        password,
-      }),
-    });
+    try {
+      const response = await fetch('https://diapo-app.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }, 
+        body: JSON.stringify({
+          pseudo,
+          password,
+        }),
+      });
 
-    const userData = await response.json();
-    console.log("Réponse backend:", userData);
+      const userData = await response.json();
+      console.log("Réponse backend:", userData);
 
-    if (response.ok) {
-      if (!userData.user) {
-        setError("Réponse inattendue du serveur. L'utilisateur est manquant.");
-        return;
+      if (response.ok) {
+        if (!userData.user) {
+          setError("Réponse inattendue du serveur. L'utilisateur est manquant.");
+          return;
+        }
+
+        const completeUser = {
+          ...userData.user,
+          pseudo: userData.user.pseudo || pseudo,
+          numero_telephone: userData.user.numero_telephone || '',
+          ville_residence: userData.user.ville_residence || '',
+          avatar: userData.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(pseudo)}`,
+          token: userData.token,
+        };
+
+        login(completeUser);
+        localStorage.setItem("token", userData.token);
+        localStorage.setItem('user', JSON.stringify(completeUser));
+        localStorage.setItem("userId", userData.user._id);
+
+        navigate('/Dashboard');
+      } else {
+        setError(userData.message || 'Erreur lors de la connexion.');
       }
-
-      const completeUser = {
-        ...userData.user,
-        pseudo: userData.user.pseudo || pseudo,
-        numero_telephone: userData.user.numero_telephone || '',
-        ville_residence: userData.user.ville_residence || '',
-        avatar: userData.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(pseudo)}`,
-        token: userData.token,
-      };
-
-      login(completeUser);
-      localStorage.setItem("token", userData.token);
-      localStorage.setItem('user', JSON.stringify(completeUser));
-      localStorage.setItem("userId", userData.user._id);
-
-      navigate('/Dashboard');
-    } else {
-      setError(userData.message || 'Erreur lors de la connexion.');
+    } catch (err) {
+      console.error("Erreur réseau ou serveur :", err);
+      setError('Une erreur est survenue. Veuillez réessayer.');
     }
-  } catch (err) {
-    console.error("Erreur réseau ou serveur :", err);
-    setError('Une erreur est survenue. Veuillez réessayer.');
-  }
-};
-
-
-  const handleLogout = () => {
-    logout(null);
-    localStorage.removeItem('user');
   };
 
   return (
@@ -102,17 +97,29 @@ const Login = () => {
             />
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-gray-700">Mot de passe <span className="text-red-500">*</span></label>
             <input 
-              type="password" 
+              type={showPassword ? "text" : "password"}
               autoComplete="off"
-              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-              value={password} 
+              className="w-full px-4 py-2 pr-10 border rounded-md focus:ring-2 focus:ring-blue-500"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <div 
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 cursor-pointer text-gray-600"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+            </div>
+            <div className="text-right mt-1">
+              <a href="/" className="text-sm text-blue-500 hover:underline">
+                Mot de passe oublié ?
+              </a>
+            </div>
           </div>
+
 
           <button 
             type="submit" 
@@ -124,8 +131,6 @@ const Login = () => {
             Vous n'avez pas de compte ? <a href="/signup" className="text-blue-500 hover:underline">Créer un compte</a>
           </p>
         </form>
-
-
       </div>
     </div>
   );

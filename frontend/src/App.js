@@ -11,7 +11,7 @@ import DonCategorie from './pages/DonCategorie';
 import Dashboard from './pages/Dashboard';
 import { UserProvider } from './context/UserContext';
 import Profil from "./pages/Profil";
-import Message from './pages/Messages';
+import Message from './components/messages/Messages';
 import Archives from './pages/Archives';
 
 
