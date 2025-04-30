@@ -52,7 +52,7 @@ const CardDon = ({ don }) => {
       const createurId = don.user?._id; // assure-toi que le createur est peuplé
   
       // 3. Appeler l'API pour envoyer une notification au créateur du don
-      await fetch('/api/notifications', {
+      await fetch('https://diapo-app.onrender.com/api/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
