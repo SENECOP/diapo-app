@@ -5,7 +5,9 @@ const { markAsRead } = require('../controllers/notificationApi');
 
 
 //  Créer une notification
-router.post('/', async (req, res) => {
+router.post('/api/notifications', async (req, res) => {
+    console.log("Reçu depuis le frontend :", req.body);
+
   try {
     const { emetteur, destinataire, message, don } = req.body;
 
@@ -19,9 +21,10 @@ router.post('/', async (req, res) => {
     await nouvelleNotif.save();
     res.status(201).json(nouvelleNotif);
   } catch (error) {
-    console.error('Erreur création notification :', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    console.error("Erreur POST /api/notifications :", error);
+    res.status(500).json({ message: "Erreur serveur" });
   }
+  
 });
 
 //  Obtenir les notifications d’un utilisateur
