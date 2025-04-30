@@ -15,7 +15,7 @@ exports.createNotification = async (req, res) => {
       don,
       destinataire,
       lu: false
-    });
+    })
 
     const savedNotification = await notification.save();
 

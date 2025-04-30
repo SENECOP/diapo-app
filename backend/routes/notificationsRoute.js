@@ -5,7 +5,7 @@ const { markAsRead } = require('../controllers/notificationApi');
 
 
 //  Créer une notification
-router.post('/api/notifications', async (req, res) => {
+router.post('/', async (req, res) => {
     console.log("Reçu depuis le frontend :", req.body);
 
   try {
