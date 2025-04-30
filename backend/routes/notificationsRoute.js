@@ -2,14 +2,49 @@ const express = require('express');
 const router = express.Router();
 const Notification = require('../models/Notification');
 
+//  Créer une notification
 router.post('/', async (req, res) => {
   try {
-    const { destinataire, emetteur, message, don } = req.body;
-    const notification = new Notification({ destinataire, emetteur, message, don });
-    await notification.save();
-    res.status(201).json(notification);
+    const { emetteur, destinataire, message, don } = req.body;
+
+    const nouvelleNotif = new Notification({
+      emetteur,
+      destinataire,
+      message,
+      don
+    });
+
+    await nouvelleNotif.save();
+    res.status(201).json(nouvelleNotif);
   } catch (error) {
-    res.status(500).json({ message: 'Erreur lors de la création de la notification' });
+    console.error('Erreur création notification :', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+//  Obtenir les notifications d’un utilisateur
+router.get('/:userId', async (req, res) => {
+  try {
+    const notifications = await Notification.find({ destinataire: req.params.userId })
+      .populate('emetteur', 'pseudo') // ajuster selon ton modèle User
+      .populate('don', 'titre')
+      .sort({ date: -1 });
+
+    res.json(notifications);
+  } catch (error) {
+    console.error('Erreur récupération notifications :', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// ✅ Marquer une notification comme lue
+router.put('/:id/lire', async (req, res) => {
+  try {
+    const notif = await Notification.findByIdAndUpdate(req.params.id, { lu: true }, { new: true });
+    res.json(notif);
+  } catch (error) {
+    console.error('Erreur mise à jour notification :', error);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 });
 

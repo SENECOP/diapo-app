@@ -30,6 +30,7 @@ const formatRelativeTime = (dateString) => {
 const CardDon = ({ don }) => {
   const navigate = useNavigate();
   const [favori, setFavori] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);  // État pour gérer l'affichage du popup
 
   if (!don) return null;
 
@@ -71,8 +72,14 @@ const CardDon = ({ don }) => {
       console.error("Erreur lors de la prise de don ou de la notification :", error);
       alert("Une erreur est survenue.");
     }
+
+    // Afficher le popup après avoir cliqué sur "Je prends"
+    setShowPopup(true);
   };
-  
+
+  const closePopup = () => {
+    setShowPopup(false);
+  };
 
   return (
     <div
@@ -122,9 +129,24 @@ const CardDon = ({ don }) => {
           {favori ? <FaBookmark /> : <FaRegBookmark />}
         </button>
       </div>
+
+      {/* Popup de confirmation */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-80 text-center">
+            <h3 className="text-lg font-semibold mb-4">Vous avez pris ce don !</h3>
+            <p className="mb-4">Merci pour votre générosité. Le créateur du don sera notifié.</p>
+            <button
+              onClick={closePopup}
+              className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
 
 export default CardDon;
