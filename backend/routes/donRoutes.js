@@ -33,6 +33,7 @@ router.post('/', verifyToken, upload.single('url_image'), async (req, res) => {
       ville_don,
       url_image: imagePath,
       user,
+      createur: req.user._id,
     });
 
     res.status(201).json(newDon);
@@ -45,7 +46,7 @@ router.post('/', verifyToken, upload.single('url_image'), async (req, res) => {
 // ✅ Obtenir tous les dons
 router.get('/', async (req, res) => {
   try {
-    const dons = await Don.find();
+    const dons = await Don.find().populate('createuur', 'pseudo');
     res.status(200).json(dons);
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });

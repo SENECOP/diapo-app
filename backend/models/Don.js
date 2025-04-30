@@ -7,8 +7,8 @@ const donSchema = new mongoose.Schema(
     categorie: { type: String, required: true },
     url_image: { type: String, required: false },
     ville_don: { type: String, required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Tu peux garder ce champ si nécessaire
-    createur: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // AJOUT DU CHAMP createur
+    //user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
+    createur: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
     archived: { type: Boolean, default: false },
     statut: { 
       type: String, 
