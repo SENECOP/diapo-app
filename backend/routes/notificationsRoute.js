@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Notification = require('../models/Notification');
+const { markAsRead } = require('../controllers/notificationApi');
+
 
 //  Créer une notification
 router.post('/', async (req, res) => {
@@ -38,7 +40,7 @@ router.get('/:userId', async (req, res) => {
 });
 
 // ✅ Marquer une notification comme lue
-router.put('/:id/lire', async (req, res) => {
+router.put('/:id/lire', markAsRead, async (req, res) => {
   try {
     const notif = await Notification.findByIdAndUpdate(req.params.id, { lu: true }, { new: true });
     res.json(notif);
