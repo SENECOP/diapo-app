@@ -15,7 +15,7 @@ const upload = multer({ storage });
 /**
  * ROUTES PROPREMENT ORGANISÉES
  */
-router.post('/api/dons', verifyToken, upload.single('url_image'), donController.createDon);
+router.post('/', verifyToken, upload.single('url_image'), donController.createDon);
 router.get('/', donController.getDons);
 router.get('/:id', donController.getDonById);
 router.put('/:id', verifyToken, upload.single('url_image'), donController.updateDon);
