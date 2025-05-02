@@ -92,34 +92,30 @@ const CreerDon = () => {
       data.append('categorie', formData.categorie);
       data.append('description', formData.description);
       data.append('ville_don', formData.ville_don);
-      if (formData.url_image) {
+  
+      if (formData.url_image instanceof File) {
         data.append('url_image', formData.url_image);
       }
   
-      if (id) { 
-        await axios.put(`https://diapo-app.onrender.com/api/dons/${id}`, data, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        alert("Don modifié avec succès !");
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+  
+      if (id) {
+        await axios.put(`https://diapo-app.onrender.com/api/dons/${id}`, data, config);
+        alert('Don modifié avec succès');
       } else {
-        await axios.post(`https://diapo-app.onrender.com/api/dons`, data, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        alert("Don créé avec succès !");
+        await axios.post('https://diapo-app.onrender.com/api/dons', data, config);
+        alert('Don créé avec succès');
       }
   
       navigate("/Listedons");
     } catch (error) {
-      console.error("Erreur lors de l'envoi du formulaire :", error);
+      console.error("Erreur :", error.response?.data || error.message);
       alert("Une erreur est survenue. Veuillez réessayer.");
     }
   };
+  
 
   return (
     <div className="min-h-screen flex flex-col justify-between">
