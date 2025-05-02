@@ -40,48 +40,61 @@ const CardDon = ({ don }) => {
 
   const handleTake = async (e) => {
     e.stopPropagation();
-
+  
     const currentUser = JSON.parse(localStorage.getItem("user"));
     if (!currentUser) {
       navigate("/login");
       return;
     }
-
+  
+    // Stocker une alerte de réservation (si besoin ailleurs)
     localStorage.setItem("AlerteReservation", "true");
+  
+    // Redirection vers la page message
     navigate("/message");
-
+  
     try {
       const donId = don._id;
+      console.log("Détails du don reçu :", don); 
       const createurId = don.createur?._id;
-
+      if (!don.createur) {
+        console.error("Aucun ID de créateur trouvé dans le don");
+      } else {
+        // Logique pour traiter l'ID du créateur
+        console.log(don.createur);
+      }
+      
+  
       if (!createurId) {
         console.warn("Aucun ID de créateur trouvé dans le don.");
         return;
       }
-
-      console.log("Notification à envoyer :", {
-        emetteur: currentUser._id,
-        destinataire: createurId,
-        message: `${currentUser.pseudo} a exprimé son intérêt pour votre don.`,
-        don: donId,
-      });
-
-      await fetch("https://diapo-app.onrender.com/api/notifications", {
+  
+      // Envoi de la notification via l’API backend
+      const response = await fetch("https://diapo-app.onrender.com/api/notifications", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           emetteur: currentUser._id,
           destinataire: createurId,
-          message: `${currentUser.pseudo} a exprimé son intérêt pour votre don.`,
+          message: `${currentUser.pseudo} a cliqué sur "Je prends" pour votre don "${don.titre}".`,
           don: donId,
         }),
       });
+  
+      if (!response.ok) {
+        throw new Error("Erreur lors de l’envoi de la notification");
+      }
+  
+      console.log("✅ Notification envoyée au créateur du don !");
     } catch (error) {
       console.error("Erreur lors de la prise de don ou de la notification :", error);
-      alert("Une erreur est survenue.");
+      alert("Une erreur est survenue lors de la notification.");
     }
   };
-
+  
   return (
     <div
       className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"

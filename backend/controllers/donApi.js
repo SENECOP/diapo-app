@@ -13,6 +13,7 @@ const createDon = async (req, res) => {
       ville_don,
       url_image: imageFilename,
       user: req.user?._id,
+      createur: userId
 
       
 
@@ -51,7 +52,7 @@ const getDons = async (req, res) => {
 
 const getDonById = async (req, res) => {
   try {
-    const don = await Don.findById(req.params.id).populate("user", "pseudo ville_residence email");
+    const don = await Don.findById(req.params.id).populate("createur", "pseudo ville_residence email");
 
     console.log("Détails du don avec donneur peuplé : ", don); 
     if (!don) return res.status(404).json({ message: "Don non trouvé" });
@@ -88,6 +89,26 @@ const updateDon = async (req, res) => {
   }
 }; 
 
+const prendreDon = async (req, res) => {
+  const don = await Don.findById(req.params.id);
+  if (!don) return res.status(404).json({ message: "Don non trouvé" });
+
+  if (don.preneur) {
+    return res.status(400).json({ message: "Ce don a déjà été pris" });
+  }
+
+  don.preneur = req.user._id;
+  await don.save();
+
+  const notification = new Notification({
+    destinataire: don.user,
+    message: `${req.user.pseudo} souhaite prendre votre don "${don.titre}".`
+  });
+
+  await notification.save();
+
+  res.status(200).json({ message: "Don pris avec succès, notification envoyée." });
+};
 
 const deleteDon = async (req, res) => {
   console.log("Suppression demandée pour :", req.params.id);
@@ -149,5 +170,6 @@ module.exports = {
   updateDon,
   deleteDon,
   archiveDon,
-  unarchiveDon
+  unarchiveDon,
+  prendreDon,
 };

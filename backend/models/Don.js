@@ -7,8 +7,13 @@ const donSchema = new mongoose.Schema(
     categorie: { type: String, required: true },
     url_image: { type: String, required: false },
     ville_don: { type: String, required: true },
-    //user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
-    createur: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: false }, 
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }, 
+    createur: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // ou "Utilisateur" selon le nom de ton modèle
+      required: true,
+    },
+    preneur: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     archived: { type: Boolean, default: false },
     statut: { 
       type: String, 

@@ -4,10 +4,13 @@ const path = require('path');
 const Don = require('../models/Don');
 const router = express.Router();
 const verifyToken = require('../middlewares/authMiddleware');
+const { prendreDon } = require('../controllers/donApi');
+
 const {
   getDons,
   updateDon,
   deleteDon,
+  getAllDons,
   archiveDon,
   unarchiveDon
 } = require('../controllers/donApi');
@@ -46,15 +49,19 @@ router.post('/', verifyToken, upload.single('url_image'), async (req, res) => {
   }
 });
 
+router.post('/:id/prendre', verifyToken, prendreDon);
+
+
 // ✅ Obtenir tous les dons
 router.get('/', async (req, res) => {
   try {
-    const dons = await Don.find().populate('createur', 'pseudo'); 
+    const dons = await Don.find().populate('user', 'pseudo'); 
     res.status(200).json(dons);
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
 
 // ✅ Archiver un don (via le contrôleur `archiveDon`)
 router.put('/:id/archives', verifyToken, archiveDon);

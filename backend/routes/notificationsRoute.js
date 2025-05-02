@@ -5,47 +5,37 @@ const { markAsRead } = require('../controllers/notificationApi');
 
 
 //  Créer une notification
+// POST /api/notifications
 router.post('/', async (req, res) => {
-    console.log("Reçu depuis le frontend :", req.body);
-
-  try {
     const { emetteur, destinataire, message, don } = req.body;
-    
-    if (!emetteur || !destinataire || !message || !don) {
-        console.error("Champs manquants :", { emetteur, destinataire, message, don });
-        return res.status(400).json({ message: "Champs requis manquants." });
-      }
-
-    const nouvelleNotif = new Notification({
-      emetteur,
-      destinataire,
-      message,
-      don
-    });
-
-    await nouvelleNotif.save();
-    res.status(201).json(nouvelleNotif);
-  } catch (error) {
-    console.error("Erreur POST /api/notifications :", error);
-    res.status(500).json({ message: "Erreur serveur" });
-  }
   
-});
+    try {
+      const newNotif = new Notification({
+        emetteur,
+        destinataire,
+        message,
+        don,
+        lu: false,
+      });
+  
+      await newNotif.save();
+      res.status(201).json(newNotif);
+    } catch (error) {
+      res.status(500).json({ error: "Erreur lors de la création de la notification." });
+    }
+  });
+  
 
 //  Obtenir les notifications d’un utilisateur
-router.get('/:userId', async (req, res) => {
-  try {
-    const notifications = await Notification.find({ destinataire: req.params.userId })
-      .populate('emetteur', 'pseudo') // ajuster selon ton modèle User
-      .populate('don', 'titre')
-      .sort({ date: -1 });
+router.get('/user/:id', async (req, res) => {
+    try {
+      const notifications = await Notification.find({ destinataire: req.params.id }).sort({ createdAt: -1 });
+      res.json(notifications);
+    } catch (err) {
+      res.status(500).json({ message: 'Erreur lors de la récupération des notifications' });
+    }
+  });
 
-    res.json(notifications);
-  } catch (error) {
-    console.error('Erreur récupération notifications :', error);
-    res.status(500).json({ message: 'Erreur serveur' });
-  }
-});
 
 // ✅ Marquer une notification comme lue
 router.put('/:id/lire', markAsRead, async (req, res) => {
