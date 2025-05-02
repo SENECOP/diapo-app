@@ -1,23 +1,10 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
-const Don = require('../models/Don');
 const router = express.Router();
 const verifyToken = require('../middlewares/authMiddleware');
+const donController = require('../controllers/donApi');
 
-const {
-  createDon,
-  getAllDons,
-  updateDon,
-  deleteDon,
-  getDonById,
-  getDons,
-  prendreDon,
-  getArchiveDon,
-  unarchiveDon,
-} = require('../controllers/donApi');
-
-// Configuration Multer
+// Multer config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
@@ -25,40 +12,44 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 /**
- * ROUTES
+ * ROUTES PROPREMENT ORGANISÉES
  */
+router.post('/', verifyToken, upload.single('url_image'), donController.createDon);
+router.get('/', donController.getDons);
+router.get('/:id', donController.getDonById);
+router.put('/:id', verifyToken, upload.single('url_image'), donController.updateDon);
+router.delete('/:id', verifyToken, donController.deleteDon);
 
-// ✅ Créer un don
-router.post('/', verifyToken, upload.single('url_image'), createDon);
+router.post('/:id/prendre', verifyToken, donController.prendreDon);
+router.put('/:id/archives', verifyToken, donController.archiveDon);
+router.put('/:id/desarchiver', verifyToken, donController.unarchiveDon);
 
-router.post('/:id/prendre', verifyToken, prendreDon);
+// Optionnel : récupérer uniquement les dons archivés
+router.get('/archives', async (req, res) => {
+  try {
+    const donsArchives = await Don.find({ archived: true });
+    res.json(donsArchives);
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
 
+// Dons par catégorie (idéalement à déplacer aussi dans le contrôleur)
+router.get('/categorie/:categorie', async (req, res) => {
+  try {
+    const { categorie } = req.params;
+    let dons;
 
-// ✅ Obtenir tous les dons
-router.get('/', getAllDons);
+    if (categorie.toLowerCase() === "nouveautes") {
+      dons = await Don.find().sort({ date: -1 }).limit(5);
+    } else {
+      dons = await Don.find({ categorie: { $regex: new RegExp(categorie, "i") } });
+    }
 
-
-// ✅ Archiver un don (via le contrôleur `archiveDon`)
-router.put('/:id/archives', verifyToken, getArchiveDon);
-
-router.put('/:id/desarchiver', verifyToken, unarchiveDon);
-
-// ✅ Récupérer les dons archivés
-router.get('/archives', getArchiveDon);
-
-// ✅ Obtenir un don par ID
-router.get('/:id', getDonById);
- 
-// ✅ Modifier un don
-router.put('/:id', upload.single('url_image'), updateDon);
-
-// ✅ Supprimer un don
-router.delete('/:id', deleteDon);
-
-// ✅ Récupérer les dons par catégorie
-router.get('/categorie/:categorie', getDons);
-
-
-
+    res.json(dons);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;

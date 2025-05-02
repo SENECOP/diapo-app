@@ -1,155 +1,105 @@
 const Don = require('../models/Don');
+const Notification = require('../models/Notification');
 
-
+// Créer un don
 const createDon = async (req, res) => {
   try {
     const { titre, description, categorie, ville_don } = req.body;
-    const imagePath = req.file ? `uploads/${req.file.filename}` : null;
+    const imageFilename = req.file?.filename || '';
+    const userId = req.user?._id;
 
     const newDon = new Don({
       titre,
       description,
       categorie: categorie?.toLowerCase(),
       ville_don,
-      url_image: imagePath,
-      user: req.user?._id,
-      createur: req.user._id
-
-      
-
+      url_image: imageFilename,
+      user: userId,
+      createur: userId,
     });
 
     await newDon.save();
-    res.status(200).json({ message: 'Don créé avec succès', Don: newDon });
+    res.status(201).json({ message: 'Don créé avec succès', don: newDon });
   } catch (error) {
     console.error('Erreur lors de la création du don:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// ✅ Afficher tous les dons
-const getAllDons = async (req, res) => {
-  try {
-    const dons = await Don.find({ archive: false }).populate('createur', 'pseudo email');
-    res.json(dons);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-const updateDon = async (req, res) => {
-  try {
-    const don = await Don.findById(req.params.id);
-    if (!don) {
-      return res.status(404).json({ message: 'Don non trouvé' });
-    }
-
-    don.titre = req.body.titre || don.titre;
-    don.description = req.body.description || don.description;
-    don.ville_don = req.body.ville_don || don.ville_don;
-
-    // Si une nouvelle image est envoyée
-    if (req.file) {
-      const imagePath = `uploads/${req.file.filename}`;
-      don.url_image = imagePath;
-    }
-
-    await don.save();
-    res.json({ message: 'Don modifié avec succès', don });
-  } catch (error) {
-    console.error('Erreur dans updateDon :', error);
-    res.status(500).json({ message: error.message });
-  }
-}; 
-
-const deleteDon = async (req, res) => {
-  console.log("Suppression demandée pour :", req.params.id);
-  try {
-    const don = await Don.findById(req.params.id);
-    if (!don) {
-      console.log("Don introuvable");
-      return res.status(404).json({ message: 'Don non trouvé' });
-    }
-
-    await don.remove();
-    console.log("Don supprimé avec succès");
-    res.json({ message: 'Don supprimé avec succès' });
-  } catch (error) {
-    console.error("Erreur dans deleteDon:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-const getDonById = async (req, res) => {
-  try {
-    const don = await Don.findById(req.params.id).populate("createur", "pseudo ville_residence email");
-
-    console.log("Détails du don avec donneur peuplé : ", don); 
-    if (!don) return res.status(404).json({ message: "Don non trouvé" });
-    
-    res.json(don);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Erreur serveur" });
-  }
-};
-
+// Obtenir tous les dons (filtrés ou non)
 const getDons = async (req, res) => {
   const { categorie } = req.query;
-
   try {
     let dons;
-
     if (categorie) {
       dons = await Don.find({
-        categorie: { $regex: new RegExp(`^${categorie}$`, 'i') } // insensitive case
+        categorie: { $regex: new RegExp(`^${categorie}$`, 'i') },
       }).sort({ createdAt: -1 });
     } else {
       dons = await Don.find().sort({ createdAt: -1 });
     }
-
     res.status(200).json(dons);
   } catch (error) {
     res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
 
-
-const prendreDon = async (req, res) => {
-  const don = await Don.findById(req.params.id);
-  if (!don) return res.status(404).json({ message: "Don non trouvé" });
-
-  if (don.preneur) {
-    return res.status(400).json({ message: "Ce don a déjà été pris" });
+// Obtenir un don par ID
+const getDonById = async (req, res) => {
+  try {
+    const don = await Don.findById(req.params.id).populate("createur", "pseudo ville_residence email");
+    if (!don) return res.status(404).json({ message: "Don non trouvé" });
+    res.status(200).json(don);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur serveur" });
   }
-
-  don.preneur = req.user._id;
-  await don.save();
-
-  const notification = new Notification({
-    destinataire: don.user,
-    message: `${req.user.pseudo} souhaite prendre votre don "${don.titre}".`
-  });
-
-  await notification.save();
-
-  res.status(200).json({ message: "Don pris avec succès, notification envoyée." });
 };
 
-
-const getArchiveDon = async (req, res) => {
+// Modifier un don
+const updateDon = async (req, res) => {
   try {
     const don = await Don.findById(req.params.id);
-    if (!don) {
-      return res.status(404).json({ message: "Don non trouvé" });
+    if (!don) return res.status(404).json({ message: 'Don non trouvé' });
+
+    const { titre, description, ville_don } = req.body;
+    don.titre = titre || don.titre;
+    don.description = description || don.description;
+    don.ville_don = ville_don || don.ville_don;
+
+    if (req.file) {
+      don.url_image = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     }
+
+    await don.save();
+    res.status(200).json({ message: 'Don modifié avec succès', don });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Supprimer un don
+const deleteDon = async (req, res) => {
+  try {
+    const don = await Don.findByIdAndDelete(req.params.id);
+    if (!don) return res.status(404).json({ message: 'Don non trouvé' });
+    res.status(200).json({ message: 'Don supprimé avec succès' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Archiver / désarchiver un don
+const archiveDon = async (req, res) => {
+  try {
+    const don = await Don.findById(req.params.id);
+    if (!don) return res.status(404).json({ message: "Don non trouvé" });
 
     don.archived = true;
     await don.save();
-
     res.status(200).json({ message: "Don archivé avec succès", don });
   } catch (error) {
-    console.error("Erreur lors de l'archivage :", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -157,30 +107,81 @@ const getArchiveDon = async (req, res) => {
 const unarchiveDon = async (req, res) => {
   try {
     const don = await Don.findById(req.params.id);
-    if (!don) {
-      return res.status(404).json({ message: "Don non trouvé" });
-    }
+    if (!don) return res.status(404).json({ message: "Don non trouvé" });
 
     don.archived = false;
     await don.save();
-
     res.status(200).json({ message: "Don désarchivé avec succès", don });
   } catch (error) {
-    console.error("Erreur lors du désarchivage :", error);
     res.status(500).json({ message: error.message });
   }
 };
 
+// Prendre un don
+const prendreDon = async (req, res) => {
+  try {
+    const don = await Don.findById(req.params.id);
+    if (!don) return res.status(404).json({ message: "Don non trouvé" });
+
+    if (don.preneur) {
+      return res.status(400).json({ message: "Ce don a déjà été pris" });
+    }
+
+    don.preneur = req.user._id;
+    await don.save();
+
+    const notification = new Notification({
+      destinataire: don.user,
+      message: `${req.user.pseudo} souhaite prendre votre don "${don.titre}".`
+    });
+
+    await notification.save();
+
+    res.status(200).json({ message: "Don pris avec succès, notification envoyée." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Récupérer les dons archivés
+const getArchivedDons = async (req, res) => {
+  try {
+    const dons = await Don.find({ archived: true });
+    res.status(200).json(dons);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Récupérer par catégorie
+const getDonsByCategorie = async (req, res) => {
+  try {
+    const { categorie } = req.params;
+    let dons;
+
+    if (categorie.toLowerCase() === "nouveautes") {
+      dons = await Don.find().sort({ createdAt: -1 }).limit(5);
+    } else {
+      dons = await Don.find({
+        categorie: { $regex: new RegExp(categorie, "i") }
+      });
+    }
+
+    res.status(200).json(dons);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 module.exports = {
   createDon,
-  getAllDons,
+  getDons,
+  getDonById,
   updateDon,
   deleteDon,
-  getDonById,
-  getDons,
-  prendreDon,
-  getArchiveDon,
+  archiveDon,
   unarchiveDon,
-
+  prendreDon,
+  getArchivedDons,
+  getDonsByCategorie
 };
