@@ -4,8 +4,8 @@ const Notification = require('../models/Notification');
 // Créer un don
 const createDon = async (req, res) => {
   try {
-    const { titre, description, categorie, ville_don } = req.body;
-    const imageFilename = req.file?.filename || '';
+    const { titre, description, categorie, ville_don, user } = req.body;
+    const imagePath = req.file ? uploads/`${req.file.filename}` : null;
     const userId = req.user?._id;
 
     const newDon = new Don({
@@ -13,7 +13,7 @@ const createDon = async (req, res) => {
       description,
       categorie: categorie?.toLowerCase(),
       ville_don,
-      url_image: imageFilename,
+      url_image: imagePath,
       user: userId,
       createur: userId,
     });
@@ -48,10 +48,13 @@ const getDons = async (req, res) => {
 const getDonById = async (req, res) => {
   try {
     const don = await Don.findById(req.params.id).populate("createur", "pseudo ville_residence email");
+
+    console.log("Détails du don avec donneur peuplé : ", don); 
     if (!don) return res.status(404).json({ message: "Don non trouvé" });
-    res.status(200).json(don);
-  } catch (error) {
-    console.error(error);
+    
+    res.json(don);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -60,24 +63,26 @@ const getDonById = async (req, res) => {
 const updateDon = async (req, res) => {
   try {
     const don = await Don.findById(req.params.id);
-    if (!don) return res.status(404).json({ message: 'Don non trouvé' });
+    if (!don) {
+      return res.status(404).json({ message: 'Don non trouvé' });
+    }
 
-    const { titre, description, ville_don } = req.body;
-    don.titre = titre || don.titre;
-    don.description = description || don.description;
-    don.ville_don = ville_don || don.ville_don;
+    don.titre = req.body.titre || don.titre;
+    don.description = req.body.description || don.description;
+    don.ville_don = req.body.ville_don || don.ville_don;
 
+    // Si une nouvelle image est envoyée
     if (req.file) {
-      don.url_image = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      don.url_image = `${req.protocol}://${req.get('host')}/${req.file.filename}`; // ou ${req.protocol}://${req.get('host')}/uploads/${req.file.filename}
     }
 
     await don.save();
-    res.status(200).json({ message: 'Don modifié avec succès', don });
+    res.json({ message: 'Don modifié avec succès', don });
   } catch (error) {
-    console.error(error);
+    console.error('Erreur dans updateDon :', error);
     res.status(500).json({ message: error.message });
   }
-};
+}; 
 
 // Supprimer un don
 const deleteDon = async (req, res) => {
@@ -159,12 +164,12 @@ const getDonsByCategorie = async (req, res) => {
     const { categorie } = req.params;
     let dons;
 
-    if (categorie.toLowerCase() === "nouveautes") {
-      dons = await Don.find().sort({ createdAt: -1 }).limit(5);
-    } else {
+    if (categorie) {
       dons = await Don.find({
-        categorie: { $regex: new RegExp(categorie, "i") }
-      });
+        categorie: { $regex: new RegExp(`${categorie}$`, 'i') } // insensitive case
+      }).sort({ createdAt: -1 });
+    } else {
+      dons = await Don.find().sort({ createdAt: -1 });
     }
 
     res.status(200).json(dons);
@@ -172,6 +177,7 @@ const getDonsByCategorie = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 module.exports = {
   createDon,
