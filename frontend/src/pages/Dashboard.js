@@ -5,6 +5,9 @@ import axios from "axios";
 import CardDon from "../components/CardDon";
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 const Dashboard = () => {
   const { user } = useContext(UserContext);
@@ -13,6 +16,14 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+
+    if (user && user._id) {
+      toast.success(`Bienvenue ${user.username || "utilisateur"} !`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+
     const fetchDons = async () => {
       try {
         const response = await axios.get("https://diapo-app.onrender.com/api/dons");
@@ -26,7 +37,7 @@ const Dashboard = () => {
     };
 
     fetchDons();
-  }, []);
+  }, [user]);
 
   const nouveautes = [...dons]
     .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -126,6 +137,7 @@ const Dashboard = () => {
           </div>
         )}
       </section>
+      <ToastContainer />
 
       <Footer />
     </div>

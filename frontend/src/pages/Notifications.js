@@ -1,38 +1,27 @@
-import React, { useEffect, useState } from 'react';
-
-
-function Notifications() {
+function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
-  const userId = localStorage.getItem('userId'); // ou autre méthode pour récupérer l'utilisateur
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      try {
-        const res = await fetch(`https://diapo-app.onrender.com/api/notifications/${userId}`);
-        const data = await res.json();
-        setNotifications(data);
-      } catch (err) {
-        console.error('Erreur récupération des notifications', err);
-      }
+      const res = await fetch(`https://diapo-app.onrender.com/api/notifications/user/${user._id}`);
+      const data = await res.json();
+      setNotifications(data);
     };
 
     fetchNotifications();
-  }, [userId]);
+  }, [user]);
 
   return (
     <div>
-      <h2>Mes notifications</h2>
-      <ul>
-        {notifications.map((notif) => (
-          <li key={notif._id}>
-            <strong>{notif.message}</strong><br />
-            {notif.don?.titre && <em>Don : {notif.don.titre}</em>}<br />
-            <span>{new Date(notif.date).toLocaleString()}</span>
-          </li>
-        ))}
-      </ul>
+      <h2>Mes Notifications</h2>
+      {notifications.map(notif => (
+        <div key={notif._id} className="border p-2 my-2">
+          <p>{notif.message}</p>
+          {notif.don?.titre && <p><i>Don : {notif.don.titre}</i></p>}
+          <small>{new Date(notif.date).toLocaleString()}</small>
+        </div>
+      ))}
     </div>
   );
 }
-
-export default Notifications;
