@@ -56,18 +56,12 @@ const CardDon = ({ don }) => {
     try {
       const donId = don._id;
       console.log("Détails du don reçu :", don); 
-      const createurId = don.createur?._id;
-      if (!don.createur) {
+      const createurId = don.user?._id;
+      if (!don.user) {
         console.error("Aucun ID de créateur trouvé dans le don");
       } else {
         // Logique pour traiter l'ID du créateur
         console.log(don.createur);
-      }
-      
-  
-      if (!createurId) {
-        console.warn("Aucun ID de créateur trouvé dans le don.");
-        return;
       }
   
       // Envoi de la notification via l’API backend
