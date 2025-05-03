@@ -11,7 +11,7 @@ const donSchema = new mongoose.Schema(
     createur: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // ou "Utilisateur" selon le nom de ton modèle
-      required: true,
+      required: false,
     },
     preneur: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     archived: { type: Boolean, default: false },
