@@ -59,7 +59,7 @@ const CardDon = ({ don }) => {
   
       const createurId = don.user?._id || don.user; // compatibilité avec ID direct ou objet user
       if (!createurId) {
-        console.error("Aucun ID de créateur trouvé dans le don");
+        console.error("Aucun Utilisateur trouvé dans le don");
         return; // Ne pas continuer si l'ID est manquant
       }
   

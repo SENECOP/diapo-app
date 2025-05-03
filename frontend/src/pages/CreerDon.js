@@ -74,6 +74,7 @@ const CreerDon = () => {
     e.preventDefault();
   
     const token = localStorage.getItem('token');
+    const UserContext = localStorage.getItem('user');
   
     const champsManquants = [];
     if (!formData.titre) champsManquants.push("le titre");
@@ -85,6 +86,13 @@ const CreerDon = () => {
       alert(`Merci de remplir ${champsManquants.join(', ')}.`);
       return;
     }
+    if (!UserContext) {
+      alert('Utilisateur non trouvé dans le localStorage.');
+      navigate('/login');  
+      return;
+    }
+  
+    const user = JSON.parse(UserContext);
   
     try {
       const data = new FormData();

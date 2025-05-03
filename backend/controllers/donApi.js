@@ -3,8 +3,9 @@ const Notification = require('../models/Notification');
 
 // Créer un don
 const createDon = async (req, res) => {
+  console.log("Utilisateur connecté :", req.user); 
   try {
-    const { titre, description, categorie, ville_don, user } = req.body;
+    const { titre, description, categorie, ville_don } = req.body;
     const imagePath = req.file ? `${req.file.filename}` : null;
     const userId = req.user?._id;
 
@@ -14,7 +15,7 @@ const createDon = async (req, res) => {
       categorie: categorie?.toLowerCase(),
       ville_don,
       url_image: imagePath,
-      user: req.userId,
+      user: userId,
     });
 
     await newDon.save();

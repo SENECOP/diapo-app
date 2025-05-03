@@ -1,30 +1,29 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/userModel'); // ← à adapter selon le chemin réel
 
-function verifyToken(req, res, next) {
+async function verifyToken(req, res, next) {
   const authHeader = req.headers['authorization'];
-  if (!authHeader) {
-    return res.status(401).json({ message: 'Token non fourni' });
-  }
-
-  // S'assurer que le header commence par "Bearer "
-  if (!authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Format de token invalide (Bearer attendu)' });
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Token non fourni ou invalide' });
   }
 
   const token = authHeader.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ message: 'Token mal formé' });
-  }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ message: 'Token invalide' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const user = await User.findById(decoded.id).select('-motdepasse');
+    if (!user) {
+      return res.status(401).json({ message: "Utilisateur introuvable" });
     }
 
-    console.log('✅ Utilisateur décodé :', decoded);
-    req.user = decoded;
+    req.user = user;
+    console.log('✅ Utilisateur authentifié :', user);
     next();
-  });
+
+  } catch (err) {
+    return res.status(401).json({ message: 'Token invalide' });
+  }
 }
 
 module.exports = verifyToken;
