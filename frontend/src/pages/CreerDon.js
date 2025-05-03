@@ -9,10 +9,6 @@ const CreerDon = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const [existingImage, setExistingImage] = useState(null);
-  const [token, setToken] = useState('');
-  const [user, setUser] = useState(null);
-
   const [formData, setFormData] = useState({
     titre: '',
     categorie: '',
@@ -21,18 +17,14 @@ const CreerDon = () => {
     url_image: null,
   });
 
+  const [existingImage, setExistingImage] = useState(null);
+  const [user, setUser] = useState(null);
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-
-    if (!storedUser || !storedToken) {
-      alert('Veuillez vous connecter pour continuer.');
-      navigate('/login');
-      return;
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
-
-    setUser(JSON.parse(storedUser));
-    setToken(storedToken);
 
     if (id) {
       axios.get(`https://diapo-app.onrender.com/api/dons/${id}`)
@@ -48,41 +40,44 @@ const CreerDon = () => {
           setExistingImage(don.url_image);
         })
         .catch((err) => {
-          console.error('Erreur lors du chargement du don à modifier :', err);
+          console.error('Erreur chargement du don :', err);
         });
     }
-  }, [id, navigate]);
+  }, [id]);
 
   const handleClick = () => fileInput.current.click();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && !file.type.startsWith('image/')) {
-      alert('Veuillez sélectionner un fichier image.');
+      alert('Veuillez sélectionner une image');
       return;
     }
-    setFormData((prev) => ({
-      ...prev,
-      url_image: file,
-    }));
+    setFormData(prev => ({ ...prev, url_image: file }));
     setExistingImage(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    if (!token || !storedUser) {
+      alert("Vous devez être connecté(e) pour publier un don.");
+      navigate('/login');
+      return;
+    }
+
     const champsManquants = [];
     if (!formData.titre) champsManquants.push("le titre");
-    if (!formData.description) champsManquants.push("la description");
     if (!formData.categorie) champsManquants.push("la catégorie");
+    if (!formData.description) champsManquants.push("la description");
     if (!formData.ville_don) champsManquants.push("la ville");
 
     if (champsManquants.length > 0) {
@@ -96,31 +91,29 @@ const CreerDon = () => {
       data.append('categorie', formData.categorie);
       data.append('description', formData.description);
       data.append('ville_don', formData.ville_don);
-
       if (formData.url_image instanceof File) {
         data.append('url_image', formData.url_image);
       }
 
-      if (!id && user?._id) {
-        data.append('userId', user._id); // Associer le don à l'utilisateur
-      }
-
       const config = {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
       };
 
       if (id) {
         await axios.put(`https://diapo-app.onrender.com/api/dons/${id}`, data, config);
-        alert('Don modifié avec succès.');
+        alert("Don modifié avec succès !");
       } else {
         await axios.post('https://diapo-app.onrender.com/api/dons', data, config);
-        alert('Don créé avec succès.');
+        alert("Don créé avec succès !");
       }
 
-      navigate("/Listedons");
+      navigate('/Listedons');
     } catch (error) {
-      console.error("Erreur :", error.response?.data || error.message);
-      alert("Une erreur est survenue. Veuillez réessayer.");
+      console.error("Erreur API :", error.response?.data || error.message);
+      alert("Erreur lors de la soumission du don. Veuillez réessayer.");
     }
   };
 
@@ -134,8 +127,8 @@ const CreerDon = () => {
         </span>
         <img
           src="/assets/Charity1.png"
-          alt=""
-          className="w-52 h-53 ml-auto object-cover rounded-full"
+          alt="charity"
+          className="w-52 h-52 object-cover rounded-full"
         />
       </div>
 
