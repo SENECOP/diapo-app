@@ -5,7 +5,7 @@ const Notification = require('../models/Notification');
 const createDon = async (req, res) => {
   try {
     const { titre, description, categorie, ville_don, user } = req.body;
-    const imagePath = req.file ? uploads/`${req.file.filename}` : null;
+    const imagePath = req.file ? `${req.file.filename}` : null;
     const userId = req.user?._id;
 
     const newDon = new Don({
