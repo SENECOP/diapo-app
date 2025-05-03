@@ -5,9 +5,12 @@ import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const CreerDon = () => {
+
   const fileInput = useRef(null);
   const navigate = useNavigate();
   const { id } = useParams();
+  const [existingImage, setExistingImage] = useState(null);
+  const [user, setUser] = useState('');
 
   const [formData, setFormData] = useState({
     titre: '',
@@ -17,13 +20,10 @@ const CreerDon = () => {
     url_image: null,
   });
 
-  const [existingImage, setExistingImage] = useState(null);
-  const [user, setUser] = useState(null);
-
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      setUser(JSON.parse(storedUser));  
     }
 
     if (id) {
@@ -40,80 +40,76 @@ const CreerDon = () => {
           setExistingImage(don.url_image);
         })
         .catch((err) => {
-          console.error('Erreur chargement du don :', err);
+          console.error('Erreur lors du chargement du don à modifier :', err);
         });
     }
   }, [id]);
 
-  const handleClick = () => fileInput.current.click();
+  const handleClick = () => {
+    fileInput.current.click();
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && !file.type.startsWith('image/')) {
-      alert('Veuillez sélectionner une image');
+      alert('Veuillez sélectionner un fichier image');
       return;
     }
-    setFormData(prev => ({ ...prev, url_image: file }));
+    setFormData((prev) => ({
+      ...prev,
+      url_image: file,
+    }));
     setExistingImage(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-
-    if (!token || !storedUser) {
-      alert("Vous devez être connecté(e) pour publier un don.");
-      navigate('/login');
-      return;
-    }
-
+  
     const champsManquants = [];
     if (!formData.titre) champsManquants.push("le titre");
-    if (!formData.categorie) champsManquants.push("la catégorie");
     if (!formData.description) champsManquants.push("la description");
+    if (!formData.categorie) champsManquants.push("la catégorie");
     if (!formData.ville_don) champsManquants.push("la ville");
-
+  
     if (champsManquants.length > 0) {
       alert(`Merci de remplir ${champsManquants.join(', ')}.`);
       return;
     }
-
+  
     try {
       const data = new FormData();
       data.append('titre', formData.titre);
       data.append('categorie', formData.categorie);
       data.append('description', formData.description);
       data.append('ville_don', formData.ville_don);
-      if (formData.url_image instanceof File) {
+      if (formData.url_image) {
         data.append('url_image', formData.url_image);
       }
-
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      };
-
+  
       if (id) {
-        await axios.put(`https://diapo-app.onrender.com/api/dons/${id}`, data, config);
-        alert("Don modifié avec succès !");
+        await axios.put(`https://diapo-app.onrender.com/api/dons/${id}`, data);
+        alert('Don modifié avec succès');
       } else {
-        await axios.post('https://diapo-app.onrender.com/api/dons', data, config);
-        alert("Don créé avec succès !");
+        await axios.post('https://diapo-app.onrender.com/api/dons', data, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert('Don créé avec succès');
       }
-
-      navigate('/Listedons');
+  
+      navigate("/Listedons");
     } catch (error) {
-      console.error("Erreur API :", error.response?.data || error.message);
-      alert("Erreur lors de la soumission du don. Veuillez réessayer.");
+      console.error("Erreur lors de l'envoi du formulaire :", error);
+      alert("Une erreur est survenue. Veuillez réessayer.");
     }
   };
 
@@ -122,14 +118,15 @@ const CreerDon = () => {
       <Header />
 
       <div className="bg-blue-800 text-white p-28 min-h-[350px] text-xl font-semibold flex items-center justify-between">
+        
         <span>
           {user ? `Bonjour ${user.pseudo},` : "Bonjour !"} Nous allons vous aider à créer votre annonce.
         </span>
         <img
-          src="/assets/Charity1.png"
-          alt="charity"
-          className="w-52 h-52 object-cover rounded-full"
-        />
+          src="/assets/Charity1.png" 
+          alt=""
+          className="w-52 h-53 ml-auto object-cover rounded-full"
+          />
       </div>
 
       <main className="flex justify-center py-10 mt-[-110px]">
