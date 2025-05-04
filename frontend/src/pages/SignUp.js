@@ -44,6 +44,8 @@ const SignUp = () => {
       await axios.post('https://diapo-app.onrender.com/api/auth/signup', newUser);
       navigate('/login');
     } catch (err) {
+      console.log('Erreur signup backend:', err.response?.data);
+
       const apiErrors = err.response?.data?.errors || [];
       const errorObj = {};
       apiErrors.forEach((err) => {

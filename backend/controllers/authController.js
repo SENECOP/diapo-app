@@ -6,7 +6,7 @@ const register = async (req, res) => {
   const { pseudo, email, numero_telephone, ville_residence, password } = req.body;
 
   if (!pseudo || !password) {
-    return res.status(400).json({ errors: [{ field: "pseudo", message: "Pseudo et mot de passe sont requis" }] });
+    return res.status(400).json({ error: [{ field: "pseudo", message: "Pseudo et mot de passe sont requis" }] });
   }
 
   const error = [];
