@@ -24,37 +24,24 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = {};
-  
-    // Validation frontend
-    if (!pseudo.trim()) newErrors.pseudo = 'Le pseudo est requis.';
-    if (!ville_residence.trim()) newErrors.ville_residence = 'La ville de résidence est requise.';
-    if (!password) newErrors.password = 'Le mot de passe est requis.';
-    if (password !== confirmPassword) newErrors.confirmPassword = 'Les mots de passe ne correspondent pas.';
-  
-    // Optionnel : valider email si renseigné
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Adresse email invalide.';
-    }
-  
-    // Optionnel : valider téléphone si renseigné
-    if (numero_telephone && !/^\+?[0-9]{7,15}$/.test(numero_telephone)) {
-      newErrors.numero_telephone = 'Numéro de téléphone invalide.';
-    }
-  
-    if (Object.keys(newErrors).length > 0) {
-      setError(newErrors);
+
+    // Réinitialiser les erreurs à chaque soumission
+    setError({});
+
+    if (!pseudo || !password || !ville_residence) {
+      setError({ general: 'Les champs obligatoires doivent être remplis.' });
       return;
     }
-  
+
+    if (password !== confirmPassword) {
+      setError({ confirmPassword: 'Les mots de passe ne correspondent pas.' });
+      return;
+    }
+
+    const newUser = { pseudo, email, numero_telephone, ville_residence, password };
+
     try {
-      await axios.post('https://diapo-app.onrender.com/api/auth/signup', {
-        pseudo,
-        email,
-        numero_telephone,
-        ville_residence,
-        password,
-      });
+      await axios.post('https://diapo-app.onrender.com/api/auth/signup', newUser);
       navigate('/login');
     } catch (err) {
       const apiErrors = err.response?.data?.errors || [];
@@ -65,7 +52,6 @@ const SignUp = () => {
       setError(errorObj);
     }
   };
-  
 
   return (
     <div className="flex min-h-screen overflow-hidden">
@@ -139,17 +125,19 @@ const SignUp = () => {
               <input
                 type={showPassword ? 'text' : 'password'}
                 className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="Mot de passe"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <div
+              <span
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-2.5 text-gray-600 cursor-pointer"
               >
                 {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-              </div>
+              </span>
             </div>
+
             {error.password && <p className="text-red-600 text-sm mt-1">{error.password}</p>}
           </div>
 
@@ -159,17 +147,19 @@ const SignUp = () => {
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="Confirmer le mot de passe"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
-              <div
+              <span
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-2.5 text-gray-600 cursor-pointer"
               >
                 {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-              </div>
+              </span>
             </div>
+
             {error.confirmPassword && (
               <p className="text-red-600 text-sm mt-1">{error.confirmPassword}</p>
             )}

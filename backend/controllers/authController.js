@@ -35,7 +35,7 @@ const register = async (req, res) => {
   }
 
   if (error.length > 0) {
-    return res.status(400).json({ errors });
+    return res.status(400).json({ error });
   }
 
   try {
