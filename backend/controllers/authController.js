@@ -3,32 +3,52 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const register = async (req, res) => {
-    const { pseudo, email, numero_telephone, ville_residence, password } = req.body;
-  
-    if (!password || !pseudo) {
-      return res.status(400).json({ message: 'Pseudo et mot de passe sont requis' });
+  const { pseudo, email, numero_telephone, ville_residence, password } = req.body;
+
+  if (!pseudo || !password) {
+    return res.status(400).json({ errors: [{ field: "pseudo", message: "Pseudo et mot de passe sont requis" }] });
+  }
+
+  const error = [];
+
+  // Email format basique
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (email && !emailRegex.test(email)) {
+    error.push({ field: "email", message: "Veuillez entrer une adresse email valide." });
+  }
+
+  // Numéro de téléphone basique
+  const phoneRegex = /^\+?[0-9]{7,15}$/;
+  if (numero_telephone && !phoneRegex.test(numero_telephone)) {
+    error.push({ field: "numero_telephone", message: "Merci d’entrer un numéro de téléphone valide." });
+  }
+
+  // Vérification pseudo/email existants
+  const existingUser = await User.findOne({ $or: [{ email }, { pseudo }] });
+  if (existingUser) {
+    if (existingUser.pseudo === pseudo) {
+      error.push({ field: "pseudo", message: "Ce pseudo est déjà utilisé." });
     }
-  
-    try {
-      const hashedPassword = await bcrypt.hash(password, 10);
-  
-      // Vérifier si l'email ou le pseudo existent déjà
-      const existingUser = await User.findOne({ $or: [{ email }, { pseudo }] });
-      if (existingUser) {
-        return res.status(400).json({ message: "Pseudo ou email déjà utilisé" });
-      }
-  
-      // Créer un nouvel utilisateur
-      const newUser = new User({ pseudo, email, numero_telephone, ville_residence, password: hashedPassword });
-      await newUser.save();
-  
-      res.status(201).json({ message: "Utilisateur inscrit avec succès" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Erreur serveur" });
+    if (existingUser.email === email) {
+      error.push({ field: "email", message: "Cette adresse email est déjà utilisée." });
     }
-  };
-  
+  }
+
+  if (error.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ pseudo, email, numero_telephone, ville_residence, password: hashedPassword });
+    await newUser.save();
+    res.status(201).json({ message: "Utilisateur inscrit avec succès" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: [{ field: "", message: "Erreur serveur" }] });
+  }
+};
+
   
   const login = async (req, res) => {
     const { pseudo, password } = req.body;

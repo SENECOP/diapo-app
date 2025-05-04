@@ -12,7 +12,7 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,26 +24,48 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!pseudo || !password || !ville_residence) {
-      setError('Les champs obligatoires doivent être remplis.');
+    const newErrors = {};
+  
+    // Validation frontend
+    if (!pseudo.trim()) newErrors.pseudo = 'Le pseudo est requis.';
+    if (!ville_residence.trim()) newErrors.ville_residence = 'La ville de résidence est requise.';
+    if (!password) newErrors.password = 'Le mot de passe est requis.';
+    if (password !== confirmPassword) newErrors.confirmPassword = 'Les mots de passe ne correspondent pas.';
+  
+    // Optionnel : valider email si renseigné
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Adresse email invalide.';
+    }
+  
+    // Optionnel : valider téléphone si renseigné
+    if (numero_telephone && !/^\+?[0-9]{7,15}$/.test(numero_telephone)) {
+      newErrors.numero_telephone = 'Numéro de téléphone invalide.';
+    }
+  
+    if (Object.keys(newErrors).length > 0) {
+      setError(newErrors);
       return;
     }
-
-    if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.');
-      return;
-    }
-
-    const newUser = { pseudo, email, numero_telephone, ville_residence, password };
-
+  
     try {
-      await axios.post('https://diapo-app.onrender.com/api/auth/signup', newUser);
+      await axios.post('https://diapo-app.onrender.com/api/auth/signup', {
+        pseudo,
+        email,
+        numero_telephone,
+        ville_residence,
+        password,
+      });
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors de l’inscription.');
+      const apiErrors = err.response?.data?.errors || [];
+      const errorObj = {};
+      apiErrors.forEach((err) => {
+        errorObj[err.field] = err.message;
+      });
+      setError(errorObj);
     }
   };
+  
 
   return (
     <div className="flex min-h-screen overflow-hidden">
@@ -60,9 +82,11 @@ const SignUp = () => {
       <div className="flex flex-col justify-center items-center w-full md:w-1/2 p-8 bg-white shadow-lg">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Créer un compte</h2>
 
-        {error && <p className="text-red-600 text-sm text-center mb-4">{error}</p>}
-
         <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-md">
+          {error.general && (
+            <p className="text-red-600 text-sm text-center">{error.general}</p>
+          )}
+
           <div>
             <label className="block text-gray-700">Pseudo <span className="text-red-500">*</span></label>
             <input
@@ -72,6 +96,7 @@ const SignUp = () => {
               onChange={(e) => setPseudo(e.target.value)}
               required
             />
+            {error.pseudo && <p className="text-red-600 text-sm mt-1">{error.pseudo}</p>}
           </div>
 
           <div>
@@ -82,6 +107,7 @@ const SignUp = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            {error.email && <p className="text-red-600 text-sm mt-1">{error.email}</p>}
           </div>
 
           <div>
@@ -92,6 +118,7 @@ const SignUp = () => {
               value={numero_telephone}
               onChange={(e) => setNumeroTelephone(e.target.value)}
             />
+            {error.numero_telephone && <p className="text-red-600 text-sm mt-1">{error.numero_telephone}</p>}
           </div>
 
           <div>
@@ -103,6 +130,7 @@ const SignUp = () => {
               onChange={(e) => setVilleResidence(e.target.value)}
               required
             />
+            {error.ville_residence && <p className="text-red-600 text-sm mt-1">{error.ville_residence}</p>}
           </div>
 
           <div>
@@ -122,6 +150,7 @@ const SignUp = () => {
                 {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
               </div>
             </div>
+            {error.password && <p className="text-red-600 text-sm mt-1">{error.password}</p>}
           </div>
 
           <div>
@@ -141,6 +170,9 @@ const SignUp = () => {
                 {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
               </div>
             </div>
+            {error.confirmPassword && (
+              <p className="text-red-600 text-sm mt-1">{error.confirmPassword}</p>
+            )}
           </div>
 
           <button
