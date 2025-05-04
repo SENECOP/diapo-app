@@ -24,36 +24,49 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Réinitialiser les erreurs à chaque soumission
+  
+    // Réinitialiser les erreurs
     setError({});
-
+  
     if (!pseudo || !password || !ville_residence) {
       setError({ general: 'Les champs obligatoires doivent être remplis.' });
       return;
     }
-
+  
     if (password !== confirmPassword) {
       setError({ confirmPassword: 'Les mots de passe ne correspondent pas.' });
       return;
     }
-
+  
     const newUser = { pseudo, email, numero_telephone, ville_residence, password };
-
+  
     try {
       await axios.post('https://diapo-app.onrender.com/api/auth/signup', newUser);
       navigate('/login');
     } catch (err) {
       console.log('Erreur signup backend:', err.response?.data);
-
-      const apiErrors = err.response?.data?.errors || [];
-      const errorObj = {};
-      apiErrors.forEach((err) => {
-        errorObj[err.field] = err.message;
-      });
-      setError(errorObj);
+  
+      const resData = err.response?.data;
+  
+      // Si c'est un tableau d'erreurs
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        const errorObj = {};
+        resData.errors.forEach((err) => {
+          errorObj[err.field] = err.message;
+        });
+        setError(errorObj);
+      } 
+      // Si c'est un message unique
+      else if (resData?.message) {
+        setError({ general: resData.message });
+      } 
+      // Erreur inconnue
+      else {
+        setError({ general: "Une erreur inattendue s'est produite." });
+      }
     }
   };
+  
 
   return (
     <div className="flex min-h-screen overflow-hidden">
