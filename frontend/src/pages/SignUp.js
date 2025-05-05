@@ -24,53 +24,44 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    // Réinitialiser les erreurs
-    setError({});
-  
-    const newErrors = {};
 
-    if (!pseudo || !password || !ville_residence) {
-      newErrors.general = 'Les champs obligatoires doivent être remplis.';
-    }
-    
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas.';
-    }
-    
-    if (Object.keys(newErrors).length > 0) {
-      setError(newErrors);
+    const validationErrors = {};
+
+    if (!pseudo.trim()) validationErrors.pseudo = 'Le pseudo est requis.';
+    if (!password) validationErrors.password = 'Le mot de passe est requis.';
+    if (!ville_residence.trim()) validationErrors.ville_residence = 'La ville est requise.';
+    if (password !== confirmPassword)
+      validationErrors.confirmPassword = 'Les mots de passe ne correspondent pas.';
+
+    if (Object.keys(validationErrors).length > 0) {
+      setError(validationErrors);
       return;
     }
+
     const newUser = { pseudo, email, numero_telephone, ville_residence, password };
-  
+
     try {
       await axios.post('https://diapo-app.onrender.com/api/auth/signup', newUser);
       navigate('/login');
     } catch (err) {
       console.log('Erreur signup backend:', err.response?.data);
-  
       const resData = err.response?.data;
-  
-      // Si c'est un tableau d'erreurs
+
+      const errorObj = {};
+
       if (resData?.errors && Array.isArray(resData.errors)) {
-        const errorObj = {};
         resData.errors.forEach((err) => {
           errorObj[err.field] = err.message;
         });
-        setError((prev) => ({ ...prev, ...errorObj }));
-      } 
-      // Si c'est un message unique
-      else if (resData?.message) {
-        setError({ general: resData.message });
-      } 
-      // Erreur inconnue
-      else {
-        setError({ general: "Une erreur inattendue s'est produite." });
+      } else if (resData?.message) {
+        errorObj.pseudo = resData.message;
+      } else {
+        errorObj.general = "Une erreur inattendue s'est produite.";
       }
+
+      setError(errorObj);
     }
   };
-  
 
   return (
     <div className="flex min-h-screen overflow-hidden">
@@ -86,12 +77,10 @@ const SignUp = () => {
       {/* Partie Droite */}
       <div className="flex flex-col justify-center items-center w-full md:w-1/2 p-8 bg-white shadow-lg">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Créer un compte</h2>
+        
+        {error.general && <p className="text-red-500 text-sm mb-4">{error.general}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-md">
-          {error.general && (
-            <p className="text-red-600 text-sm text-center">{error.general}</p>
-          )}
-
           <div>
             <label className="block text-gray-700">Pseudo <span className="text-red-500">*</span></label>
             <input
@@ -156,7 +145,6 @@ const SignUp = () => {
                 {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
               </span>
             </div>
-
             {error.password && <p className="text-red-600 text-sm mt-1">{error.password}</p>}
           </div>
 
@@ -178,7 +166,6 @@ const SignUp = () => {
                 {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
               </span>
             </div>
-
             {error.confirmPassword && (
               <p className="text-red-600 text-sm mt-1">{error.confirmPassword}</p>
             )}
