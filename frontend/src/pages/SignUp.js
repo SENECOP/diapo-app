@@ -28,16 +28,20 @@ const SignUp = () => {
     // Réinitialiser les erreurs
     setError({});
   
+    const newErrors = {};
+
     if (!pseudo || !password || !ville_residence) {
-      setError({ general: 'Les champs obligatoires doivent être remplis.' });
-      return;
+      newErrors.general = 'Les champs obligatoires doivent être remplis.';
     }
-  
+    
     if (password !== confirmPassword) {
-      setError({ confirmPassword: 'Les mots de passe ne correspondent pas.' });
+      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas.';
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setError(newErrors);
       return;
     }
-  
     const newUser = { pseudo, email, numero_telephone, ville_residence, password };
   
     try {
@@ -54,7 +58,7 @@ const SignUp = () => {
         resData.errors.forEach((err) => {
           errorObj[err.field] = err.message;
         });
-        setError(errorObj);
+        setError((prev) => ({ ...prev, ...errorObj }));
       } 
       // Si c'est un message unique
       else if (resData?.message) {
