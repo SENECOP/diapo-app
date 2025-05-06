@@ -26,8 +26,14 @@ router.put('/:id/archives', verifyToken, donController.archiveDon);
 router.put('/:id/desarchiver', verifyToken, donController.unarchiveDon);
 
 // Optionnel : récupérer uniquement les dons archivés
-router.get('/archives', donController.getArchivedDons);
-
+router.get('/archives', async (req, res) => {
+  try {
+    const donsArchives = await Don.find({ archived: true });
+    res.json(donsArchives);
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
 
 // Dons par catégorie (idéalement à déplacer aussi dans le contrôleur)
 router.get('/categorie/:categorie', async (req, res) => {

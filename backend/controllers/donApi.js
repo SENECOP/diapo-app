@@ -108,7 +108,6 @@ const archiveDon = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 const unarchiveDon = async (req, res) => {
   try {
     const don = await Don.findById(req.params.id);
@@ -148,15 +147,6 @@ const prendreDon = async (req, res) => {
   }
 };
 
-// Récupérer les dons archivés
-const getArchivedDons = async (req, res) => {
-  try {
-    const dons = await Don.find({ archived: true });
-    res.status(200).json(dons);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 // Récupérer par catégorie
 const getDonsByCategorie = async (req, res) => {
@@ -188,6 +178,5 @@ module.exports = {
   archiveDon,
   unarchiveDon,
   prendreDon,
-  getArchivedDons,
   getDonsByCategorie
 };

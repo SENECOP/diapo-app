@@ -13,6 +13,8 @@ import { UserProvider } from './context/UserContext';
 import Profil from "./pages/Profil";
 import Message from './components/messages/Messages';
 import Archives from './pages/Archives';
+import Recuperation from './pages/Recuperation'; 
+
 
 
 
@@ -36,6 +38,8 @@ const App = () => {
           <Route path="/profil" element={<Profil />} />
           <Route path="/message" element={<Message />} />
           <Route path="/archives" element={<Archives />} />
+          <Route path="/recuperation" element={<Recuperation />} />
+
 
 
 
