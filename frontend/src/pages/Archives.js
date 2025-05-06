@@ -31,7 +31,12 @@ const Archives = () => {
   useEffect(() => {
     const fetchArchives = async () => {
       try {
-        const res = await axios.get("https://diapo-app.onrender.com/api/dons/archives");
+        const res = await axios.get("https://diapo-app.onrender.com/api/dons/archives", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+        
         setArchives(res.data);
       } catch (err) {
         console.error("Erreur lors du chargement des archives", err);
