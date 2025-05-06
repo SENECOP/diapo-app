@@ -81,7 +81,7 @@ const updateDon = async (req, res) => {
 
     // Si une nouvelle image est envoyée
     if (req.file) {
-      don.url_image = `${req.protocol}://${req.get('host')}/${req.file.filename}`; // ou ${req.protocol}://${req.get('host')}/uploads/${req.file.filename}
+      don.url_image = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     }
 
     await don.save();

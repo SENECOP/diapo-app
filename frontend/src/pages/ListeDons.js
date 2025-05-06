@@ -7,6 +7,8 @@ import { FiMenu, FiX, FiMoreVertical, FiEdit, FiTrash2, FiArchive } from 'react-
 import { UserContext } from '../context/UserContext';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { FaArrowLeft } from 'react-icons/fa';
+
 
 const MySwal = withReactContent(Swal);
 
@@ -111,9 +113,18 @@ const ListeDons = () => {
     <div className="flex flex-col min-h-screen bg-white text-black">
       <Header />
 
-      <div className="bg-blue-700 text-white px-10 py-10 flex items-center space-x-4">
-        <Link to="/" className="text-white text-2xl hover:text-gray-200">←</Link>
-        <h1 className="text-3xl font-semibold">Dashboard</h1>
+      <div className="bg-blue-700 text-white px-10 py-10 flex items-center h-[250px] space-x-4">
+      <div className="flex items-center gap-4">
+      <button
+        onClick={() => navigate('/dashboard')}
+        className="p-2 rounded-full bg-white text-blue-700 hover:bg-gray-100 shadow"
+        title="Retour au tableau de bord"
+      >
+        <FaArrowLeft />
+      </button>
+      <h1 className="text-3xl font-semibold">Dashboard</h1>
+    </div>
+
       </div>
 
       <div className="flex flex-1">
@@ -141,6 +152,7 @@ const ListeDons = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-semibold">Liste des Dons</h2>
+
               <Link to="/archives" className="text-blue-600 hover:text-blue-800 flex items-center space-x-1">
                 <FiArchive size={20} />
                 <span className="text-sm font-medium">Archives</span>

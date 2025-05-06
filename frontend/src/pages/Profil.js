@@ -5,6 +5,8 @@ import Footer from '../components/Footer';
 import Header from '../components/Header'; // À créer si ce n’est pas encore fait
 import { FaEdit } from 'react-icons/fa';
 import { MdCameraAlt } from 'react-icons/md';
+import { FaArrowLeft } from 'react-icons/fa';
+
 
 const Profil = () => {
   const { user, logout, updateUser } = useContext(UserContext);
@@ -95,11 +97,19 @@ const Profil = () => {
           />
         </div>
         </div>
-        <h1 className="text-3xl font-semibold">Profile</h1>
-      </div>
+        <div className="flex items-center h-[150px] gap-4 ">
+  <button
+    onClick={() => navigate('/dashboard')}
+    className="p-2 rounded-full bg-white  text-blue-700 hover:bg-gray-100 shadow"
+    title="Retour au tableau de bord"
+  >
+    <FaArrowLeft />
+  </button>
+  <h1 className="text-3xl font-semibold">Profile</h1>
+</div>      </div>
 
       {/* Formulaire centré */}
-      <div className="flex justify-center px-4 mt-6">
+      <div className="flex justify-center px-4 -mt-16">
       <div className="bg-white shadow-lg rounded-md p-8 w-full max-w-2xl relative mt-10">
         <h2 className="text-xl font-semibold border-b border-gray-300 pb-2 mb-6">Info personnel</h2>
 
