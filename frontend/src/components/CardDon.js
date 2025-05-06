@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FaMapMarkerAlt,
   FaClock,
@@ -30,6 +30,14 @@ const formatRelativeTime = (dateString) => {
 const CardDon = ({ don }) => {
   const navigate = useNavigate();
   const [favori, setFavori] = useState(false);
+  const [isPris, setIsPris] = useState(false);
+
+  useEffect(() => {
+    const donsPris = JSON.parse(localStorage.getItem("donsPris")) || [];
+    if (don && donsPris.includes(don._id)) {
+      setIsPris(true);
+    }
+  }, [don]);
 
   if (!don) return null;
 
@@ -40,30 +48,25 @@ const CardDon = ({ don }) => {
 
   const handleTake = async (e) => {
     e.stopPropagation();
-  
+
     const currentUser = JSON.parse(localStorage.getItem("user"));
     if (!currentUser) {
       navigate("/login");
       return;
     }
-  
-    // Stocker une alerte de réservation (si besoin ailleurs)
+
     localStorage.setItem("AlerteReservation", "true");
-  
-    // Redirection vers la page message
     navigate("/message");
-  
+
     try {
       const donId = don._id;
-      console.log("Détails du don reçu :", don); 
-  
-      const createurId = don.user?._id || don.user; // compatibilité avec ID direct ou objet user
+      const createurId = don.user?._id || don.user;
+
       if (!createurId) {
         console.error("Aucun Utilisateur trouvé dans le don");
-        return; // Ne pas continuer si l'ID est manquant
+        return;
       }
-  
-      // Envoi de la notification via l’API backend
+
       const response = await fetch("https://diapo-app.onrender.com/api/notifications", {
         method: "POST",
         headers: {
@@ -76,35 +79,36 @@ const CardDon = ({ don }) => {
           don: donId,
         }),
       });
-  
+
       if (!response.ok) {
         throw new Error("Erreur lors de l’envoi de la notification");
       }
-  
+
       console.log("✅ Notification envoyée au créateur du don !");
+
+      // Marquer ce don comme pris
+      const donsPris = JSON.parse(localStorage.getItem("donsPris")) || [];
+      if (!donsPris.includes(donId)) {
+        donsPris.push(donId);
+        localStorage.setItem("donsPris", JSON.stringify(donsPris));
+      }
+      setIsPris(true);
     } catch (error) {
       console.error("Erreur lors de la prise de don ou de la notification :", error);
       alert("Une erreur est survenue lors de la notification.");
     }
   };
-  
-  
+
   return (
-    <div
-      className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"
-    >
+    <div className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
       <img
         src={`https://diapo-app.onrender.com${don.url_image}`}
         alt={don.titre || " "}
         className="w-full h-32 object-cover rounded"
       />
-      <h3 className="font-semibold text-lg mt-2">
-        {don.titre || "Titre inconnu"}
-      </h3>
+      <h3 className="font-semibold text-lg mt-2">{don.titre || "Titre inconnu"}</h3>
       <p className="text-sm text-gray-500">{don.categorie || "Catégorie inconnue"}</p>
-      <p className="text-sm text-gray-600">
-        {don.description || "Pas de description"}
-      </p>
+      <p className="text-sm text-gray-600">{don.description || "Pas de description"}</p>
 
       <div className="flex flex-col gap-1 mt-2 text-sm text-gray-600">
         <div className="flex items-center gap-2">
@@ -124,9 +128,12 @@ const CardDon = ({ don }) => {
       <div className="mt-4 flex justify-between items-center gap-2">
         <button
           onClick={handleTake}
-          className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+          disabled={isPris}
+          className={`flex-1 py-2 rounded transition ${
+            isPris ? "bg-gray-400 text-white cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
         >
-          Je prends
+          {isPris ? "Pris" : "Je prends"}
         </button>
         <button
           onClick={handleFavoriToggle}
