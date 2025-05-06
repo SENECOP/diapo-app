@@ -6,7 +6,7 @@ const createDon = async (req, res) => {
   console.log("Utilisateur connecté :", req.user); 
   try {
     const { titre, description, categorie, ville_don } = req.body;
-    const imagePath = req.file ? `${req.file.filename}` : null;
+    const imagePath = req.file ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` : null;
     const userId = req.user?._id;
 
     const newDon = new Don({
@@ -28,21 +28,30 @@ const createDon = async (req, res) => {
 
 // Obtenir tous les dons (filtrés ou non)
 const getDons = async (req, res) => {
-  const { categorie } = req.query;
+  const { userId, categorie } = req.query;
+
   try {
-    let dons;
-    if (categorie) {
-      dons = await Don.find({
-        categorie: { $regex: new RegExp(`^${categorie}$`, 'i') },
-      }).sort({ createdAt: -1 });
-    } else {
-      dons = await Don.find().sort({ createdAt: -1 });
+    const filter = {};
+
+    if (userId) {
+      filter.userId = userId;
     }
+
+    if (categorie) {
+      filter.categorie = { $regex: new RegExp(`^${categorie}$`, 'i') };
+    }
+
+    const dons = await Don.find(filter).sort({ createdAt: -1 });
     res.status(200).json(dons);
   } catch (error) {
+    console.error("Erreur lors de la récupération des dons :", error);
     res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
+
+
+
+
 
 // Obtenir un don par ID
 const getDonById = async (req, res) => {
@@ -147,26 +156,37 @@ const prendreDon = async (req, res) => {
   }
 };
 
+// Récupérer tous les dons archivés
+const getArchivedDons = async (req, res) => {
+  try {
+    const dons = await Don.find({ archived: false });
+    res.json(dons);
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
 
-// Récupérer par catégorie
+// Récupérer par catégorie, y compris les nouveautés
 const getDonsByCategorie = async (req, res) => {
   try {
     const { categorie } = req.params;
     let dons;
 
-    if (categorie) {
-      dons = await Don.find({
-        categorie: { $regex: new RegExp(`${categorie}$`, 'i') } // insensitive case
-      }).sort({ createdAt: -1 });
+    if (categorie.toLowerCase() === "nouveautes") {
+      dons = await Don.find().sort({ createdAt: -1 }).limit(5);
     } else {
-      dons = await Don.find().sort({ createdAt: -1 });
+      dons = await Don.find({
+        categorie: { $regex: new RegExp(categorie, "i") },
+        archived: false
+      }).sort({ createdAt: -1 });
     }
 
-    res.status(200).json(dons);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.json(dons);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
+
 
 
 module.exports = {
@@ -178,5 +198,6 @@ module.exports = {
   archiveDon,
   unarchiveDon,
   prendreDon,
-  getDonsByCategorie
+  getDonsByCategorie,
+  getArchivedDons, 
 };

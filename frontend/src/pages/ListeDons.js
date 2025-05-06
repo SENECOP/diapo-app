@@ -20,28 +20,36 @@ const ListeDons = () => {
   const { user } = useContext(UserContext);
   const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    const fetchDons = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get('https://diapo-app.onrender.com/api/dons');
-        const data = Array.isArray(response.data) ? response.data : response.data.data || [];
-        const userDons = data.filter(don => don.userId === user?.id);
-        setDons(userDons);
-      } catch (error) {
-        console.error('Erreur lors de la récupération des dons :', error);
-        setDons([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    console.log("User context:", user);
-
-    if (user?._id) {
-      fetchDons();
+ useEffect(() => {
+  if (!user?.id) {
+    console.log("user.id absent, pas d'appel à fetchDons");
+    return;
+  }
+  const fetchDons = async () => {
+    setLoading(true);
+    try {
+      const userId = user._id || user.id;
+      const response = await axios.get(`https://diapo-app.onrender.com/api/dons?userId=${userId}`);
+      const data = Array.isArray(response.data) ? response.data : response.data.data || [];
+  
+      setDons(data);
+      console.log("Dons récupérés pour l'utilisateur :", data);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des dons :', error);
+      setDons([]);
+    } finally {
+      setLoading(false);
+      console.log("Chargement terminé");
     }
-  }, [location, user]);
+  };
+  
+  
 
+  console.log("Appel de fetchDons avec user.id =", user.id);
+  fetchDons();
+}, [location, user]);  
+
+  
   const handleEdit = (id) => navigate(`/creer-don/${id}`);
 
   const handleDelete = (id) => {
@@ -162,7 +170,7 @@ const ListeDons = () => {
                           {don.categorie || 'Catégorie inconnue'} — {don.ville_don || 'Ville non précisée'}
                         </p>
                       </div>
-                      {user && user.id === don.userId && (
+                      {user && user._id === don.userId && (
                         <div className="relative">
                           <button
                             onClick={() => setActiveMenuId(activeMenuId === don._id ? null : don._id)}

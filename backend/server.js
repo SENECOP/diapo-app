@@ -31,7 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dons', donRoutes);
 app.use('/api/notifications', notificationsRoutes);
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static('uploads'));
 //app.options('*', cors());
 
 
