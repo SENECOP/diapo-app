@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useNavigate } from "react-router-dom"; // ✅ import navigation
+import { useNavigate } from "react-router-dom"; 
 
 const Archives = () => {
   const [archives, setArchives] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // ✅ initialise useNavigate
+  const navigate = useNavigate(); 
 
   const handleUnarchive = async (id) => {
     if (window.confirm("Voulez-vous désarchiver ce don ?")) {
@@ -19,7 +19,7 @@ const Archives = () => {
         });
 
         alert("Don désarchivé avec succès !");
-        // ✅ redirection vers la liste des dons
+       
         navigate("/ListeDons");
       } catch (err) {
         console.error("Erreur lors du désarchivage :", err);
@@ -32,7 +32,7 @@ const Archives = () => {
     const fetchArchives = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get("https://diapo-app.onrender.com/api/archives", {
+        const response = await axios.get("https://diapo-app.onrender.com/api/dons/archives", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
