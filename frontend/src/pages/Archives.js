@@ -31,23 +31,26 @@ const Archives = () => {
   useEffect(() => {
     const fetchArchives = async () => {
       try {
-        const res = await axios.get("https://diapo-app.onrender.com/api/dons/archives", {
+        const token = localStorage.getItem('token');
+        const response = await axios.get("https://diapo-app.onrender.com/api/archives", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
-        
-        setArchives(res.data);
-      } catch (err) {
-        console.error("Erreur lors du chargement des archives", err);
+  
+        const data = Array.isArray(response.data) ? response.data : response.data.data || [];
+        setArchives(data);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des dons archivés :", error);
+        setArchives([]);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchArchives();
   }, []);
-
+  
   return (
     <div className="flex flex-col min-h-screen bg-white text-black">
       <Header />
