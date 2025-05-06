@@ -32,7 +32,7 @@ const getDons = async (req, res) => {
   const { categorie, userId } = req.query;
 
   try {
-    let filter = {};
+    let filter = {archived: false};
     if (categorie) {
       filter.categorie = { $regex: new RegExp(`^${categorie}$`, 'i') };
     }
