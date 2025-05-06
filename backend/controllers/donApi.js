@@ -158,6 +158,8 @@ const prendreDon = async (req, res) => {
 const getArchivedDons = async (req, res) => {
   try {
     const userId = req.user?.id;
+    console.log("Utilisateur non authentifié");  
+
     if (!userId) {
       return res.status(401).json({ message: 'Utilisateur non authentifié' });
     }
