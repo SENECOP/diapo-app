@@ -157,20 +157,12 @@ const prendreDon = async (req, res) => {
 // Récupérer tous les dons archivés
 const getArchivedDons = async (req, res) => {
   try {
-    const userId = req.user?.id;
-    console.log("Utilisateur non authentifié");  
-
-    if (!userId) {
-      return res.status(401).json({ message: 'Utilisateur non authentifié' });
-    }
-
-    const dons = await Don.find({ userId, archived: true });
-    res.json(dons);
+    const donsArchives = await Don.find({ archived: true });
+    res.json(donsArchives);
   } catch (err) {
-    console.error("Erreur dans getArchivedDons :", err);
     res.status(500).json({ message: 'Erreur serveur' });
   }
-};
+}
 
 
 // Récupérer par catégorie, y compris les nouveautés

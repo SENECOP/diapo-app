@@ -26,7 +26,7 @@ router.put('/:id/archives', verifyToken, donController.archiveDon);
 router.put('/:id/desarchiver', verifyToken, donController.unarchiveDon);
 
 
-router.get('/dons/archives',verifyToken, donController.getArchivedDons);
+router.get('/archives',verifyToken, donController.getArchivedDons);
 router.get('/categorie/:categorie', donController.getDonsByCategorie);
 
 
