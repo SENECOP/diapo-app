@@ -28,26 +28,24 @@ const createDon = async (req, res) => {
 
 // Obtenir tous les dons (filtrés ou non)
 const getDons = async (req, res) => {
-  const { userId, categorie } = req.query;
+  const { categorie, userId } = req.query;
 
   try {
-    const filter = {};
-
-    if (userId) {
-      filter.userId = userId;
-    }
-
+    let filter = {};
     if (categorie) {
       filter.categorie = { $regex: new RegExp(`^${categorie}$`, 'i') };
+    }
+    if (userId) {
+      filter.user = userId;  // ce champ doit correspondre à ton modèle Don
     }
 
     const dons = await Don.find(filter).sort({ createdAt: -1 });
     res.status(200).json(dons);
   } catch (error) {
-    console.error("Erreur lors de la récupération des dons :", error);
     res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
+
 
 
 
