@@ -37,7 +37,9 @@ const Archives = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-          setArchives(reponse.data);
+  
+        const data = Array.isArray(response.data) ? response.data : response.data.data || [];
+        setArchives(data);
       } catch (error) {
         console.error("Erreur lors de la récupération des dons archivés :", error);
         setArchives([]);
