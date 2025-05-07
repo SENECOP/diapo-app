@@ -1,33 +1,32 @@
 const Notification = require('../models/Notification');
 
 // ➕ Créer une notification
-exports.createNotification = async (req, res) => {
+const createNotification = async (req, res) => {
   try {
-    const { message, don, destinataire } = req.body;
+    const { emetteur, destinataire, message, don } = req.body;
 
-    // Validation rapide
-    if (!message || !don || !destinataire) {
-      return res.status(400).json({ error: "Champs requis manquants (message, don, destinataire)" });
+    if (!emetteur || !destinataire || !message) {
+      return res.status(400).json({ error: "Champs obligatoires manquants" });
     }
 
     const notification = new Notification({
-      message,
-      don,
+      emetteur,
       destinataire,
-      lu: false
-    })
+      message,
+      don: don || null
+    });
 
-    const savedNotification = await notification.save();
+    await notification.save();
 
-    res.status(201).json(savedNotification);
+    res.status(201).json({ message: "Notification créée", notification });
   } catch (error) {
-    console.error("Erreur lors de la création de la notification :", error.message);
-    res.status(500).json({ error: "Erreur serveur", details: error.message });
+    console.error("Erreur lors de la création de la notification :", error);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 };
 
 // 🔽 Obtenir toutes les notifications
-exports.getNotifications = async (req, res) => {
+const getNotifications = async (req, res) => {
     
   try {
     const notifications = await Notification.find().populate('don destinataire');
@@ -53,3 +52,9 @@ exports.markAsRead = async (req, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
+
+module.exports = {
+  createNotification,
+  getNotifications,
+
+}

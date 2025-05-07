@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+
 function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const user = JSON.parse(localStorage.getItem("user"));
@@ -6,7 +8,7 @@ function NotificationsPage() {
     const fetchNotifications = async () => {
       const res = await fetch(`https://diapo-app.onrender.com/api/notifications/user/${user._id}`);
       const data = await res.json();
-      setNotifications(data);
+      setNotifications(data.notifications || []);
     };
 
     fetchNotifications();
@@ -25,3 +27,5 @@ function NotificationsPage() {
     </div>
   );
 }
+
+export default NotificationsPage;

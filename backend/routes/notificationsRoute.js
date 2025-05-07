@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Notification = require("../models/Notification");
+const { createNotification } = require("../controllers/notificationController");
+
 
 // Récupérer les notifications d’un utilisateur
 router.get("/user/:userId", async (req, res) => {
@@ -13,6 +15,10 @@ router.get("/user/:userId", async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
+
+router.post("/", createNotification);
+
+
 
 // Marquer les notifications comme lues
 router.put("/mark-as-read/:userId", async (req, res) => {

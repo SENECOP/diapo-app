@@ -14,9 +14,7 @@ import Profil from "./pages/Profil";
 import Message from './components/messages/Messages';
 import Archives from './pages/Archives';
 import Recuperation from './pages/Recuperation'; 
-
-
-
+import NotificationsPage from './pages/Notifications'
 
 
 
@@ -39,6 +37,7 @@ const App = () => {
           <Route path="/message" element={<Message />} />
           <Route path="/archives" element={<Archives />} />
           <Route path="/recuperation" element={<Recuperation />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
 
 
 
