@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Notification = require("../models/Notification");
-const { createNotification } = require("../controllers/notificationController");
+const { createNotification } = require("../controllers/notificationApi");
 
 
 // Récupérer les notifications d’un utilisateur
