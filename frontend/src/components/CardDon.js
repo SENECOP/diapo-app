@@ -31,12 +31,6 @@ const CardDon = ({ don }) => {
   const navigate = useNavigate();
   const [favori, setFavori] = useState(false);
   const [isPris, setIsPris] = useState(false);
-  const imageUrl =
-  typeof don?.url_image === "string" && don.url_image.startsWith("http")
-    ? don.url_image
-    : "https://via.placeholder.com/150";
-
-
   
   useEffect(() => {
     const donsPris = JSON.parse(localStorage.getItem("donsPris")) || [];
@@ -117,7 +111,7 @@ const CardDon = ({ don }) => {
   return (
     <div className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
       <img
-        src= {imageUrl}  
+        src= {`https://diapo-app.onrender.com${don.url_image}`}
         alt={don.titre || " "}
         className="w-full h-32 object-cover rounded"
       />

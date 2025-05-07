@@ -117,7 +117,7 @@ const CreerDon = () => {
     <div className="min-h-screen flex flex-col justify-between">
       <Header />
 
-      <div className="bg-blue-800 text-white p-28 min-h-[350px] text-xl font-semibold flex items-center justify-between">
+      <div className="bg-blue-800 text-white p-27 min-h-[250px] text-l font-semibold flex items-center justify-between">
         
         <span>
           {user ? `Bonjour ${user.pseudo},` : "Bonjour !"} Nous allons vous aider à créer votre annonce.

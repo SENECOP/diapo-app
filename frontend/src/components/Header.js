@@ -13,7 +13,7 @@ const Header = () => {
   const filterMenuRef = useRef(null);
 
   const categories = ["Technologie", "Vêtements", "Meuble"];
-  const villes = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack"];
+  const villes = ["Dakar", "Thiès", "Saint-Louis", "Mbour", "Yoff"];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
