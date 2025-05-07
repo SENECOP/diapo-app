@@ -32,12 +32,14 @@ const CardDon = ({ don }) => {
   const [favori, setFavori] = useState(false);
   const [isPris, setIsPris] = useState(false);
 
+  
   useEffect(() => {
     const donsPris = JSON.parse(localStorage.getItem("donsPris")) || [];
     if (don && donsPris.includes(don._id)) {
       setIsPris(true);
     }
-  }, [don]);
+  }, [don]); 
+  
 
   if (!don) return null;
 
@@ -57,6 +59,14 @@ const CardDon = ({ don }) => {
 
     localStorage.setItem("AlerteReservation", "true");
     navigate("/message");
+
+    await fetch(`https://diapo-app.onrender.com/api/dons/reserver/${don._id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ preneur: currentUser._id }), // facultatif
+    });
 
     try {
       const donId = don._id;
@@ -102,7 +112,7 @@ const CardDon = ({ don }) => {
   return (
     <div className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
       <img
-        src={`https://diapo-app.onrender.com${don.url_image}`}
+        src={don.url_image}
         alt={don.titre || " "}
         className="w-full h-32 object-cover rounded"
       />

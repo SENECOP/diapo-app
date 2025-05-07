@@ -30,6 +30,39 @@ router.put('/:id/archives', verifyToken, donController.archiveDon);
 router.put('/:id/desarchiver', verifyToken, donController.unarchiveDon);
 
 
+// GET /api/dons/reserves/:userId
+router.get("/reserves/:userId", async (req, res) => {
+  try {
+    const donsReserves = await Don.find({
+      statut: "reserve",
+      preneur: req.params.userId
+    }).populate("user").populate("preneur");
+
+    res.status(200).json(donsReserves);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error });
+  }
+});
+
+// PUT /api/dons/reserver/:id
+router.put("/reserver/:id", async (req, res) => {
+  try {
+    const don = await Don.findById(req.params.id);
+    if (!don) {
+      return res.status(404).json({ message: "Don introuvable" });
+    }
+
+    don.statut = "reserve"; // 👈 Change le statut ici
+    don.preneur = req.body.preneur || null; // facultatif : enregistrer le preneur
+    await don.save();
+
+    res.status(200).json({ message: "Don réservé avec succès", don });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error });
+  }
+});
+
+
 
 
 
