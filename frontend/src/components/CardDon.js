@@ -31,6 +31,11 @@ const CardDon = ({ don }) => {
   const navigate = useNavigate();
   const [favori, setFavori] = useState(false);
   const [isPris, setIsPris] = useState(false);
+  const imageUrl =
+  typeof don?.url_image === "string" && don.url_image.startsWith("http")
+    ? don.url_image
+    : "https://via.placeholder.com/150";
+
 
   
   useEffect(() => {
@@ -112,10 +117,11 @@ const CardDon = ({ don }) => {
   return (
     <div className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
       <img
-        src={don.url_image}
+        src= {imageUrl}  
         alt={don.titre || " "}
         className="w-full h-32 object-cover rounded"
       />
+
       <h3 className="font-semibold text-lg mt-2">{don.titre || "Titre inconnu"}</h3>
       <p className="text-sm text-gray-500">{don.categorie || "Catégorie inconnue"}</p>
       <p className="text-sm text-gray-600">{don.description || "Pas de description"}</p>

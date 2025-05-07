@@ -6,7 +6,7 @@ const createDon = async (req, res) => {
   console.log("Utilisateur connecté :", req.user); 
   try {
     const { titre, description, categorie, ville_don } = req.body;
-    const imagePath = req.file ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` : null;
+    const imagePath = req.file ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`: "";
     const userId = req.user?._id;
 
     const newDon = new Don({

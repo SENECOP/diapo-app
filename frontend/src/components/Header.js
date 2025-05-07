@@ -12,7 +12,7 @@ const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState({ category: false, city: false });
   const filterMenuRef = useRef(null);
 
-  const categories = ["Technologie", "Vêtements", "Électroménager", "Livres"];
+  const categories = ["Technologie", "Vêtements", "Meuble"];
   const villes = ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack"];
 
   useEffect(() => {

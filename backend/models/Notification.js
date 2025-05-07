@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema({
+  emetteur: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
   destinataire: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -12,7 +17,7 @@ const notificationSchema = new mongoose.Schema({
   },
   don: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Don", // si tu veux lier à un don spécifique
+    ref: "Don",
     default: null
   },
   vu: {
