@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const CreerDon = () => {
-
   const fileInput = useRef(null);
   const navigate = useNavigate();
   const { id } = useParams();
@@ -30,7 +30,6 @@ const CreerDon = () => {
       axios.get(`https://diapo-app.onrender.com/api/dons/${id}`)
         .then((res) => {
           const don = res.data;
-          console.log('Image URL:', don.url_image);
           setFormData({
             titre: don.titre || '',
             categorie: don.categorie || '',
@@ -61,7 +60,11 @@ const CreerDon = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && !file.type.startsWith('image/')) {
-      alert('Veuillez sélectionner un fichier image');
+      Swal.fire({
+        icon: 'error',
+        title: 'Fichier invalide',
+        text: 'Veuillez sélectionner un fichier image.',
+      });
       return;
     }
     setFormData((prev) => ({
@@ -73,20 +76,23 @@ const CreerDon = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
     const token = localStorage.getItem('token');
-  
+
     const champsManquants = [];
     if (!formData.titre) champsManquants.push("le titre");
     if (!formData.description) champsManquants.push("la description");
     if (!formData.categorie) champsManquants.push("la catégorie");
     if (!formData.ville_don) champsManquants.push("la ville");
-  
+
     if (champsManquants.length > 0) {
-      alert(`Merci de remplir ${champsManquants.join(', ')}.`);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Champs manquants',
+        text: `Merci de remplir ${champsManquants.join(', ')}.`,
+      });
       return;
     }
-  
+
     try {
       const data = new FormData();
       data.append('titre', formData.titre);
@@ -96,21 +102,35 @@ const CreerDon = () => {
       if (formData.url_image) {
         data.append('url_image', formData.url_image);
       }
-  
+
       if (id) {
         await axios.put(`https://diapo-app.onrender.com/api/dons/${id}`, data);
-        alert('Don modifié avec succès');
+        Swal.fire({
+          icon: 'success',
+          title: 'Succès',
+          text: 'Don modifié avec succès',
+          confirmButtonColor: '#2563eb'
+        });
       } else {
         await axios.post('https://diapo-app.onrender.com/api/dons', data, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        alert('Don créé avec succès');
+        Swal.fire({
+          icon: 'success',
+          title: 'Succès',
+          text: 'Don créé avec succès',
+          confirmButtonColor: '#2563eb'
+        });
       }
-  
+
       navigate("/Listedons");
     } catch (error) {
       console.error("Erreur lors de l'envoi du formulaire :", error);
-      alert("Une erreur est survenue. Veuillez réessayer.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: "Une erreur est survenue. Veuillez réessayer.",
+      });
     }
   };
 
@@ -119,15 +139,14 @@ const CreerDon = () => {
       <Header />
 
       <div className="bg-blue-800 text-white p-27 min-h-[250px] text-l font-semibold flex items-center justify-between">
-        
         <span>
           {user ? `Bonjour ${user.pseudo},` : "Bonjour !"} Nous allons vous aider à créer votre annonce.
         </span>
         <img
-          src="/assets/Charity1.png" 
+          src="/assets/Charity1.png"
           alt=""
           className="w-52 h-53 ml-auto object-cover rounded-full"
-          />
+        />
       </div>
 
       <main className="flex justify-center py-10 mt-[-110px]">
@@ -208,7 +227,7 @@ const CreerDon = () => {
                 <p className="text-sm text-gray-600">Image actuelle :</p>
                 <img
                   src={`https://diapo-app.onrender.com/${existingImage}`}
-                  alt="don"
+                  alt={formData.titre}
                   className="w-full max-w-xs rounded"
                 />
               </div>
@@ -217,7 +236,7 @@ const CreerDon = () => {
 
           <button
             type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
           >
             {id ? "Modifier le don" : "Publier"}
           </button>

@@ -109,10 +109,11 @@ const CardDon = ({ don }) => {
   };
 
   return (
+    
     <div className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
   <img
-    src={`http://diapo-app.onrender.com/uploads/${don.url_image}`}
-    alt="don"
+    src={`https://diapo-app.onrender.com/${don.url_image}`}
+    alt={don.titre || "Titre de l'image"}
     className="w-full h-48 object-cover rounded"
   />
       <h3 className="font-semibold text-lg mt-2">{don.titre || "Titre inconnu"}</h3>

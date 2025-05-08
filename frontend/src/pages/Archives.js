@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 import { useNavigate } from "react-router-dom"; 
+
+
+const MySwal = withReactContent(Swal);
 
 const Archives = () => {
   const [archives, setArchives] = useState([]);
@@ -10,23 +15,53 @@ const Archives = () => {
   const navigate = useNavigate(); 
 
   const handleUnarchive = async (id) => {
-    if (window.confirm("Voulez-vous désarchiver ce don ?")) {
-      try {
-        await axios.put(`https://diapo-app.onrender.com/api/dons/${id}/desarchiver`, {}, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
-        });
-
-        alert("Don désarchivé avec succès !");
-       
-        navigate("/ListeDons");
-      } catch (err) {
-        console.error("Erreur lors du désarchivage :", err);
-        alert("Échec du désarchivage");
+    MySwal.fire({
+      title: 'Désarchiver ce don ?',
+      text: 'Ce don sera restauré dans la liste active.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Désarchiver',
+      cancelButtonText: 'Annuler',
+      customClass: {
+        confirmButton: 'custom-archive-button',
+        cancelButton: 'custom-cancel-button',
       }
-    }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.put(`https://diapo-app.onrender.com/api/dons/${id}/desarchiver`, {}, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+          });
+  
+          MySwal.fire({
+            title: 'Désarchivé',
+            text: 'Don désarchivé avec succès !',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            customClass: {
+              confirmButton: 'custom-archive-button'
+            }
+          });
+  
+          navigate("/ListeDons");
+        } catch (err) {
+          console.error("Erreur lors du désarchivage :", err);
+          MySwal.fire({
+            title: 'Erreur',
+            text: 'Échec du désarchivage',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            customClass: {
+              confirmButton: 'custom-cancel-button'
+            }
+          });
+        }
+      }
+    });
   };
+  
 
   useEffect(() => {
     const fetchArchives = async () => {

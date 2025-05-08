@@ -70,13 +70,18 @@ const ListeDons = () => {
         actions: 'custom-swal-actions',
       },
     }).then(async (result) => {
-      if (result.isConfirmed) {
+      if (result.isConfirmed) { 
         try {
           await axios.delete(`https://diapo-app.onrender.com/api/dons/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          MySwal.fire('Supprimé', 'Don supprimé avec succès.', 'success');
-          setDons((prev) => prev.filter((don) => don._id !== id));
+          MySwal.fire({
+            title: 'Archivé',
+            text: 'Don archivé avec succès.',
+            icon: 'success',
+            confirmButtonText: 'OK',
+          })
+            setDons((prev) => prev.filter((don) => don._id !== id));
         } catch (error) {
           console.error('Erreur lors de la suppression :', error);
           MySwal.fire('Erreur', 'Erreur lors de la suppression', 'error');
@@ -91,6 +96,11 @@ const ListeDons = () => {
       showCancelButton: true,
       confirmButtonText: 'Archiver',
       cancelButtonText: 'Annuler',
+      customClass: {
+        confirmButton: 'custom-archive-button',  
+        cancelButton: 'custom-cancel-button',
+      },
+    
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
@@ -99,14 +109,33 @@ const ListeDons = () => {
             {},
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          MySwal.fire('Archivé', 'Don archivé avec succès.', 'success');
+          MySwal.fire({
+            title: 'Archivé',
+            text: 'Don archivé avec succès.',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            customClass: {
+              confirmButton: 'custom-archive-button'
+            }
+          });
+          
           setDons((prev) => prev.filter((don) => don._id !== id));
         } catch (error) {
           console.error('Erreur lors de l\'archivage :', error);
-          MySwal.fire('Erreur', 'Erreur lors de l\'archivage', 'error');
+          MySwal.fire({
+            title: 'Erreur',
+            text: 'Erreur lors de l\'archivage',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            customClass: {
+              confirmButton: 'custom-archive-button'
+            }
+          });
+          
         }
       }
     });
+    
   };
 
   return (
