@@ -30,6 +30,7 @@ const CreerDon = () => {
       axios.get(`https://diapo-app.onrender.com/api/dons/${id}`)
         .then((res) => {
           const don = res.data;
+          console.log('Image URL:', don.url_image);
           setFormData({
             titre: don.titre || '',
             categorie: don.categorie || '',

@@ -76,7 +76,6 @@ const Header = () => {
                     onClick={() => handleSelection('category', '')}
                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                   >
-                    Toutes les catégories
                   </li>
                   {categories.map((cat) => (
                     <li
@@ -105,7 +104,6 @@ const Header = () => {
                     onClick={() => handleSelection('city', '')}
                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                   >
-                    Toutes les villes
                   </li>
                   {villes.map((ville) => (
                     <li

@@ -6,8 +6,9 @@ const createDon = async (req, res) => {
   console.log("Utilisateur connecté :", req.user); 
   try {
     const { titre, description, categorie, ville_don } = req.body;
-    const imagePath = req.file ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`: "";
-    const userId = req.user?._id;
+    const imagePath = req.file
+    ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
+    : "";    const userId = req.user?._id;
 
     const newDon = new Don({
       titre,
@@ -37,7 +38,7 @@ const getDons = async (req, res) => {
       filter.categorie = { $regex: new RegExp(`^${categorie}$`, 'i') };
     }
     if (userId) {
-      filter.user = userId;  // ce champ doit correspondre à ton modèle Don
+      filter.user = userId;  
     }
 
     const dons = await Don.find(filter).sort({ createdAt: -1 });

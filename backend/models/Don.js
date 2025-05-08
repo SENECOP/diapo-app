@@ -10,7 +10,7 @@ const donSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, required: true }, 
     createur: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // ou "Utilisateur" selon le nom de ton modèle
+      ref: "User", 
       required: false,
     },
     preneur: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

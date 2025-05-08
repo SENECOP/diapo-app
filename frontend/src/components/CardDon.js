@@ -110,12 +110,11 @@ const CardDon = ({ don }) => {
 
   return (
     <div className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
-      <img
-        src= {`https://diapo-app.onrender.com${don.url_image}`}
-        alt={don.titre || " "}
-        className="w-full h-32 object-cover rounded"
-      />
-
+  <img
+    src={`http://diapo-app.onrender.com/uploads/${don.url_image}`}
+    alt="don"
+    className="w-full h-48 object-cover rounded"
+  />
       <h3 className="font-semibold text-lg mt-2">{don.titre || "Titre inconnu"}</h3>
       <p className="text-sm text-gray-500">{don.categorie || "Catégorie inconnue"}</p>
       <p className="text-sm text-gray-600">{don.description || "Pas de description"}</p>
