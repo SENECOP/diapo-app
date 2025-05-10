@@ -31,6 +31,8 @@ const CardDon = ({ don }) => {
   const navigate = useNavigate();
   const [favori, setFavori] = useState(false);
   const [isPris, setIsPris] = useState(false);
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+
   
   useEffect(() => {
     const donsPris = JSON.parse(localStorage.getItem("donsPris")) || [];
@@ -49,64 +51,88 @@ const CardDon = ({ don }) => {
 
   const handleTake = async (e) => {
     e.stopPropagation();
-
-    const currentUser = JSON.parse(localStorage.getItem("user"));
+  
     if (!currentUser) {
       navigate("/login");
       return;
     }
-
+  
     localStorage.setItem("AlerteReservation", "true");
-    navigate("/message");
-
-    await fetch(`https://diapo-app.onrender.com/api/dons/reserver/${don._id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ preneur: currentUser._id }), // facultatif
-    });
-
+  
     try {
+      // Réservation du don
+      const response = await fetch(`https://diapo-app.onrender.com/api/dons/reserver/${don._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ preneur: currentUser._id }), 
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Erreur lors de la réservation du don:", errorData);
+        throw new Error("Erreur lors de la réservation du don");
+      }
+  
       const donId = don._id;
-      const createurId = don.user?._id || don.user;
-
+      const createurId = don.user?._id || don.user;  // Si don.user est une chaîne (ID), on l'utilise directement
+  
       if (!createurId) {
         console.error("Aucun Utilisateur trouvé dans le don");
         return;
       }
+  
+      console.log("currentUser:", currentUser);
+      console.log("emetteur:", currentUser?._id);
+      console.log("createurId (destinataire):", createurId);
+  
+      // Construction du payload pour la notification
+      const emetteur = currentUser.id; // Set the sender as the current user's ID.
+      const notificationPayload = {
+        destinataire: createurId, // Recipient's ID.
+        emetteur: emetteur, // Sender's ID (this should be the current user's ID).
+        message: `${currentUser.pseudo} a cliqué sur "Je prends" pour votre don "${don.name}".`,
+        don: don.id, // The ID of the donation.
+      };
 
-      const response = await fetch("https://diapo-app.onrender.com/api/notifications", {
+  
+      console.log("Notification payload :", notificationPayload);
+  
+      // Envoi de la notification
+      const notificationResponse = await fetch("https://diapo-app.onrender.com/api/notifications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          emetteur: currentUser._id,
-          destinataire: createurId,
-          message: `${currentUser.pseudo} a cliqué sur "Je prends" pour votre don "${don.titre}".`,
-          don: donId,
-        }),
+        body: JSON.stringify(notificationPayload),
       });
-
-      if (!response.ok) {
+  
+      if (!notificationResponse.ok) {
+        const errorData = await notificationResponse.json();
+        console.error("Erreur Notification:", errorData);
         throw new Error("Erreur lors de l’envoi de la notification");
       }
-
+  
       console.log("✅ Notification envoyée au créateur du don !");
-
-      // Marquer ce don comme pris
+  
+      // Marquer ce don comme pris dans le localStorage
       const donsPris = JSON.parse(localStorage.getItem("donsPris")) || [];
       if (!donsPris.includes(donId)) {
         donsPris.push(donId);
         localStorage.setItem("donsPris", JSON.stringify(donsPris));
       }
       setIsPris(true);
+  
+      // Redirection vers la page des messages
+      navigate("/message");
+  
     } catch (error) {
       console.error("Erreur lors de la prise de don ou de la notification :", error);
       alert("Une erreur est survenue lors de la notification.");
     }
   };
+  
 
   return (
     

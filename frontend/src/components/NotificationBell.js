@@ -18,7 +18,7 @@ const NotificationBell = () => {
       }
     };
 
-    if (currentUser?._id) {
+    if (currentUser?._id) { 
       fetchNotifications();
     }
   }, [currentUser]);

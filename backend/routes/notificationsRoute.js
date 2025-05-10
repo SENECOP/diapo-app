@@ -31,3 +31,4 @@ router.put("/mark-as-read/:userId", async (req, res) => {
 });
 
 module.exports = router;
+ 

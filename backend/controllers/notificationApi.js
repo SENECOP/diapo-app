@@ -13,7 +13,7 @@ const createNotification = async (req, res) => {
       emetteur,
       destinataire,
       message,
-      don: don || null
+      don: don || null 
     });
 
     await notification.save();
@@ -24,6 +24,7 @@ const createNotification = async (req, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
+
 
 // 🔽 Obtenir toutes les notifications
 const getNotifications = async (req, res) => {
