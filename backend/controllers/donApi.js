@@ -204,16 +204,18 @@ const getDonsByCategorie = async (req, res) => {
 
 const reserverDon = async (req, res) => {
   try {
+    console.log("Données reçues pour réservation :", req.body);
+
     const don = await Don.findById(req.params.id).populate("user");
     if (!don) return res.status(404).json({ message: "Don non trouvé" });
 
     // Vérifie si l'utilisateur a déjà réservé
-    if (don.preneurs.includes(req.user._id)) {
+    if (don.preneur.includes(req.user._id)) {
       return res.status(400).json({ message: "Vous avez déjà réservé ce don." });
     }
 
     // Ajouter l'utilisateur à la liste des preneurs
-    don.preneurs.push(req.user._id);
+    don.preneur.push(req.user._id);
     await don.save();
 
     // Créer la notification
@@ -222,7 +224,6 @@ const reserverDon = async (req, res) => {
       emetteur: req.user._id,
       message: `${req.user.pseudo} a réservé votre don "${don.titre}".`,
       don: don._id,
-      type: "reservation"  // Assure-toi que ce champ existe bien dans le modèle Notification
     });
 
     res.status(200).json({ message: "Don réservé avec succès", don });
