@@ -67,7 +67,6 @@ const CardDon = ({ don, onReservationSuccess }) => {
       navigate("/message", {
         state: { showReservationAlert: true },
       });
-      localStorage.setItem("AlerteReservation", "true");
 
     } catch (error) {
       console.error("Erreur lors de la réservation :", error);
