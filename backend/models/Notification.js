@@ -20,10 +20,6 @@ const notificationSchema = new mongoose.Schema({
     ref: "Don",
     default: null
   },
-  type: {
-    type: String, 
-    required:true
-  },
   vu: {
     type: Boolean,
     default: false

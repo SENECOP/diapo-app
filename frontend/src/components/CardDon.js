@@ -1,26 +1,10 @@
-import { useState, useEffect } from "react";
-import {
-  FaMapMarkerAlt,
-  FaClock,
-  FaBookmark,
-  FaRegBookmark,
-} from "react-icons/fa";
-import { GiSofa } from "react-icons/gi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom'; // Pour utiliser useNavigate
+import { useState, useEffect } from 'react'; // Pour utiliser useState et useEffect
+import { FaMapMarkerAlt, FaClock, FaBookmark, FaRegBookmark } from 'react-icons/fa'; // Pour les icônes
+import { GiSofa } from 'react-icons/gi'; // Pour l'icône Sofa
+import { formatDistanceToNow } from 'date-fns'; // Pour formater le temps écoulé
 
-const formatRelativeTime = (dateString) => {
-  const now = new Date();
-  const date = new Date(dateString);
-  const diff = Math.floor((now - date) / 1000);
-  if (isNaN(diff)) return "Date invalide";
-
-  if (diff < 60) return `Il y a ${diff} seconde${diff > 1 ? "s" : ""}`;
-  if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} minute${diff > 1 ? "s" : ""}`;
-  if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} heure${diff > 1 ? "s" : ""}`;
-  return `Il y a ${Math.floor(diff / 86400)} jour${diff > 1 ? "s" : ""}`;
-};
-
-const CardDon = ({ don }) => {
+const CardDon = ({ don, onReservationSuccess }) => {
   const navigate = useNavigate();
   const [favori, setFavori] = useState(false);
   const [isPris, setIsPris] = useState(false);
@@ -28,11 +12,13 @@ const CardDon = ({ don }) => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const donsPris = JSON.parse(localStorage.getItem("donsPris")) || [];
-    if (don && donsPris.includes(don._id)) {
-      setIsPris(true);
+    // Vérifie si le don a déjà un preneur, sinon on ne marque pas le don comme "pris"
+    if (don && don.preneur && don.preneur === currentUser?._id) {
+      setIsPris(true); // Le don est réservé par l'utilisateur
+    } else {
+      setIsPris(false); // Sinon, il n'est pas pris
     }
-  }, [don]);
+  }, [don, currentUser]);
 
   if (!don) return null;
 
@@ -50,7 +36,6 @@ const CardDon = ({ don }) => {
     }
 
     try {
-      // Réserver le don
       const res = await fetch(`https://diapo-app.onrender.com/api/dons/${don._id}/reserver`, {
         method: "PUT",
         headers: {
@@ -66,47 +51,14 @@ const CardDon = ({ don }) => {
         return;
       }
 
-      // Notification
-      const donateurId = don.user?._id || don.user;
-      if (!donateurId) {
-        console.error("ID du donateur introuvable");
-        return;
-      }
+      setIsPris(true); // Met à jour l'état pour indiquer que le don a été pris
+      alert("✅ Vous avez réservé ce don avec succès.");
 
-      const notifRes = await fetch("https://diapo-app.onrender.com/api/notifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          emetteur: currentUser._id,
-          destinataire: donateurId,
-          message: `${currentUser.pseudo} a cliqué sur "Je prends" pour votre don "${don.titre}".`,
-          don: don._id,
-        }),
-      });
-
-      if (!notifRes.ok) {
-        const error = await notifRes.text();
-        console.error("Erreur envoi notification :", error);
-        return;
-      }
-
-      // Marquer le don comme pris localement
-      const donsPris = JSON.parse(localStorage.getItem("donsPris")) || [];
-      if (!donsPris.includes(don._id)) {
-        donsPris.push(don._id);
-        localStorage.setItem("donsPris", JSON.stringify(donsPris));
-      }
-
-      setIsPris(true);
-
-      // ✅ Alerte utilisateur
-      alert("✅ Notification envoyée au donateur.\nVous pouvez continuer à consulter les autres dons.");
+      // 🔁 Rafraîchir les données dans le composant parent (si fourni)
+      if (onReservationSuccess) onReservationSuccess();
 
     } catch (error) {
-      console.error("Erreur lors de la réservation ou de la notification :", error);
+      console.error("Erreur lors de la réservation :", error);
       alert("❌ Une erreur est survenue.");
     }
   };
@@ -133,7 +85,7 @@ const CardDon = ({ don }) => {
         </div>
         <div className="flex items-center gap-2">
           <FaClock className="text-orange-500" />
-          <span>{formatRelativeTime(don.createdAt)}</span>
+          <span>{formatDistanceToNow(new Date(don.createdAt), { addSuffix: true })}</span>
         </div>
       </div>
 

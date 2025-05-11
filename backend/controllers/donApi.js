@@ -207,12 +207,13 @@ const reserverDon = async (req, res) => {
     const don = await Don.findById(req.params.id).populate("user");
     if (!don) return res.status(404).json({ message: "Don non trouvé" });
 
-    if (don.statut !== "actif") {
-      return res.status(400).json({ message: "Ce don n'est pas disponible" });
+    // Vérifie si l'utilisateur a déjà réservé
+    if (don.preneurs.includes(req.user._id)) {
+      return res.status(400).json({ message: "Vous avez déjà réservé ce don." });
     }
 
-    don.statut = "reserve";
-    don.preneur = req.user._id;
+    // Ajouter l'utilisateur à la liste des preneurs
+    don.preneurs.push(req.user._id);
     await don.save();
 
     // Créer la notification
@@ -220,7 +221,8 @@ const reserverDon = async (req, res) => {
       destinataire: don.user._id,
       emetteur: req.user._id,
       message: `${req.user.pseudo} a réservé votre don "${don.titre}".`,
-      don: don._id
+      don: don._id,
+      type: "reservation"  // Assure-toi que ce champ existe bien dans le modèle Notification
     });
 
     res.status(200).json({ message: "Don réservé avec succès", don });
@@ -228,6 +230,7 @@ const reserverDon = async (req, res) => {
     res.status(500).json({ message: "Erreur serveur", error });
   }
 };
+
 
 
 
