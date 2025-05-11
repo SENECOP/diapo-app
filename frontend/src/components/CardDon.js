@@ -1,26 +1,34 @@
-import { useNavigate } from 'react-router-dom'; // Pour utiliser useNavigate
-import { useState, useEffect } from 'react'; // Pour utiliser useState et useEffect
-import { FaMapMarkerAlt, FaClock, FaBookmark, FaRegBookmark } from 'react-icons/fa'; // Pour les icônes
-import { GiSofa } from 'react-icons/gi'; // Pour l'icône Sofa
-import { formatDistanceToNow } from 'date-fns'; // Pour formater le temps écoulé
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react'; 
+import { FaMapMarkerAlt, FaClock, FaBookmark, FaRegBookmark } from 'react-icons/fa';
+import { GiSofa } from 'react-icons/gi';
+import { formatDistanceToNow } from 'date-fns';
 
 const CardDon = ({ don, onReservationSuccess }) => {
   const navigate = useNavigate();
   const [favori, setFavori] = useState(false);
-  const [isPris, setIsPris] = useState(false);
+  const [etatDon, setEtatDon] = useState(don.etat);
+  const [preneurDon, setPreneurDon] = useState(don.preneur);
+
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    // Vérifie si le don a déjà un preneur, sinon on ne marque pas le don comme "pris"
-    if (don && don.preneur && don.preneur === currentUser?._id) {
-      setIsPris(true); // Le don est réservé par l'utilisateur
-    } else {
-      setIsPris(false); // Sinon, il n'est pas pris
+    const alertReservation = localStorage.getItem("AlerteReservation");
+    if (alertReservation === "true") {
+      setEtatDon("réservé");
+      localStorage.removeItem("AlerteReservation");
     }
-  }, [don, currentUser]);
+  }, []);
+
+
+  useEffect(() => {
+    setEtatDon(don.etat);
+    setPreneurDon(don.preneur);
+  }, [don]);
 
   if (!don) return null;
+
 
   const handleFavoriToggle = (e) => {
     e.stopPropagation();
@@ -51,17 +59,23 @@ const CardDon = ({ don, onReservationSuccess }) => {
         return;
       }
 
-      setIsPris(true); // Met à jour l'état pour indiquer que le don a été pris
-      alert("✅ Vous avez réservé ce don avec succès.");
+      setEtatDon("réservé");
+      setPreneurDon(currentUser._id);
 
-      // 🔁 Rafraîchir les données dans le composant parent (si fourni)
       if (onReservationSuccess) onReservationSuccess();
+
+      navigate("/message", {
+        state: { showReservationAlert: true },
+      });
+      localStorage.setItem("AlerteReservation", "true");
 
     } catch (error) {
       console.error("Erreur lors de la réservation :", error);
       alert("❌ Une erreur est survenue.");
     }
   };
+
+  const estPris = etatDon === "réservé" || preneurDon === currentUser?._id;
 
   return (
     <div className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
@@ -92,12 +106,12 @@ const CardDon = ({ don, onReservationSuccess }) => {
       <div className="mt-4 flex justify-between items-center gap-2">
         <button
           onClick={handleTake}
-          disabled={isPris}
-          className={`flex-1 py-2 rounded transition ${
-            isPris ? "bg-gray-400 text-white cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"
+          disabled={estPris}
+          className={`px-4 py-2 text-white rounded ${
+            estPris ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
           }`}
         >
-          {isPris ? "Pris" : "Je prends"}
+          {estPris ? "Pris" : "Je prends"}
         </button>
         <button
           onClick={handleFavoriToggle}

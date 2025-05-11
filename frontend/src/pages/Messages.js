@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
 import AlerteReservation from "../components/AlerteReservation";
+import { useLocation } from "react-router-dom";
 
 const Message = () => {
   const [showAlert, setShowAlert] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
-    const alertFlag = localStorage.getItem("AlerteReservation");
-    if (alertFlag === "true") {
+    const alertFromState = location.state?.showReservationAlert;
+    const alertFromStorage = localStorage.getItem("AlerteReservation") === "true";
+
+    if (alertFromState || alertFromStorage) {
       setShowAlert(true);
-      localStorage.removeItem("AlerteReservation"); // enlever après affichage
+      localStorage.removeItem("AlerteReservation");
     }
-  }, []);
+  }, [location.state]);
 
   return (
     <div className="p-4">
