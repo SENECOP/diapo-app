@@ -8,11 +8,14 @@ const NotificationPage = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch("https://diapo-app.onrender.com/api/notifications/notifications", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          "https://diapo-app.onrender.com/api/notifications/notifications",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) throw new Error("Erreur lors du chargement des notifications");
 
@@ -23,8 +26,19 @@ const NotificationPage = () => {
       }
     };
 
-    fetchNotifications();
-  }, []);
+    if (token) {
+      fetchNotifications();
+    }
+  }, [token]); // 
+
+  const handleIgnore = (id) => {
+    setNotifications((prev) => prev.filter((n) => n._id !== id));
+    // Optionnel : faire un PUT /notifications/:id/lire ici
+  };
+
+  const handleVoir = (donId) => {
+    window.location.href = `/dons/${donId}`;
+  };
 
   return (
     <div className="p-4 max-w-md mx-auto">
@@ -71,15 +85,6 @@ const NotificationPage = () => {
       )}
     </div>
   );
-
-  function handleIgnore(id) {
-    setNotifications((prev) => prev.filter((n) => n._id !== id));
-    // Optionnel : appeler PUT /notifications/:id/lire pour marquer comme lue
-  }
-
-  function handleVoir(donId) {
-    window.location.href = `/dons/${donId}`;
-  }
 };
 
 export default NotificationPage;
