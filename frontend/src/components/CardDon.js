@@ -15,16 +15,9 @@ const formatRelativeTime = (dateString) => {
   if (isNaN(diff)) return "Date invalide";
 
   if (diff < 60) return `Il y a ${diff} seconde${diff > 1 ? "s" : ""}`;
-  if (diff < 3600) {
-    const minutes = Math.floor(diff / 60);
-    return `Il y a ${minutes} minute${minutes > 1 ? "s" : ""}`;
-  }
-  if (diff < 86400) {
-    const hours = Math.floor(diff / 3600);
-    return `Il y a ${hours} heure${hours > 1 ? "s" : ""}`;
-  }
-  const days = Math.floor(diff / 86400);
-  return `Il y a ${days} jour${days > 1 ? "s" : ""}`;
+  if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} minute${diff > 1 ? "s" : ""}`;
+  if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} heure${diff > 1 ? "s" : ""}`;
+  return `Il y a ${Math.floor(diff / 86400)} jour${diff > 1 ? "s" : ""}`;
 };
 
 const CardDon = ({ don }) => {
@@ -32,15 +25,14 @@ const CardDon = ({ don }) => {
   const [favori, setFavori] = useState(false);
   const [isPris, setIsPris] = useState(false);
   const currentUser = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
 
-  
   useEffect(() => {
     const donsPris = JSON.parse(localStorage.getItem("donsPris")) || [];
     if (don && donsPris.includes(don._id)) {
       setIsPris(true);
     }
-  }, [don]); 
-  
+  }, [don]);
 
   if (!don) return null;
 
@@ -51,97 +43,81 @@ const CardDon = ({ don }) => {
 
   const handleTake = async (e) => {
     e.stopPropagation();
-  
+
     if (!currentUser) {
       navigate("/login");
       return;
     }
-  
-    localStorage.setItem("AlerteReservation", "true");
-  
+
     try {
-      // Réservation du don
-      const response = await fetch(`https://diapo-app.onrender.com/api/dons/reserver/${don._id}`, {
+      // Réserver le don
+      const res = await fetch(`https://diapo-app.onrender.com/api/dons/${don._id}/reserver`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ preneur: currentUser._id }), 
+        body: JSON.stringify({ preneur: currentUser._id }),
       });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Erreur lors de la réservation du don:", errorData);
-        throw new Error("Erreur lors de la réservation du don");
-      }
-  
-      const donId = don._id;
-      const createurId = don.user?._id || don.user;  // Si don.user est une chaîne (ID), on l'utilise directement
-  
-      if (!createurId) {
-        console.error("Aucun Utilisateur trouvé dans le don");
+
+      if (!res.ok) {
+        const error = await res.text();
+        console.error("Erreur réservation :", error);
         return;
       }
-  
-      console.log("currentUser:", currentUser);
-      console.log("emetteur:", currentUser?._id);
-      console.log("createurId (destinataire):", createurId);
-  
-      // Construction du payload pour la notification
-      const emetteur = currentUser.id; // Set the sender as the current user's ID.
-      const notificationPayload = {
-        destinataire: createurId, // Recipient's ID.
-        emetteur: emetteur, // Sender's ID (this should be the current user's ID).
-        message: `${currentUser.pseudo} a cliqué sur "Je prends" pour votre don "${don.name}".`,
-        don: don.id, // The ID of the donation.
-      };
 
-  
-      console.log("Notification payload :", notificationPayload);
-  
-      // Envoi de la notification
-      const notificationResponse = await fetch("https://diapo-app.onrender.com/api/notifications", {
+      // Notification
+      const donateurId = don.user?._id || don.user;
+      if (!donateurId) {
+        console.error("ID du donateur introuvable");
+        return;
+      }
+
+      const notifRes = await fetch("https://diapo-app.onrender.com/api/notifications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(notificationPayload),
+        body: JSON.stringify({
+          emetteur: currentUser._id,
+          destinataire: donateurId,
+          message: `${currentUser.pseudo} a cliqué sur "Je prends" pour votre don "${don.titre}".`,
+          don: don._id,
+        }),
       });
-  
-      if (!notificationResponse.ok) {
-        const errorData = await notificationResponse.json();
-        console.error("Erreur Notification:", errorData);
-        throw new Error("Erreur lors de l’envoi de la notification");
+
+      if (!notifRes.ok) {
+        const error = await notifRes.text();
+        console.error("Erreur envoi notification :", error);
+        return;
       }
-  
-      console.log("✅ Notification envoyée au créateur du don !");
-  
-      // Marquer ce don comme pris dans le localStorage
+
+      // Marquer le don comme pris localement
       const donsPris = JSON.parse(localStorage.getItem("donsPris")) || [];
-      if (!donsPris.includes(donId)) {
-        donsPris.push(donId);
+      if (!donsPris.includes(don._id)) {
+        donsPris.push(don._id);
         localStorage.setItem("donsPris", JSON.stringify(donsPris));
       }
+
       setIsPris(true);
-  
-      // Redirection vers la page des messages
-      navigate("/message");
-  
+
+      // ✅ Alerte utilisateur
+      alert("✅ Notification envoyée au donateur.\nVous pouvez continuer à consulter les autres dons.");
+
     } catch (error) {
-      console.error("Erreur lors de la prise de don ou de la notification :", error);
-      alert("Une erreur est survenue lors de la notification.");
+      console.error("Erreur lors de la réservation ou de la notification :", error);
+      alert("❌ Une erreur est survenue.");
     }
   };
-  
 
   return (
-    
     <div className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
-  <img
-    src={`https://diapo-app.onrender.com/${don.url_image}`}
-    alt={don.titre || "Titre de l'image"}
-    className="w-full h-48 object-cover rounded"
-  />
+      <img
+        src={`https://diapo-app.onrender.com/${don.url_image}`}
+        alt={don.titre || "Titre de l'image"}
+        className="w-full h-48 object-cover rounded"
+      />
       <h3 className="font-semibold text-lg mt-2">{don.titre || "Titre inconnu"}</h3>
       <p className="text-sm text-gray-500">{don.categorie || "Catégorie inconnue"}</p>
       <p className="text-sm text-gray-600">{don.description || "Pas de description"}</p>

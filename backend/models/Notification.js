@@ -20,6 +20,10 @@ const notificationSchema = new mongoose.Schema({
     ref: "Don",
     default: null
   },
+  type: {
+    type: String, 
+    required:true
+  },
   vu: {
     type: Boolean,
     default: false
@@ -27,7 +31,12 @@ const notificationSchema = new mongoose.Schema({
   date: {
     type: Date,
     default: Date.now
-  }
-});
+  },
+ 
+},
+{
+  timestamps: true
+}
+);
 
 module.exports = mongoose.model("Notification", notificationSchema);

@@ -202,6 +202,37 @@ const getDonsByCategorie = async (req, res) => {
 
 
 
+const reserverDon = async (req, res) => {
+  try {
+    const don = await Don.findById(req.params.id).populate("user");
+    if (!don) return res.status(404).json({ message: "Don non trouvé" });
+
+    if (don.statut !== "actif") {
+      return res.status(400).json({ message: "Ce don n'est pas disponible" });
+    }
+
+    don.statut = "reserve";
+    don.preneur = req.user._id;
+    await don.save();
+
+    // Créer la notification
+    await Notification.create({
+      destinataire: don.user._id,
+      emetteur: req.user._id,
+      message: `${req.user.pseudo} a réservé votre don "${don.titre}".`,
+      don: don._id
+    });
+
+    res.status(200).json({ message: "Don réservé avec succès", don });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error });
+  }
+};
+
+
+
+
+
 module.exports = {
   createDon,
   getDons,
@@ -213,4 +244,5 @@ module.exports = {
   prendreDon,
   getDonsByCategorie,
   getArchivedDons, 
+  reserverDon,
 };

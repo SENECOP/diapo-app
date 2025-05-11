@@ -1,61 +1,30 @@
-const Notification = require('../models/Notification');
+const Notification = require("../models/Notification");
 
-// ➕ Créer une notification
-const createNotification = async (req, res) => {
+const reserverDon = async (req, res) => {
   try {
-    const { emetteur, destinataire, message, don } = req.body;
+    const don = await Don.findById(req.params.id).populate('user');
 
-    if (!emetteur || !destinataire || !message) {
-      return res.status(400).json({ error: "Champs obligatoires manquants" });
+    if (!don) return res.status(404).json({ message: "Don non trouvé" });
+
+    if (don.statut !== 'actif') {
+      return res.status(400).json({ message: "Ce don n'est pas disponible" });
     }
 
-    const notification = new Notification({
-      emetteur,
-      destinataire,
-      message,
-      don: don || null 
+    don.statut = 'reserve';
+    don.preneur = req.user._id;
+    await don.save();
+
+    // Créer la notification pour le donateur
+    await Notification.create({
+      destinataire: don.user._id,
+      emetteur: req.user._id,
+      message: `${req.user.pseudo} a exprimé son intérêt pour votre don "${don.titre}".`,
+      don: don._id
     });
 
-    await notification.save();
-
-    res.status(201).json({ message: "Notification créée", notification });
+    res.status(200).json({ message: "Don réservé et notification envoyée", don });
   } catch (error) {
-    console.error("Erreur lors de la création de la notification :", error);
-    res.status(500).json({ error: "Erreur serveur" });
+    console.error("Erreur réservation ou notification :", error);
+    res.status(500).json({ message: "Erreur serveur", error });
   }
 };
-
-
-// 🔽 Obtenir toutes les notifications
-const getNotifications = async (req, res) => {
-    
-  try {
-    const notifications = await Notification.find().populate('don destinataire');
-    res.status(200).json(notifications);
-  } catch (error) {
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-};
-
-// ✅ Marquer comme lue
-exports.markAsRead = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const notification = await Notification.findByIdAndUpdate(id, { lu: true }, { new: true });
-
-    if (!notification) {
-      return res.status(404).json({ error: "Notification non trouvée" });
-    }
-
-    res.json(notification);
-  } catch (error) {
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-};
-
-module.exports = {
-  createNotification,
-  getNotifications,
-
-}
