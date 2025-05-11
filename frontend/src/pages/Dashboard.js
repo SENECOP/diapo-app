@@ -8,21 +8,41 @@ import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-
 const Dashboard = () => {
   const { user } = useContext(UserContext);
   const [dons, setDons] = useState([]);
+  const [notifications, setNotifications] = useState([]); // Ajout pour les notifications
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fonction pour récupérer les notifications
   useEffect(() => {
-
     if (user && user._id) {
       toast.success(`Bienvenue ${user.username || "utilisateur"} !`, {
         position: "top-right",
         autoClose: 3000,
       });
     }
+
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token"); 
+    
+        const response = await axios.get(
+          `https://diapo-app.onrender.com/api/notifications`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+    
+        setNotifications(response.data.notifications);
+      } catch (err) {
+        console.error("Erreur lors du chargement des notifications", err);
+      }
+    };
+    
 
     const fetchDons = async () => {
       try {
@@ -36,6 +56,7 @@ const Dashboard = () => {
       }
     };
 
+    fetchNotifications(); 
     fetchDons();
   }, [user]);
 
@@ -67,6 +88,25 @@ const Dashboard = () => {
           </div>
         </div>
         <img src="/assets/Charity-rafiki.png" alt="charity" className="md:w-1/3 w-full" />
+      </section>
+
+      {/* Affichage des notifications */}
+      <section className="p-10">
+        {notifications.length > 0 && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">Notifications</h2>
+            </div>
+            <div className="bg-yellow-100 p-4 rounded-md">
+              {notifications.map((notification) => (
+                <div key={notification._id} className="p-2 mb-2 border-b">
+                  <p>{notification.message}</p>
+                  <small>{new Date(notification.createdAt).toLocaleString()}</small>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {loading && <p className="text-center text-gray-500">Chargement des dons...</p>}

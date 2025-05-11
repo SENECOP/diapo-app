@@ -207,32 +207,33 @@ const reserverDon = async (req, res) => {
     console.log("Données reçues pour réservation :", req.body);
 
     const don = await Don.findById(req.params.id).populate("user");
+    console.log("Don avec utilisateur :", don.user);
     if (!don) return res.status(404).json({ message: "Don non trouvé" });
 
-    // Vérifie si l'utilisateur a déjà réservé
-    if (don.preneur.includes(req.user._id)) {
+    // Si le don est déjà réservé par cet utilisateur
+    if (don.preneur && don.preneur.toString() === req.user._id.toString()) {
       return res.status(400).json({ message: "Vous avez déjà réservé ce don." });
     }
 
-    // Ajouter l'utilisateur à la liste des preneurs
-    don.preneur.push(req.user._id);
+    // Attribuer l'utilisateur en tant que preneur
+    don.preneur = req.user._id;
+    don.statut = "reserve";
     await don.save();
 
-    // Créer la notification
+    // Créer la notification pour le donateur
     await Notification.create({
       destinataire: don.user._id,
       emetteur: req.user._id,
-      message: `${req.user.pseudo} a réservé votre don "${don.titre}".`,
+      message: `${req.user.pseudo} est intéressé(e) par votre don "${don.titre}".`,
       don: don._id,
     });
 
-    res.status(200).json({ message: "Don réservé avec succès", don });
+    res.status(200).json({ message: "Don réservé avec succès. Notification envoyée au donateur.", don });
   } catch (error) {
+    console.error("Erreur dans reserverDon:", error);
     res.status(500).json({ message: "Erreur serveur", error });
   }
 };
-
-
 
 
 
