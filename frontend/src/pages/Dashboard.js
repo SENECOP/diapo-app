@@ -3,6 +3,7 @@ import { UserContext } from '../context/UserContext';
 import Header from "../components/Header";
 import axios from "axios";
 import CardDon from "../components/CardDon";
+import NotificationCard from '../components/NotificationCard';
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -11,14 +12,14 @@ import "react-toastify/dist/ReactToastify.css";
 const Dashboard = () => {
   const { user } = useContext(UserContext);
   const [dons, setDons] = useState([]);
-  const [notifications, setNotifications] = useState([]); // Ajout pour les notifications
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fonction pour récupérer les notifications
+  // Récupérer les données au montage
   useEffect(() => {
-    if (user && user._id) {
-      toast.success(`Bienvenue ${user.username || "utilisateur"} !`, {
+    if (user?.username) {
+      toast.success(`Bienvenue ${user.username} !`, {
         position: "top-right",
         autoClose: 3000,
       });
@@ -26,28 +27,24 @@ const Dashboard = () => {
 
     const fetchNotifications = async () => {
       try {
-        const token = localStorage.getItem("token"); 
-    
-        const response = await axios.get(
-          `https://diapo-app.onrender.com/api/notifications`,
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          "https://diapo-app.onrender.com/api/notifications",
           {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+            headers: { Authorization: `Bearer ${token}` }
           }
         );
-    
-        setNotifications(response.data.notifications);
+        console.log("Réponse de l'API pour les notifications:", res.data);
+        setNotifications(res.data.notifications || []);
       } catch (err) {
         console.error("Erreur lors du chargement des notifications", err);
       }
     };
-    
 
     const fetchDons = async () => {
       try {
-        const response = await axios.get("https://diapo-app.onrender.com/api/dons");
-        setDons(response.data);
+        const res = await axios.get("https://diapo-app.onrender.com/api/dons");
+        setDons(res.data || []);
       } catch (err) {
         console.error("Erreur lors du chargement des dons", err);
         setError("Impossible de charger les dons.");
@@ -56,9 +53,11 @@ const Dashboard = () => {
       }
     };
 
-    fetchNotifications(); 
+    fetchNotifications();
     fetchDons();
   }, [user]);
+  console.log("Notifications:", notifications);
+
 
   const nouveautes = [...dons]
     .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -71,13 +70,15 @@ const Dashboard = () => {
   return (
     <div>
       <Header />
+
+      {/* Section Intro */}
       <section className="flex flex-col md:flex-row justify-between items-center bg-white p-10">
         <div className="md:w-1/2 mb-6 md:mb-0">
           <h1 className="text-3xl font-bold mb-4">
             Donner et recevoir gratuitement des produits divers
           </h1>
           <p className="mb-4 text-gray-600">
-            Dans un monde où le gaspillage est un enjeu majeur et où de nombreuses personnes sont dans le besoin, Diapo vise à créer un pont entre ceux qui veulent donner et ceux qui ont besoin de recevoir
+            Dans un monde où le gaspillage est un enjeu majeur et où de nombreuses personnes sont dans le besoin, Diapo vise à créer un pont entre ceux qui veulent donner et ceux qui ont besoin de recevoir.
           </p>
           <div className="flex items-center gap-4">
             <Link to={user ? "/creer-don" : "/login"}>
@@ -90,35 +91,36 @@ const Dashboard = () => {
         <img src="/assets/Charity-rafiki.png" alt="charity" className="md:w-1/3 w-full" />
       </section>
 
-      {/* Affichage des notifications */}
-      <section className="p-10">
-        {Array.isArray(notifications) && notifications.length > 0
-         && (
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Notifications</h2>
+      {/* Section Notifications */}
+      {notifications.length > 0 && (
+        <section className="p-10">
+          <div className="bg-yellow-100 p-4 rounded-md mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-xl font-bold text-gray-800">Dernières notifications</h2>
+              <Link to="/notifications" className="text-blue-600 hover:underline text-sm">
+                Voir tout
+              </Link>
             </div>
-            <div className="bg-yellow-100 p-4 rounded-md">
-              {notifications.map((notification) => (
-                <div key={notification._id} className="p-2 mb-2 border-b">
-                  <p>{notification.message}</p>
-                  <small>{new Date(notification.createdAt).toLocaleString()}</small>
-                </div>
+
+            <div className="space-y-3">
+              {notifications.slice(-3).reverse().map((notification) => (
+                <NotificationCard key={notification._id} notification={notification} />
               ))}
             </div>
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      {loading && <p className="text-center text-gray-500">Chargement des dons...</p>}
-      {error && <p className="text-center text-red-500">{error}</p>}
-
+      {/* Section Dons */}
       <section className="p-10">
+        {loading && <p className="text-center text-gray-500">Chargement des dons...</p>}
+        {error && <p className="text-center text-red-500">{error}</p>}
+
         {nouveautes.length > 0 && (
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-800">Les nouveautés</h2>
-              <Link to={`/dons/nouveautes`} className="text-blue-600 hover:underline text-sm">
+              <Link to="/dons/nouveautes" className="text-blue-600 hover:underline text-sm">
                 Voir tout
               </Link>
             </div>
@@ -134,7 +136,7 @@ const Dashboard = () => {
           <div>
             <div className="flex justify-between items-center mt-10 mb-4">
               <h2 className="text-xl font-bold text-gray-800">Technologie</h2>
-              <Link to={`/dons/technologie`} className="text-blue-600 hover:underline text-sm">
+              <Link to="/dons/technologie" className="text-blue-600 hover:underline text-sm">
                 Voir tout
               </Link>
             </div>
@@ -150,7 +152,7 @@ const Dashboard = () => {
           <div>
             <div className="flex justify-between items-center mt-10 mb-4">
               <h2 className="text-xl font-bold text-gray-800">Vêtements</h2>
-              <Link to={`/dons/vêtements`} className="text-blue-600 hover:underline text-sm">
+              <Link to="/dons/vêtements" className="text-blue-600 hover:underline text-sm">
                 Voir tout
               </Link>
             </div>
@@ -166,7 +168,7 @@ const Dashboard = () => {
           <div>
             <div className="flex justify-between items-center mt-10 mb-4">
               <h2 className="text-xl font-bold text-gray-800">Meubles</h2>
-              <Link to={`/dons/meubles`} className="text-blue-600 hover:underline text-sm">
+              <Link to="/dons/meubles" className="text-blue-600 hover:underline text-sm">
                 Voir tout
               </Link>
             </div>
@@ -178,8 +180,8 @@ const Dashboard = () => {
           </div>
         )}
       </section>
-      <ToastContainer />
 
+      <ToastContainer />
       <Footer />
     </div>
   );

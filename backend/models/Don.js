@@ -5,7 +5,7 @@ const donSchema = new mongoose.Schema(
     titre: { type: String, required: true },
     description: { type: String, required: true },
     categorie: { type: String, required: true },
-    url_image: { type: String, required: false },
+    url_image: [String],
     ville_don: { type: String, required: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, required: true }, 
     createur: {

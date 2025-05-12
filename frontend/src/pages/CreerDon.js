@@ -9,7 +9,7 @@ const CreerDon = () => {
   const fileInput = useRef(null);
   const navigate = useNavigate();
   const { id } = useParams();
-  const [existingImage, setExistingImage] = useState(null);
+  const [existingImages, setExistingImages] = useState([]);
   const [user, setUser] = useState('');
 
   const [formData, setFormData] = useState({
@@ -17,7 +17,7 @@ const CreerDon = () => {
     categorie: '',
     description: '',
     ville_don: '',
-    url_image: null,
+    images: [],
   });
 
   useEffect(() => {
@@ -35,9 +35,9 @@ const CreerDon = () => {
             categorie: don.categorie || '',
             description: don.description || '',
             ville_don: don.ville_don || '',
-            url_image: null,
+            images: [], // Reset images array
           });
-          setExistingImage(don.url_image);
+          setExistingImages(don.images || []);
         })
         .catch((err) => {
           console.error('Erreur lors du chargement du don à modifier :', err);
@@ -58,20 +58,21 @@ const CreerDon = () => {
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && !file.type.startsWith('image/')) {
+    const files = Array.from(e.target.files);
+    const validImages = files.filter((file) => file.type.startsWith('image/'));
+    if (validImages.length !== files.length) {
       Swal.fire({
         icon: 'error',
-        title: 'Fichier invalide',
-        text: 'Veuillez sélectionner un fichier image.',
+        title: 'Fichiers invalides',
+        text: 'Veuillez sélectionner uniquement des fichiers image.',
       });
       return;
     }
+
     setFormData((prev) => ({
       ...prev,
-      url_image: file,
+      images: [...prev.images, ...validImages],
     }));
-    setExistingImage(null);
   };
 
   const handleSubmit = async (e) => {
@@ -99,10 +100,11 @@ const CreerDon = () => {
       data.append('categorie', formData.categorie);
       data.append('description', formData.description);
       data.append('ville_don', formData.ville_don);
-      if (formData.url_image) {
-        data.append('url_image', formData.url_image);
-      }
 
+      formData.images.forEach((image) => {
+        data.append('url_image', image); 
+      });
+      
       if (id) {
         await axios.put(`https://diapo-app.onrender.com/api/dons/${id}`, data);
         Swal.fire({
@@ -205,31 +207,41 @@ const CreerDon = () => {
           </div>
 
           <div>
-            <label className="block font-semibold mb-1">Image</label>
+            <label className="block font-semibold mb-1">Images</label>
             <button
               type="button"
               onClick={handleClick}
               className="bg-gray-100 border px-4 py-2 rounded hover:bg-gray-200"
             >
-              Choisir une image
+              Choisir des images
             </button>
             <input
               type="file"
               ref={fileInput}
               onChange={handleFileChange}
+              multiple
               style={{ display: 'none' }}
             />
-            {formData.url_image && (
-              <p className="mt-2 text-sm text-green-600">{formData.url_image.name} sélectionné</p>
+            {formData.images.length > 0 && (
+              <div className="mt-2">
+                {formData.images.map((image, index) => (
+                  <p key={index} className="text-sm text-green-600">{image.name} sélectionné</p>
+                ))}
+              </div>
             )}
-            {existingImage && (
+            {existingImages.length > 0 && (
               <div className="mt-4">
-                <p className="text-sm text-gray-600">Image actuelle :</p>
-                <img
-                  src={`https://diapo-app.onrender.com/${existingImage}`}
-                  alt={formData.titre}
-                  className="w-full max-w-xs rounded"
-                />
+                <p className="text-sm text-gray-600">Images actuelles :</p>
+                <div className="flex space-x-2">
+                  {existingImages.map((image, index) => (
+                    <img
+                      key={index}
+                      src={`https://diapo-app.onrender.com/${image}`}
+                      alt={`Don  ${index + 1}`}
+                      className="w-20 h-20 object-cover rounded"
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </div>

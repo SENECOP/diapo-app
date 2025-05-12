@@ -3,23 +3,25 @@ const Notification = require('../models/Notification');
 
 // Créer un don
 const createDon = async (req, res) => {
-  console.log("Utilisateur connecté :", req.user); 
   try {
     const { titre, description, categorie, ville_don } = req.body;
-    const imagePath = req.file
-    ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
-    : "";    const userId = req.user?._id;
+    const userId = req.user?._id;
+
+    // Gérer plusieurs images
+    const imagePaths = req.files?.map(file =>
+      `${req.protocol}://${req.get('host')}/uploads/${file.filename}`
+    ) || [];
 
     const newDon = new Don({
       titre,
       description,
       categorie: categorie?.toLowerCase(),
       ville_don,
-      url_image: imagePath,
+      url_image: imagePaths, // tableau d'URLs
       archived: false,
       user: userId,
     });
- 
+
     await newDon.save();
     res.status(201).json({ message: 'Don créé avec succès', don: newDon });
   } catch (error) {
@@ -148,8 +150,6 @@ const prendreDon = async (req, res) => {
       message: `${req.user.pseudo} souhaite prendre votre don "${don.titre}".`
     });
 
-    await notification.save();
-
     res.status(200).json({ message: "Don pris avec succès, notification envoyée." });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -226,7 +226,10 @@ const reserverDon = async (req, res) => {
       emetteur: req.user._id,
       message: `${req.user.pseudo} est intéressé(e) par votre don "${don.titre}".`,
       don: don._id,
+      vu: false,
     });
+
+    await notification.save();
 
     res.status(200).json({ message: "Don réservé avec succès. Notification envoyée au donateur.", don });
   } catch (error) {

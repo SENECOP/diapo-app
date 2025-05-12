@@ -1,21 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { FaGift } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
+
+
+import Header from "../components/Header"; // adapte le chemin si besoin
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch(
-          "https://diapo-app.onrender.com/api/notifications/notifications",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch("https://diapo-app.onrender.com/api/notifications", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) throw new Error("Erreur lors du chargement des notifications");
 
@@ -29,60 +33,71 @@ const NotificationPage = () => {
     if (token) {
       fetchNotifications();
     }
-  }, [token]); // 
-
-  const handleIgnore = (id) => {
-    setNotifications((prev) => prev.filter((n) => n._id !== id));
-    // Optionnel : faire un PUT /notifications/:id/lire ici
-  };
-
-  const handleVoir = (donId) => {
-    window.location.href = `/dons/${donId}`;
-  };
+  }, [token]);
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h2 className="text-xl font-semibold mb-4">🔔 Notifications</h2>
-
-      {notifications.length === 0 ? (
-        <p className="text-gray-500">Aucune notification pour l’instant.</p>
-      ) : (
-        notifications.map((notif) => (
-          <div
-            key={notif._id}
-            className="bg-white rounded-lg shadow-md p-4 mb-4 border-l-4 border-blue-500"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <FaGift className="text-blue-600" />
-                <h3 className="font-semibold text-gray-800 text-sm">Intérêt pour un Don</h3>
-              </div>
-              <span className="text-xs text-gray-400">
-                {new Date(notif.createdAt).toLocaleTimeString()}
-              </span>
-            </div>
-            <p className="text-sm text-gray-700">
-              <span className="font-medium">{notif.emetteur?.pseudo}</span> a exprimé son intérêt
-              pour votre don <strong>“{notif.don?.titre}”</strong>.
-            </p>
-
-            <div className="mt-3 flex justify-end gap-3">
-              <button
-                className="text-sm text-gray-500 hover:underline"
-                onClick={() => handleIgnore(notif._id)}
-              >
-                Ignorer
-              </button>
-              <button
-                className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
-                onClick={() => handleVoir(notif.don?._id)}
-              >
-                Voir
-              </button>
-            </div>
+    <div className="min-h-screen flex flex-col">
+      {/* HEADER EN HAUT */}
+      <Header />
+      
+            <div className="bg-blue-700 text-white px-10 py-10 flex items-center h-[250px] space-x-4">
+            <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="p-2 rounded-full bg-white text-blue-700 hover:bg-gray-100 shadow"
+              title="Retour au tableau de bord"
+            >
+              <FaArrowLeft />
+            </button>
+            <h1 className="text-3xl font-semibold">Notifications</h1>
           </div>
-        ))
-      )}
+      
+            </div>
+
+      {/* CONTENU PRINCIPAL EN DESSOUS */}
+      <div className="flex flex-1">
+        {/* Colonne Gauche : Notifications */}
+        <div className="w-1/3 bg-gray-300 border-r">
+          <div className="bg-white text-gray-900 p-4 text-lg font-semibold">
+            Notifications
+          </div>
+          <div className="p-2 overflow-y-auto h-full">
+            {notifications.length === 0 ? (
+              <p className="text-gray-500">Aucune notification</p>
+            ) : (
+              notifications.map((notification) => (
+                <div
+                  key={notification._id}
+                  className="bg-white rounded-md shadow-sm p-3 mb-2 flex items-start justify-between hover:bg-blue-50 cursor-pointer"
+                >
+                  <div className="flex gap-2">
+                    <div className="p-2 bg-gray-200 rounded-full">
+                      <FaGift className="text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">
+                        {notification.emetteur?.pseudo || "Utilisateur"}
+                      </p>
+                      <p className="text-xs text-gray-600 line-clamp-1">
+                        Intérêt pour le don : {notification.don?.titre || ""}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-gray-400 mt-1 whitespace-nowrap">
+                    {new Date(notification.createdAt).toLocaleTimeString()}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Colonne Droite : Contenu statique ou détail */}
+        <div className="flex-1 p-6 bg-white ">
+          <h2 className="text-xl font-bold mb-2">Liste des Dons</h2>
+          <p className="text-sm text-gray-500">Subheading</p>
+        </div>
+      </div>
     </div>
   );
 };
