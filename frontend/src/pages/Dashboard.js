@@ -92,7 +92,8 @@ const Dashboard = () => {
 
       {/* Affichage des notifications */}
       <section className="p-10">
-        {notifications.length > 0 && (
+        {Array.isArray(notifications) && notifications.length > 0
+         && (
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-800">Notifications</h2>
