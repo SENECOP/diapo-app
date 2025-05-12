@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { UserContext } from '../context/UserContext';
 import Header from "../components/Header";
 import axios from "axios";
+import NotificationCard from "../components/NotificationCard";
 import CardDon from "../components/CardDon";
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
@@ -20,31 +21,45 @@ const Dashboard = () => {
         position: "top-right",
         autoClose: 3000,
       });
-  
-      const fetchNotifications = async () => {
-        try {
-          const token = localStorage.getItem("token");
-          const res = await axios.get(
-            "https://diapo-app.onrender.com/api/notifications",
+    }
+
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          "https://diapo-app.onrender.com/api/notifications",
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        const notifications = res.data.notifications || [];
+
+        notifications.forEach((notif) => {
+          toast.info(
+            ({ closeToast }) => (
+              <NotificationCard
+                titre="Interet pour un Don"
+                message={`${notif.message}`}
+                onVoir={() => {
+                  closeToast();
+                  window.location.href = `/notification/${notif._id}`;
+                }}
+                onIgnorer={closeToast}
+              />
+            ),
             {
-              headers: { Authorization: `Bearer ${token}` }
+              position: "top-right",
+              autoClose: false,
+              closeOnClick: false,
+              draggable: false
             }
           );
-          const notifications = res.data.notifications || [];
-          notifications.forEach((notif) => {
-            toast.info(`${notif.message}`, {
-              position: "top-right",
-              autoClose: 7000,
-            });
-          });
-        } catch (err) {
-          console.error("Erreur lors du chargement des notifications", err);
-        }
-      };
-  
-      fetchNotifications();
-    }
-  
+        });
+      } catch (err) {
+        console.error("Erreur lors du chargement des notifications", err);
+      }
+    };
+
     const fetchDons = async () => {
       try {
         const res = await axios.get("https://diapo-app.onrender.com/api/dons");
@@ -56,10 +71,10 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-  
+
+    fetchNotifications();
     fetchDons();
   }, [user]);
-  
 
   const nouveautes = [...dons]
     .sort((a, b) => new Date(b.date) - new Date(a.date))

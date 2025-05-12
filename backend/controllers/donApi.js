@@ -1,5 +1,6 @@
 const Don = require('../models/Don');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // Créer un don
 const createDon = async (req, res) => {
