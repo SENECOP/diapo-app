@@ -13,7 +13,7 @@ const donSchema = new mongoose.Schema(
       ref: "User", 
       required: false,
     },
-    preneur: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    preneur: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }],
     archived: { type: Boolean, default: false },
     statut: { 
       type: String, 

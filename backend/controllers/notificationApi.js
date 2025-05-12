@@ -5,11 +5,10 @@ const getNotifications = async (req, res) => {
     console.log("Récupération des notifications pour l'utilisateur:", req.user._id);
     // Récupérer les notifications du destinataire (utilisateur connecté)
     const notifications = await Notification.find({ destinataire: req.user._id })
-      .populate("emetteur", "pseudo ") 
+      .populate("emetteur", "pseudo avatar") 
       .populate("don", "titre") 
       .sort({ createdAt: -1 });
-
-    console.log("Notifications récupérées:", notifications);   
+      
     res.status(200).json({ notifications });
   } catch (error) {
     console.error("Erreur lors de la récupération des notifications :", error);

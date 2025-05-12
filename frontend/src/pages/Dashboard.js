@@ -3,7 +3,6 @@ import { UserContext } from '../context/UserContext';
 import Header from "../components/Header";
 import axios from "axios";
 import CardDon from "../components/CardDon";
-import NotificationCard from '../components/NotificationCard';
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -12,35 +11,40 @@ import "react-toastify/dist/ReactToastify.css";
 const Dashboard = () => {
   const { user } = useContext(UserContext);
   const [dons, setDons] = useState([]);
-  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Récupérer les données au montage
   useEffect(() => {
     if (user?.username) {
       toast.success(`Bienvenue ${user.username} !`, {
         position: "top-right",
         autoClose: 3000,
       });
+  
+      const fetchNotifications = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await axios.get(
+            "https://diapo-app.onrender.com/api/notifications",
+            {
+              headers: { Authorization: `Bearer ${token}` }
+            }
+          );
+          const notifications = res.data.notifications || [];
+          notifications.forEach((notif) => {
+            toast.info(`${notif.message}`, {
+              position: "top-right",
+              autoClose: 7000,
+            });
+          });
+        } catch (err) {
+          console.error("Erreur lors du chargement des notifications", err);
+        }
+      };
+  
+      fetchNotifications();
     }
-
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "https://diapo-app.onrender.com/api/notifications",
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
-        console.log("Réponse de l'API pour les notifications:", res.data);
-        setNotifications(res.data.notifications || []);
-      } catch (err) {
-        console.error("Erreur lors du chargement des notifications", err);
-      }
-    };
-
+  
     const fetchDons = async () => {
       try {
         const res = await axios.get("https://diapo-app.onrender.com/api/dons");
@@ -52,12 +56,10 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-
-    fetchNotifications();
+  
     fetchDons();
   }, [user]);
-  console.log("Notifications:", notifications);
-
+  
 
   const nouveautes = [...dons]
     .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -90,26 +92,6 @@ const Dashboard = () => {
         </div>
         <img src="/assets/Charity-rafiki.png" alt="charity" className="md:w-1/3 w-full" />
       </section>
-
-      {/* Section Notifications */}
-      {notifications.length > 0 && (
-        <section className="p-10">
-          <div className="bg-yellow-100 p-4 rounded-md mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-xl font-bold text-gray-800">Dernières notifications</h2>
-              <Link to="/notifications" className="text-blue-600 hover:underline text-sm">
-                Voir tout
-              </Link>
-            </div>
-
-            <div className="space-y-3">
-              {notifications.slice(-3).reverse().map((notification) => (
-                <NotificationCard key={notification._id} notification={notification} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Section Dons */}
       <section className="p-10">
