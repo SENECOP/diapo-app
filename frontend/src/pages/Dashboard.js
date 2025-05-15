@@ -16,6 +16,9 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!user) return; 
+    console.log("Tentative de fetch des notifications...");
+
     if (user?.username) {
       toast.success(`Bienvenue ${user.username} !`, {
         position: "top-right",
@@ -26,19 +29,26 @@ const Dashboard = () => {
     const fetchNotifications = async () => {
       try {
         const token = localStorage.getItem("token");
+        console.log("Token récupéré:", token);
+  
         const res = await axios.get(
           "https://diapo-app.onrender.com/api/notifications",
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
-        const notifications = res.data.notifications || [];
 
+        console.log("Réponse notifications :", res.data); 
+  
+        const notifications = res.data.notifications || [];
+        console.log("Notifications extraites:", notifications);
+
+  
         notifications.forEach((notif) => {
           toast.info(
             ({ closeToast }) => (
               <NotificationCard
-                titre="Interet pour un Don"
+                titre="Intérêt pour un Don"
                 message={`${notif.message}`}
                 onVoir={() => {
                   closeToast();
@@ -51,15 +61,32 @@ const Dashboard = () => {
               position: "top-right",
               autoClose: false,
               closeOnClick: false,
-              draggable: false
+              draggable: false,
             }
           );
         });
       } catch (err) {
         console.error("Erreur lors du chargement des notifications", err);
+        if (err.response) {
+          console.log("Erreur response.data:", err.response.data);
+          console.log("Erreur response.status:", err.response.status);
+        } else if (err.request) {
+          console.log("Aucune réponse reçue:", err.request);
+        } else {
+          console.log("Erreur lors de la requête:", err.message);
+        }
       }
+      
     };
-
+  
+    if (user && user.username) {
+      toast.success(`Bienvenue ${user.username} !`, {
+        position: "top-right",
+        autoClose: 3000,
+      });    
+      fetchNotifications(); // ✅ maintenant sûr et fonctionnel
+    }
+  
     const fetchDons = async () => {
       try {
         const res = await axios.get("https://diapo-app.onrender.com/api/dons");
@@ -71,10 +98,11 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-
-    fetchNotifications();
+  
     fetchDons();
   }, [user]);
+  
+  
 
   const nouveautes = [...dons]
     .sort((a, b) => new Date(b.date) - new Date(a.date))

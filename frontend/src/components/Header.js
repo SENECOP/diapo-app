@@ -11,6 +11,8 @@ const Header = () => {
   const [searchCity, setSearchCity] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState({ category: false, city: false });
   const filterMenuRef = useRef(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const token = localStorage.getItem("token");
 
   const categories = ["Technologie", "Vêtements", "Meuble"];
   const villes = ["Dakar", "Thiès", "Saint-Louis", "Mbour", "Yoff"];
@@ -25,6 +27,26 @@ const Header = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch("https://diapo-app.onrender.com/api/notifications", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) throw new Error("Erreur lors du chargement des notifications");
+        const data = await response.json();
+        const unread = data.notifications.filter(n => !n.vu).length;
+        setUnreadCount(unread);
+      } catch (error) {
+        console.error("Erreur chargement notifications :", error.message);
+      }
+    };
+
+    if (token) fetchNotifications();
+  }, [token]);
 
   const toggleDropdown = (type) => {
     setDropdownOpen(prev => ({ ...prev, [type]: !prev[type] }));
@@ -62,7 +84,6 @@ const Header = () => {
 
         {showFilters && (
           <div ref={filterMenuRef} className="absolute right-0 mt-2 w-64 bg-white shadow-md border rounded p-4 z-10">
-            {/* Catégorie dropdown */}
             <div className="mb-4 relative">
               <button
                 onClick={() => toggleDropdown('category')}
@@ -75,8 +96,7 @@ const Header = () => {
                   <li
                     onClick={() => handleSelection('category', '')}
                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                  </li>
+                  />
                   {categories.map((cat) => (
                     <li
                       key={cat}
@@ -90,7 +110,6 @@ const Header = () => {
               )}
             </div>
 
-            {/* Ville dropdown */}
             <div className="mb-4 relative">
               <button
                 onClick={() => toggleDropdown('city')}
@@ -103,8 +122,7 @@ const Header = () => {
                   <li
                     onClick={() => handleSelection('city', '')}
                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                  </li>
+                  />
                   {villes.map((ville) => (
                     <li
                       key={ville}
@@ -128,6 +146,11 @@ const Header = () => {
       <div className="flex items-center gap-4">
         <Link to="/notifications" className="relative p-2 text-gray-600 hover:text-blue-600">
           <FiBell size={22} />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-[1px] rounded-full">
+              {unreadCount}
+            </span>
+          )}
         </Link>
 
         <Link to="/message" className="relative p-2 text-gray-600 hover:text-blue-600">

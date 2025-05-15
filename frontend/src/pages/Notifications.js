@@ -24,7 +24,11 @@ const NotificationPage = () => {
         if (!response.ok) throw new Error("Erreur lors du chargement des notifications");
 
         const data = await response.json();
-        setNotifications(data);
+        if (Array.isArray(data.notifications)) {
+          setNotifications(data.notifications);
+        } else {
+          setNotifications([]); // fallback sécurisé
+        }
       } catch (error) {
         console.error("Erreur chargement notifications :", error.message);
       }
@@ -84,7 +88,9 @@ const NotificationPage = () => {
                     </div>
                   </div>
                   <span className="text-[10px] text-gray-400 mt-1 whitespace-nowrap">
-                    {new Date(notification.createdAt).toLocaleTimeString()}
+                    {new Date(notification.createdAt).toLocaleString("fr-FR", {
+                      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+                    })}
                   </span>
                 </div>
               ))
