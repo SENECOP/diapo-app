@@ -13,6 +13,12 @@ const NotificationPage = () => {
 
 
   useEffect(() => {
+      const user = JSON.parse(localStorage.getItem("user"));
+  if (!user || !user.token) {
+    console.log("Utilisateur non connecté, pas de récupération des notifications.");
+    return; 
+  }
+  
     const fetchNotifications = async () => {
       try {
         const response = await fetch("https://diapo-app.onrender.com/api/notifications", {

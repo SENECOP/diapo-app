@@ -31,7 +31,7 @@ const getNotifications = async (req, res) => {
       .populate("don", "titre") 
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ notifications });
+    res.status(200).json({ notifications: notifications || [] });
   } catch (error) {
     console.error("Erreur lors de la récupération des notifications :", error);
     res.status(500).json({ message: 'Erreur interne du serveur', error: error.message });

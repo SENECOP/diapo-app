@@ -14,42 +14,32 @@ const Dashboard = () => {
   const [dons, setDons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasFetchedNotifications, setHasFetchedNotifications] = useState(false);
 
-  useEffect(() => {
-    if (!user) return; 
-    console.log("Tentative de fetch des notifications...");
 
-    if (user?.username) {
-      toast.success(`Bienvenue ${user.username} !`, {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    }
+ useEffect(() => {
+  const token = localStorage.getItem("token");
 
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        console.log("Token récupéré:", token);
-  
-        const res = await axios.get(
-          "https://diapo-app.onrender.com/api/notifications",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+  const fetchNotifications = async () => {
+    try {
+      if (!user || !user._id || !token || hasFetchedNotifications) return;
 
-        console.log("Réponse notifications :", res.data); 
-  
-        const notifications = res.data.notifications || [];
-        console.log("Notifications extraites:", notifications);
+      const res = await axios.get(
+        "https://diapo-app.onrender.com/api/notifications",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-  
+      const notifications = res.data.notifications || [];
+
+      if (notifications.length > 0) {
         notifications.forEach((notif) => {
           toast.info(
             ({ closeToast }) => (
               <NotificationCard
                 titre="Intérêt pour un Don"
-                message={`${notif.message}`}
+                message={notif.message}
                 onVoir={() => {
                   closeToast();
                   window.location.href = `/notification/${notif._id}`;
@@ -65,42 +55,39 @@ const Dashboard = () => {
             }
           );
         });
-      } catch (err) {
-        console.error("Erreur lors du chargement des notifications", err);
-        if (err.response) {
-          console.log("Erreur response.data:", err.response.data);
-          console.log("Erreur response.status:", err.response.status);
-        } else if (err.request) {
-          console.log("Aucune réponse reçue:", err.request);
-        } else {
-          console.log("Erreur lors de la requête:", err.message);
-        }
       }
-      
-    };
-  
-    if (user && user.username) {
-      toast.success(`Bienvenue ${user.username} !`, {
-        position: "top-right",
-        autoClose: 3000,
-      });    
-      fetchNotifications(); // ✅ maintenant sûr et fonctionnel
+
+      setHasFetchedNotifications(true);
+    } catch (err) {
+      console.error("Erreur lors du chargement des notifications", err);
     }
+  };
+
+  const fetchDons = async () => {
+    try {
+      const res = await axios.get("https://diapo-app.onrender.com/api/dons");
+      setDons(res.data || []);
+    } catch (err) {
+      console.error("Erreur lors du chargement des dons", err);
+      setError("Impossible de charger les dons.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   
-    const fetchDons = async () => {
-      try {
-        const res = await axios.get("https://diapo-app.onrender.com/api/dons");
-        setDons(res.data || []);
-      } catch (err) {
-        console.error("Erreur lors du chargement des dons", err);
-        setError("Impossible de charger les dons.");
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    fetchDons();
-  }, [user]);
+  if (user?.username && !hasFetchedNotifications && token) {
+    toast.success(`Bienvenue ${user.username} !`, {
+      position: "top-right",
+      autoClose: 3000,
+    });
+
+    fetchNotifications(); 
+  }
+
+  fetchDons();
+}, [user, hasFetchedNotifications]);
+
   
   
 

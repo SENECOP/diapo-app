@@ -146,12 +146,13 @@ const Header = () => {
       <div className="flex items-center gap-4">
         <Link to="/notifications" className="relative p-2 text-gray-600 hover:text-blue-600">
           <FiBell size={22} />
-          {unreadCount > 0 && (
+          {user && unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-[1px] rounded-full">
               {unreadCount}
             </span>
           )}
         </Link>
+
 
         <Link to="/message" className="relative p-2 text-gray-600 hover:text-blue-600">
           <FiMail size={22} />
