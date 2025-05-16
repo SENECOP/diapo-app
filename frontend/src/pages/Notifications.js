@@ -18,7 +18,7 @@ const NotificationPage = () => {
     console.log("Utilisateur non connecté, pas de récupération des notifications.");
     return; 
   }
-  
+
     const fetchNotifications = async () => {
       try {
         const response = await fetch("https://diapo-app.onrender.com/api/notifications", {
@@ -50,8 +50,8 @@ const NotificationPage = () => {
       {/* HEADER EN HAUT */}
       <Header />
       
-            <div className="bg-blue-700 text-white px-10 py-10 flex items-center h-[250px] space-x-4">
-            <div className="flex items-center gap-4">
+      <div className="bg-blue-700 text-white px-10 py-10 flex items-center h-[250px] space-x-4">
+         <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/dashboard')}
               className="p-2 rounded-full bg-white text-blue-700 hover:bg-gray-100 shadow"
@@ -60,9 +60,9 @@ const NotificationPage = () => {
               <FaArrowLeft />
             </button>
             <h1 className="text-3xl font-semibold">Notifications</h1>
-          </div>
+        </div>
       
-            </div>
+      </div>
 
       {/* CONTENU PRINCIPAL EN DESSOUS */}
       <div className="flex flex-1">
@@ -79,7 +79,21 @@ const NotificationPage = () => {
                 <div
                   key={notification._id}
                   className="bg-white rounded-md shadow-sm p-3 mb-2 flex items-start justify-between hover:bg-blue-50 cursor-pointer"
-                >
+                   onClick={() => {
+                    navigate('/message', {
+                      state: {
+                        user: {
+                          pseudo: notification.emetteur?.pseudo || "Utilisateur",
+                          avatar: notification.emetteur?.avatar || "https://via.placeholder.com/50"
+                        },
+                        messageInitial: {
+                          image: notification.don?.image_url || "https://via.placeholder.com/150",
+                          description: notification.don?.description || "Aucune description fournie"
+                        }
+                      }
+                    });
+                  }}
+                 >
                   <div className="flex gap-2">
                     <div className="p-2 bg-gray-200 rounded-full">
                       <FaGift className="text-blue-600" />
