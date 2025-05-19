@@ -21,6 +21,9 @@ useEffect(() => {
 
   const fetchNotifications = async () => {
     try {
+      const alreadyShown = sessionStorage.getItem("notificationsShown");
+      if (alreadyShown === "true") return;
+
       const res = await axios.get(
         "https://diapo-app.onrender.com/api/notifications",
         {
@@ -52,6 +55,7 @@ useEffect(() => {
             }
           );
         });
+        sessionStorage.setItem("notificationsShown", "true");
       }
 
       setHasFetchedNotifications(true);

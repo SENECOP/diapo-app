@@ -218,6 +218,14 @@ const reserverDon = async (req, res) => {
     don.statut = "reserve";
     await don.save();
 
+    // Ajouter l'utilisateur aux intéressés s'il n'y est pas déjà
+    if (!don.interesses.includes(req.user._id)) {
+      don.interesses.push(req.user._id);
+    }
+
+    await don.save();
+
+
     // ✅ Crée la notification et enregistre-la dans une variable
     const notification = await Notification.create({
       destinataire: don.user._id,
@@ -253,6 +261,7 @@ const getDonsDuDonateur = async (req, res) => {
 
 
 
+
 module.exports = {
   createDon,
   getDons,
@@ -267,3 +276,4 @@ module.exports = {
   reserverDon,
   getDonsDuDonateur,
 };
+

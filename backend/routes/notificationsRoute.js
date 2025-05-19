@@ -8,6 +8,7 @@ const Notification = require("../models/Notification");
 
 
 router.get('/', verifyToken, notificationApi.getNotifications);
+router.patch('/read/:id', verifyToken, notificationApi.markAsRead);
 
 
 

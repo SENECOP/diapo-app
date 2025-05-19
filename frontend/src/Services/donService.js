@@ -30,12 +30,12 @@ export const reserverDon = async (id, userId) => {
 export const fetchMesDons = async () => {
   const token = localStorage.getItem("token");
 
-  const res = await fetch("https://diapo-app.onrender.com/api/dons/mes-dons", {
+  const response = await axios.get("https://diapo-app.onrender.com/api/dons/mes-dons", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
 
-  if (!res.ok) throw new Error("Erreur lors du chargement des dons");
-  return await res.json();
+  return response.data;
 };
+

@@ -51,7 +51,7 @@ const Message = () => {
       <div className="bg-blue-700 text-white px-10 py-10 flex items-center h-[250px] space-x-4">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/notifications')}
             className="p-2 rounded-full bg-white text-blue-700 hover:bg-gray-100 shadow"
             title="Retour au tableau de bord"
           >

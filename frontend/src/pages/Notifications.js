@@ -44,6 +44,25 @@ const NotificationPage = () => {
     }
   }, [token]);
 
+  const markAsRead = async (notificationId) => {
+  try {
+    const response = await fetch(`https://diapo-app.onrender.com/api/notifications/read/${notificationId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Échec lors de la mise à jour de la notification.");
+    }
+  } catch (error) {
+    console.error("Erreur lors du marquage comme lu :", error.message);
+  }
+};
+
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* HEADER EN HAUT */}
@@ -77,21 +96,29 @@ const NotificationPage = () => {
               notifications.map((notification) => (
                 <div
                   key={notification._id}
-                  className="bg-white rounded-md shadow-sm p-3 mb-2 flex items-start justify-between hover:bg-blue-50 cursor-pointer"
-                   onClick={() => {
-                    navigate('/message', {
-                      state: {
-                        user: {
-                          pseudo: notification.emetteur?.pseudo || "Utilisateur",
-                          avatar: notification.emetteur?.avatar || "https://via.placeholder.com/50"
-                        },
-                        messageInitial: {
-                          image: notification.don?.image_url || "https://via.placeholder.com/150",
-                          description: notification.don?.description || "Aucune description fournie"
+                  className={`bg-white rounded-md shadow-sm p-3 mb-2 flex items-start justify-between hover:bg-blue-50 cursor-pointer ${
+                      notification.vu ? 'opacity-50' : 'opacity-100'
+                    }`}                  
+                    onClick={async () => {
+                      await markAsRead(notification._id); // Marque comme lu
+                      setNotifications(prev =>
+                        prev.map(n => n._id === notification._id ? { ...n, vu: true } : n)
+                      );
+
+                      navigate('/message', {
+                        state: {
+                          user: {
+                            pseudo: notification.emetteur?.pseudo || "Utilisateur",
+                            avatar: notification.emetteur?.avatar || "https://via.placeholder.com/50"
+                          },
+                          messageInitial: {
+                            image: notification.don?.image_url || "https://via.placeholder.com/150",
+                            description: notification.don?.description || "Aucune description fournie"
+                          }
                         }
-                      }
-                    });
-                  }}
+                      });
+                    }}
+
                  >
                   <div className="flex gap-2">
                     <div className="p-2 bg-gray-200 rounded-full">

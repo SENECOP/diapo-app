@@ -38,6 +38,28 @@ const getNotifications = async (req, res) => {
   }
 };
 
+const markAsRead = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const notification = await Notification.findByIdAndUpdate(
+      id,
+      { vu: true },
+      { new: true }
+    );
+
+    if (!notification) {
+      return res.status(404).json({ message: "Notification non trouvée" });
+    }
+
+    res.status(200).json({ message: "Notification marquée comme lue", notification });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de la notification :", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
 module.exports = {
   getNotifications,
+  markAsRead,
 };
