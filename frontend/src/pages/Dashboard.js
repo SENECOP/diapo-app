@@ -74,13 +74,13 @@ useEffect(() => {
 
   fetchDons();
 
-  // ✅ Ce bloc ne sera exécuté qu'une fois user bien défini
+ 
   if (user && !hasFetchedNotifications && token) {
     
     fetchNotifications();
   }
 
-}, [user?._id, hasFetchedNotifications]); // Écouter user._id garantit que ça se réexécute dès qu'on récupère le user
+}, [user, hasFetchedNotifications]); 
 
  
   

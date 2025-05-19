@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaGift } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
-
-
+import Footer from "../components/Footer";
 import Header from "../components/Header"; // adapte le chemin si besoin
 
 const NotificationPage = () => {
@@ -124,6 +123,7 @@ const NotificationPage = () => {
           <p className="text-sm text-gray-500">Subheading</p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
