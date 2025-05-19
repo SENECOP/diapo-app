@@ -238,6 +238,19 @@ const reserverDon = async (req, res) => {
 };
 
 
+// Récupérer les dons du donateur connecté
+const getDonsDuDonateur = async (req, res) => {
+  try {
+    const userId = req.user._id; // récupéré depuis le token JWT via le middleware `auth`
+    const dons = await Don.find({ user: userId, archived: false }).sort({ createdAt: -1 });
+
+    res.status(200).json(dons);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des dons du donateur :", error);
+    res.status(500).json({ message: "Erreur serveur", error });
+  }
+};
+
 
 
 module.exports = {
@@ -252,4 +265,5 @@ module.exports = {
   getDonsByCategorie,
   getArchivedDons, 
   reserverDon,
+  getDonsDuDonateur,
 };

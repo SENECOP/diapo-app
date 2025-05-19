@@ -137,7 +137,7 @@ const CreerDon = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between">
+    <div className="min-h-screen overflow-x-hidden flex flex-col justify-between">
       <Header />
 
       <div className="bg-blue-800 text-white p-27 min-h-[250px] text-l font-semibold flex items-center justify-between">

@@ -33,14 +33,8 @@ router.get("/reserves", verifyToken, async (req, res) => {
 });
 
 
-router.get('/mes-dons', verifyToken, async (req, res) => {
-  try {
-    const dons = await Don.find({ user: req.user._id }).sort({ createdAt: -1 });
-    res.json(dons);
-  } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur', error });
-  }
-});
+router.get("/mes-dons", verifyToken, donController.getDonsDuDonateur);
+
 
 
 router.get('/', donController.getDons);

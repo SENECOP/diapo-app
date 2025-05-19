@@ -80,11 +80,11 @@ const CardDon = ({ don, onReservationSuccess }) => {
   return (
     <div className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
       <img
-        src={`https://diapo-app.onrender.com/${don.url_image}`}
+        src={don.url_image?.[0]}
         alt={don.titre || "Titre de l'image"}
         className="w-full h-48 object-cover rounded"
       />
-     
+          
 
       <div className="flex flex-col gap-1 mt-2 text-sm text-gray-600">
         <div className="flex items-center gap-2">

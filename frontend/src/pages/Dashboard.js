@@ -16,14 +16,11 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [hasFetchedNotifications, setHasFetchedNotifications] = useState(false);
 
-
- useEffect(() => {
+useEffect(() => {
   const token = localStorage.getItem("token");
 
   const fetchNotifications = async () => {
     try {
-      if (!user || !user._id || !token || hasFetchedNotifications) return;
-
       const res = await axios.get(
         "https://diapo-app.onrender.com/api/notifications",
         {
@@ -42,7 +39,7 @@ const Dashboard = () => {
                 message={notif.message}
                 onVoir={() => {
                   closeToast();
-                  window.location.href = `/notification/${notif._id}`;
+                  window.location.href = `/notifications`;
                 }}
                 onIgnorer={closeToast}
               />
@@ -75,20 +72,17 @@ const Dashboard = () => {
     }
   };
 
-  
-  if (user?.username && !hasFetchedNotifications && token) {
-    toast.success(`Bienvenue ${user.username} !`, {
-      position: "top-right",
-      autoClose: 3000,
-    });
+  fetchDons();
 
-    fetchNotifications(); 
+  // ✅ Ce bloc ne sera exécuté qu'une fois user bien défini
+  if (user && !hasFetchedNotifications && token) {
+    
+    fetchNotifications();
   }
 
-  fetchDons();
-}, [user, hasFetchedNotifications]);
+}, [user?._id, hasFetchedNotifications]); // Écouter user._id garantit que ça se réexécute dès qu'on récupère le user
 
-  
+ 
   
 
   const nouveautes = [...dons]
