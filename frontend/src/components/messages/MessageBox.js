@@ -1,6 +1,5 @@
 import React from 'react';
 import { useLocation } from "react-router-dom";
-import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 
 export default function MessageBox() {
@@ -23,28 +22,25 @@ export default function MessageBox() {
 
       {/* Zone des messages */}
       <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
-        {/* Premier message : Don (image + description) envoyé par le donateur */}
+        {/* Premier message envoyé par le preneur : image + description + message */}
         {messageInitial && (
           <div className="mb-2 flex justify-start">
-            <div className="bg-gray-200 rounded-lg p-2 max-w-xs">
+            <div className="bg-gray-200 rounded-lg p-3 max-w-xs">
               <img
                 src={messageInitial.image}
                 alt="don"
                 className="w-32 h-32 object-cover rounded mb-2"
               />
-              <p className="text-sm">{messageInitial.description}</p>
+              <p className="text-sm mb-2">{messageInitial.description}</p>
+              <div className="bg-white text-black rounded px-3 py-2 text-sm shadow">
+                Merci pour les infos, je suis intéressé.
+              </div>
             </div>
           </div>
         )}
-
-        {/* Réponse automatique du preneur */}
-        <MessageBubble
-          sender="preneur"
-          message="Merci pour les infos, je suis intéressé."
-        />
       </div>
 
-      {/* Boutons + input */}
+      {/* Boutons rapides + input */}
       <div className="border-t bg-white p-4">
         <div className="flex gap-2 mb-2">
           <button className="px-3 py-1 bg-purple-100 text-sm rounded-full hover:bg-purple-200">Demain</button>

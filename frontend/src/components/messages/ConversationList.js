@@ -15,7 +15,7 @@ export default function ConversationList({ conversations = [] }) {
             <li
               key={conv._id}
               className="p-2 border-b hover:bg-gray-100 cursor-pointer"
-              onClick={() => {
+              onClick={() => { 
                 navigate("/message", {
                   state: {
                     user: {

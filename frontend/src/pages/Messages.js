@@ -22,27 +22,39 @@ const Message = () => {
       localStorage.removeItem("AlerteReservation");
     }
   }, []);
+  useEffect(() => {
+  const savedConversations = JSON.parse(localStorage.getItem("conversations") || "[]");
+  setConversations(savedConversations);
+}, []);
+
+useEffect(() => {
+  localStorage.setItem("conversations", JSON.stringify(conversations));
+}, [conversations]);
+
 
   // Ajouter automatiquement le preneur à la liste des conversations (sans duplication)
   useEffect(() => {
-    if (user?.pseudo) {
-      setConversations(prev => {
-        const exists = prev.find(conv => conv.pseudo === user.pseudo);
-        if (exists) return prev;
+  if (user?.pseudo) {
+    setConversations(prev => {
+      const exists = prev.find(conv => conv.pseudo === user.pseudo);
+      if (exists) return prev;
 
-        return [
-          ...prev,
-          {
-            _id: Date.now(), // ID temporaire
-            pseudo: user.pseudo,
-            avatar: user.avatar || "https://via.placeholder.com/50",
-            dernierMessage: "Merci pour les infos, je suis intéressé.",
-            messageInitial: messageInitial,
-          }
-        ];
-      });
-    }
-  }, [user, messageInitial]);
+      const newConv = {
+        _id: Date.now(),
+        pseudo: user.pseudo,
+        avatar: user.avatar || "https://via.placeholder.com/50",
+        dernierMessage: "Merci pour les infos, je suis intéressé.",
+        messageInitial: messageInitial,
+      };
+
+      const updated = [...prev, newConv];
+      localStorage.setItem("conversations", JSON.stringify(updated));
+      return updated;
+    });
+  }
+}, [user, messageInitial]);
+
+
 
   return (
     <div className="p-4">
