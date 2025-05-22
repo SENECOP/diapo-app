@@ -11,6 +11,7 @@ const CreerDon = () => {
   const { id } = useParams();
   const [existingImages, setExistingImages] = useState([]);
   const [user, setUser] = useState('');
+  const [images, setImages] = useState([]);
 
   const [formData, setFormData] = useState({
     titre: '',
@@ -47,6 +48,10 @@ const CreerDon = () => {
 
   const handleClick = () => {
     fileInput.current.click();
+  };
+  const handleImageChange = (e) => {
+  const files = Array.from(e.target.files);
+  setImages(files);
   };
 
   const handleChange = (e) => {
@@ -102,7 +107,7 @@ const CreerDon = () => {
       data.append('ville_don', formData.ville_don);
 
       formData.images.forEach((image) => {
-        data.append('url_image', image); 
+        data.append('images', image); // "images" est un tableau de fichiers
       });
       
       if (id) {

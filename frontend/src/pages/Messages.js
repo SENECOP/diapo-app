@@ -6,6 +6,9 @@ import Header from '../components/Header';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 
+
+
+
 const Message = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [conversations, setConversations] = useState([]);
@@ -13,6 +16,8 @@ const Message = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, messageInitial } = location.state || {};
+  const userId = user?._id; // ou user.id selon ton backend
+
 
   // Gérer l'alerte de réservation
   useEffect(() => {
@@ -30,6 +35,7 @@ const Message = () => {
 useEffect(() => {
   localStorage.setItem("conversations", JSON.stringify(conversations));
 }, [conversations]);
+
 
 
   // Ajouter automatiquement le preneur à la liste des conversations (sans duplication)

@@ -73,6 +73,10 @@ const getDonById = async (req, res) => {
 
 // Modifier un don
 const updateDon = async (req, res) => {
+  if (don.user.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ message: "Accès non autorisé" });
+  }
+
   try {
     const don = await Don.findById(req.params.id);
     if (!don) {
@@ -84,8 +88,10 @@ const updateDon = async (req, res) => {
     don.ville_don = req.body.ville_don || don.ville_don;
 
     // Si une nouvelle image est envoyée
-    if (req.file) {
-      don.url_image = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    if (req.files && req.files.length > 0) {
+      don.url_image = req.files.map(file =>
+        `${req.protocol}://${req.get('host')}/uploads/${file.filename}`
+      );
     }
 
     await don.save();
@@ -98,6 +104,10 @@ const updateDon = async (req, res) => {
 
 // Supprimer un don
 const deleteDon = async (req, res) => {
+  if (don.user.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ message: "Accès non autorisé" });
+  }
+
   try {
     const don = await Don.findByIdAndDelete(req.params.id);
     if (!don) return res.status(404).json({ message: 'Don non trouvé' });
@@ -110,6 +120,10 @@ const deleteDon = async (req, res) => {
 // Archiver / désarchiver un don
 const archiveDon = async (req, res) => {
   try {
+    if (don.user.toString() !== req.user._id.toString()) {
+     return res.status(403).json({ message: "Accès non autorisé" });
+    }
+
     const don = await Don.findById(req.params.id);
     if (!don) return res.status(404).json({ message: "Don non trouvé" });
 
@@ -150,6 +164,8 @@ const prendreDon = async (req, res) => {
       destinataire: don.user,
       message: `${req.user.pseudo} souhaite prendre votre don "${don.titre}".`
     });
+
+    await notification.save(); 
 
     res.status(200).json({ message: "Don pris avec succès, notification envoyée." });
   } catch (error) {
@@ -214,15 +230,13 @@ const reserverDon = async (req, res) => {
       return res.status(400).json({ message: "Vous avez déjà réservé ce don." });
     }
 
-    don.preneur = req.user._id;
-    don.statut = "reserve";
-    await don.save();
-
-    // Ajouter l'utilisateur aux intéressés s'il n'y est pas déjà
+     // Ajouter l'utilisateur aux intéressés s'il n'y est pas déjà
     if (!don.interesses.includes(req.user._id)) {
       don.interesses.push(req.user._id);
     }
 
+    don.preneur = req.user._id;
+    don.statut = "reserve";
     await don.save();
 
 

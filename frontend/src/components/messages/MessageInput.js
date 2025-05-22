@@ -2,7 +2,7 @@ import { useState } from 'react';
 import EmojiPicker from 'emoji-picker-react';
 import { FiSmile, FiPaperclip, FiSend } from 'react-icons/fi';
 
-export default function MessageInput() {
+export default function MessageInput({ onSend }) {
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -14,8 +14,21 @@ export default function MessageInput() {
     const file = e.target.files[0];
     if (file) {
       console.log('Fichier sélectionné :', file);
-      // Tu peux envoyer le fichier ici
+      // Tu peux envoyer le fichier ici via Firebase ou autre
     }
+  };
+
+  const handleSend = () => {
+    if (message.trim() === '') return;
+
+    if (onSend) {
+      onSend(message);
+    } else {
+      console.log('Message envoyé :', message);
+    }
+
+    setMessage('');
+    setShowEmojiPicker(false);
   };
 
   return (
@@ -37,6 +50,12 @@ export default function MessageInput() {
         placeholder="Écrire un message..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        }}
       />
 
       {/* Emoji bouton */}
@@ -47,8 +66,11 @@ export default function MessageInput() {
         <FiSmile size={22} />
       </button>
 
-      {/* Bouton envoyer (non fonctionnel pour l’instant) */}
-      <button className="text-blue-600 hover:text-blue-800">
+      {/* Bouton envoyer */}
+      <button
+        className="text-blue-600 hover:text-blue-800"
+        onClick={handleSend}
+      >
         <FiSend size={22} />
       </button>
 
