@@ -16,7 +16,6 @@ const Message = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, messageInitial } = location.state || {};
-  const userId = user?._id; // ou user.id selon ton backend
 
 
   // Gérer l'alerte de réservation
