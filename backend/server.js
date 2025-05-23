@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const http = require('http');
 const socketIO = require('socket.io');
+const { Server } = require('socket.io');
 const connectDB = require("./config/db.js"); 
 const authRoutes = require('./routes/authRoutes'); 
 const donRoutes = require('./routes/donRoutes');
@@ -52,49 +53,32 @@ app.post('/', (req, res) => {
 });
 
 const server = http.createServer(app);
-const io = socketIO(server, {
+const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: '*', // ou spécifie ton domaine React
     methods: ['GET', 'POST']
   }
 });
 
 io.on('connection', (socket) => {
-  console.log('✅ Utilisateur connecté :', socket.id);
+  console.log('🟢 Un client est connecté :', socket.id);
 
-  socket.on('sendMessage', async (data) => {
-    try {
-      const { contenu, don_id, envoye_par, recu_par } = data;
-
-      const message = new Message({
-        contenu,
-        don_id,
-        envoye_par,
-        recu_par
-      });
-
-      await message.save(); // Enregistre en base
-
-      // Renvoie au destinataire
-      io.emit('receiveMessage', {
-        contenu: message.contenu,
-        don_id: message.don_id,
-        envoye_par: message.envoye_par,
-        recu_par: message.recu_par,
-        envoye_le: message.envoye_le,
-        _id: message._id
-      });
-
-    } catch (error) {
-      console.error('❌ Erreur lors de l’enregistrement du message :', error);
-    }
+  socket.on('sendMessage', (message) => {
+    console.log('📨 Nouveau message reçu :', message);
+    io.emit('receiveMessage', message); // Broadcast à tous
   });
 
   socket.on('disconnect', () => {
-    console.log('🔌 Utilisateur déconnecté :', socket.id);
+    console.log('🔌 Un client s’est déconnecté :', socket.id);
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Serveur démarré sur le port ${PORT}`);
+// Les routes REST API habituelles ici
+app.get('/', (req, res) => {
+  res.send("Serveur API + Socket.io opérationnel");
+});
+
+
+server.listen(PORT, () => {
+  console.log(`Serveur (avec WebSocket) démarré sur le port ${PORT}`);
 });

@@ -1,11 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from "react-router-dom";
 import MessageInput from './MessageInput';
 import { io } from 'socket.io-client';
-
-const socket = io('https://diapo-app.onrender.com', {
-  transports: ['websocket'],
-});
 
 const API_BASE_URL = 'https://diapo-app.onrender.com/api/messages';
 
@@ -14,8 +10,25 @@ export default function MessageBox() {
   const { user, messageInitial } = location.state || {};
 
   const [messages, setMessages] = useState([]);
+  const socketRef = useRef(null); // ✅ Garde une seule instance de socket
 
   useEffect(() => {
+    const socket = io('https://diapo-app.onrender.com', {
+      transports: ['websocket', 'polling'],
+    });
+
+    socketRef.current = socket;
+
+    console.log("📡 Tentative de connexion WebSocket...");
+
+    socket.on('connect', () => {
+      console.log("✅ Connecté au serveur WebSocket :", socket.id);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error("❌ Erreur de connexion WebSocket :", err.message);
+    });
+
     const donId = messageInitial?.don_id;
     const user1 = user?.pseudo;
     const user2 = messageInitial?.envoye_par === user?.pseudo
@@ -24,7 +37,7 @@ export default function MessageBox() {
 
     if (!donId || !user1 || !user2) return;
 
-    // 🔄 Fetch des anciens messages
+    // 🔄 Fetch messages existants
     fetch(`${API_BASE_URL}/${donId}/${user1}/${user2}`)
       .then((res) => {
         if (!res.ok) throw new Error('Erreur de récupération des messages');
@@ -37,7 +50,7 @@ export default function MessageBox() {
         console.error('Erreur lors du fetch des messages:', err);
       });
 
-    // 📥 Ecoute Socket.io
+    // 📥 Nouveau message reçu
     socket.on('receiveMessage', (data) => {
       if (
         data.don_id === donId &&
@@ -49,10 +62,14 @@ export default function MessageBox() {
 
     return () => {
       socket.off('receiveMessage');
+      socket.disconnect(); // ✅ Nettoyage à la fin
+      console.log("🔌 Déconnecté du serveur WebSocket");
     };
   }, [messageInitial, user]);
 
   const handleSendMessage = (content) => {
+    if (!socketRef.current) return;
+
     const newMessage = {
       contenu: content,
       don_id: messageInitial?.don_id,
@@ -63,7 +80,7 @@ export default function MessageBox() {
           : messageInitial?.envoye_par,
     };
 
-    socket.emit('sendMessage', newMessage);
+    socketRef.current.emit('sendMessage', newMessage); // ✅ Envoie via socket
     setMessages((prev) => [...prev, newMessage]);
   };
 
@@ -71,11 +88,13 @@ export default function MessageBox() {
     <div className="flex flex-col w-2/3 bg-white">
       {/* Header */}
       <div className="flex items-center gap-4 border-b p-4">
-        <img
-          src={user?.avatar || ""}
-          alt="avatar"
-          className="w-12 h-12 rounded-full object-cover"
-        />
+        {user?.avatar && (
+          <img
+            src={user.avatar}
+            alt="avatar"
+            className="w-12 h-12 rounded-full object-cover"
+          />
+        )}
         <div>
           <h3 className="font-semibold text-lg">{user?.pseudo || "Utilisateur"}</h3>
         </div>
@@ -86,11 +105,13 @@ export default function MessageBox() {
         {messageInitial && (
           <div className="mb-2 flex justify-start">
             <div className="bg-gray-200 rounded-lg p-3 max-w-xs">
-              <img
-                src={messageInitial.image}
-                alt="don"
-                className="w-32 h-32 object-cover rounded mb-2"
-              />
+              {messageInitial.image && (
+                <img
+                  src={messageInitial.image}
+                  alt="don"
+                  className="w-32 h-32 object-cover rounded mb-2"
+                />
+              )}
               <p className="text-sm mb-2">{messageInitial.description}</p>
               <div className="bg-white text-black rounded px-3 py-2 text-sm shadow">
                 Merci pour les infos, je suis intéressé.
@@ -111,7 +132,7 @@ export default function MessageBox() {
         ))}
       </div>
 
-      {/* Input + Quick replies */}
+      {/* Input + Suggestions */}
       <div className="border-t bg-white p-4">
         <div className="flex gap-2 mb-2">
           {["Demain", "Ce soir", "Peut-être la semaine prochaine"].map((text) => (

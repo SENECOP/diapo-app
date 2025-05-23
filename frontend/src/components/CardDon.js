@@ -80,7 +80,7 @@ const CardDon = ({ don, onReservationSuccess }) => {
   return (
     <div className="border rounded-lg p-4 bg-white shadow hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
       <img
-        src={don.url_image?.[0]}
+        src={don.url_image?.[0] || "/placeholder.jpg"}
         alt={don.titre || "Titre de l'image"}
         className="w-full h-48 object-cover rounded"
       />

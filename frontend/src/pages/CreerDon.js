@@ -62,23 +62,21 @@ const CreerDon = () => {
     }));
   };
 
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    const validImages = files.filter((file) => file.type.startsWith('image/'));
-    if (validImages.length !== files.length) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Fichiers invalides',
-        text: 'Veuillez sélectionner uniquement des fichiers image.',
-      });
-      return;
-    }
+ const handleFileChange = (e) => {
+  const files = Array.from(e.target.files);
+  const validImages = files.filter((file) => file.type.startsWith('image/'));
+  if (validImages.length !== files.length) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Fichiers invalides',
+      text: 'Veuillez sélectionner uniquement des fichiers image.',
+    });
+    return;
+  }
 
-    setFormData((prev) => ({
-      ...prev,
-      images: [...prev.images, ...validImages],
-    }));
-  };
+  setImages((prev) => [...prev, ...validImages]);
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -106,7 +104,7 @@ const CreerDon = () => {
       data.append('description', formData.description);
       data.append('ville_don', formData.ville_don);
 
-      formData.images.forEach((image) => {
+      images.forEach((image) => {
         data.append('images', image); // "images" est un tableau de fichiers
       });
       
@@ -227,7 +225,7 @@ const CreerDon = () => {
               multiple
               style={{ display: 'none' }}
             />
-            {formData.images.length > 0 && (
+            {images.length > 0 &&  (
               <div className="mt-2">
                 {formData.images.map((image, index) => (
                   <p key={index} className="text-sm text-green-600">{image.name} sélectionné</p>
