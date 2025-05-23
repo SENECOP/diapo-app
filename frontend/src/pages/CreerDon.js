@@ -49,10 +49,10 @@ const CreerDon = () => {
   const handleClick = () => {
     fileInput.current.click();
   };
-  const handleImageChange = (e) => {
-  const files = Array.from(e.target.files);
-  setImages(files);
-  };
+  //const handleImageChange = (e) => {
+  //const files = Array.from(e.target.files);
+  //setImages(files);
+  //};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
