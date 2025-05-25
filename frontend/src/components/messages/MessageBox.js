@@ -9,6 +9,10 @@ export default function MessageBox() {
   const location = useLocation();
   const { user, messageInitial } = location.state || {};
 
+  console.log("✅ Chargement MessageBox");
+  console.log("👤 user =", user);
+  console.log("📨 messageInitial =", messageInitial);
+
   const [messages, setMessages] = useState([]);
   const socketRef = useRef(null); // ✅ Garde une seule instance de socket
 
@@ -54,7 +58,8 @@ export default function MessageBox() {
     socket.on('receiveMessage', (data) => {
       if (
         data.don_id === donId &&
-        (data.envoye_par === user1 || data.recu_par === user1)
+        data.envoye_par !== user1 && // ⛔️ ignorer si c’est soi-même (on l’a déjà ajouté)
+        (data.envoye_par === user2 || data.recu_par === user2)
       ) {
         setMessages((prev) => [...prev, data]);
       }

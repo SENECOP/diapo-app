@@ -8,6 +8,8 @@ import Header from "../components/Header"; // adapte le chemin si besoin
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
   const token = localStorage.getItem("token");
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+
   const navigate = useNavigate();
 
 
@@ -108,10 +110,13 @@ const NotificationPage = () => {
                       navigate('/message', {
                         state: {
                           user: {
-                            pseudo: notification.emetteur?.pseudo || "Utilisateur",
-                            avatar: notification.emetteur?.avatar || "https://via.placeholder.com/50"
+                            pseudo: currentUser?.pseudo || "Moi",
+                            avatar: currentUser?.avatar || "https://via.placeholder.com/50"
                           },
                           messageInitial: {
+                            don_id: notification.don?._id,
+                            envoye_par: notification.emetteur?._id,
+                            recu_par: currentUser?._id,
                             image: notification.don?.image_url || "https://via.placeholder.com/150",
                             description: notification.don?.description || "Aucune description fournie"
                           }
