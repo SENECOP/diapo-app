@@ -115,8 +115,8 @@ const NotificationPage = () => {
                           },
                           messageInitial: {
                             don_id: notification.don?._id,
-                            envoye_par: notification.emetteur?._id,
-                            recu_par: currentUser?._id,
+                            envoye_par: notification.emetteur?.pseudo,  
+                            recu_par: currentUser?.pseudo,              
                             image: notification.don?.image_url || "https://via.placeholder.com/150",
                             description: notification.don?.description || "Aucune description fournie"
                           }
