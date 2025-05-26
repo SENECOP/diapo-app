@@ -7,25 +7,22 @@ const API_BASE_URL = 'https://diapo-app.onrender.com/api/messages';
 
 export default function MessageBox() {
   const location = useLocation();
-const { user, messageInitial } = location.state || {};
-if (!user || !messageInitial) {
-  return <div className="p-4 text-red-500">❌ Données utilisateur ou message manquantes.</div>;
-}
-  const destinatairePseudo = messageInitial?.envoye_par === user.pseudo
-  ? messageInitial?.recu_par
-  : messageInitial?.envoye_par;
+  const { user, messageInitial } = location.state || {};
 
-const destinataireAvatar = "https://ui-avatars.com/api/?name=" + destinatairePseudo;
-
-
-  console.log("✅ Chargement MessageBox");
-  console.log("👤 user =", user);
-  console.log("📨 messageInitial =", messageInitial);
-
+  // 🔴 Les hooks doivent TOUJOURS être appelés, même si les données sont manquantes
   const [messages, setMessages] = useState([]);
-  const socketRef = useRef(null); // ✅ Garde une seule instance de socket
+  const socketRef = useRef(null);
+
+  const destinatairePseudo =
+    messageInitial?.envoye_par === user?.pseudo
+      ? messageInitial?.recu_par
+      : messageInitial?.envoye_par;
+
+  const destinataireAvatar = "https://ui-avatars.com/api/?name=" + destinatairePseudo;
 
   useEffect(() => {
+    if (!user || !messageInitial || !messageInitial.don_id) return;
+
     const socket = io('https://diapo-app.onrender.com', {
       transports: ['websocket', 'polling'],
     });
@@ -42,15 +39,10 @@ const destinataireAvatar = "https://ui-avatars.com/api/?name=" + destinatairePse
       console.error("❌ Erreur de connexion WebSocket :", err.message);
     });
 
-    const donId = messageInitial?.don_id;
-    const user1 = user?.pseudo;
-    const user2 = messageInitial?.envoye_par === user?.pseudo
-      ? messageInitial?.recu_par
-      : messageInitial?.envoye_par;
+    const donId = messageInitial.don_id;
+    const user1 = user.pseudo;
+    const user2 = destinatairePseudo;
 
-    if (!donId || !user1 || !user2) return;
-
-    // 🔄 Fetch messages existants
     fetch(`${API_BASE_URL}/${donId}/${user1}/${user2}`)
       .then((res) => {
         if (!res.ok) throw new Error('Erreur de récupération des messages');
@@ -63,11 +55,10 @@ const destinataireAvatar = "https://ui-avatars.com/api/?name=" + destinatairePse
         console.error('Erreur lors du fetch des messages:', err);
       });
 
-    // 📥 Nouveau message reçu
     socket.on('receiveMessage', (data) => {
       if (
         data.don_id === donId &&
-        data.envoye_par !== user1 && // ⛔️ ignorer si c’est soi-même (on l’a déjà ajouté)
+        data.envoye_par !== user1 &&
         (data.envoye_par === user2 || data.recu_par === user2)
       ) {
         setMessages((prev) => [...prev, data]);
@@ -76,10 +67,10 @@ const destinataireAvatar = "https://ui-avatars.com/api/?name=" + destinatairePse
 
     return () => {
       socket.off('receiveMessage');
-      socket.disconnect(); // ✅ Nettoyage à la fin
+      socket.disconnect();
       console.log("🔌 Déconnecté du serveur WebSocket");
     };
-  }, [messageInitial, user]);
+  }, [user, messageInitial, destinatairePseudo]);
 
   const handleSendMessage = (content) => {
     if (!socketRef.current) return;
@@ -88,17 +79,18 @@ const destinataireAvatar = "https://ui-avatars.com/api/?name=" + destinatairePse
       contenu: content,
       don_id: messageInitial?.don_id,
       envoye_par: user?.pseudo,
-      recu_par:
-        messageInitial?.envoye_par === user?.pseudo
-          ? messageInitial?.recu_par
-          : messageInitial?.envoye_par,
+      recu_par: destinatairePseudo,
     };
-      console.log("🟡 Envoi du message vers backend :", newMessage);
 
-
-    socketRef.current.emit('sendMessage', newMessage); // ✅ Envoie via socket
+    console.log("🟡 Envoi du message vers backend :", newMessage);
+    socketRef.current.emit('sendMessage', newMessage);
     setMessages((prev) => [...prev, newMessage]);
   };
+
+  // ✅ Rendu après les hooks
+  if (!user || !messageInitial) {
+    return <div className="p-4 text-red-500">❌ Données utilisateur ou message manquantes.</div>;
+  }
 
   return (
     <div className="flex flex-col w-2/3 bg-white">
@@ -137,7 +129,7 @@ const destinataireAvatar = "https://ui-avatars.com/api/?name=" + destinatairePse
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`mb-2 flex ${msg.envoye_par === user?.pseudo ? 'justify-end' : 'justify-start'}`}
+            className={`mb-2 flex ${msg.envoye_par === user.pseudo ? 'justify-end' : 'justify-start'}`}
           >
             <div className="bg-blue-200 rounded-lg p-3 max-w-xs text-sm">
               {msg.contenu}
