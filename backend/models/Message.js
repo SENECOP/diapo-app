@@ -9,16 +9,9 @@ const messageSchema = new mongoose.Schema({
     ref: 'Don', 
     required: true 
   },
-  envoye_par: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
-  },
-  recu_par: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
-  }
+envoye_par: { type: String, required: true },
+recu_par:   { type: String, required: true },
+
 });
 
 module.exports = mongoose.model('Message', messageSchema);

@@ -7,7 +7,10 @@ const API_BASE_URL = 'https://diapo-app.onrender.com/api/messages';
 
 export default function MessageBox() {
   const location = useLocation();
-  const { user, messageInitial } = location.state || {};
+const { user, messageInitial } = location.state || {};
+if (!user || !messageInitial) {
+  return <div className="p-4 text-red-500">❌ Données utilisateur ou message manquantes.</div>;
+}
   const destinatairePseudo = messageInitial?.envoye_par === user.pseudo
   ? messageInitial?.recu_par
   : messageInitial?.envoye_par;
