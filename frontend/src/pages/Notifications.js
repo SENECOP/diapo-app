@@ -106,7 +106,11 @@ const NotificationPage = () => {
                       setNotifications(prev =>
                         prev.map(n => n._id === notification._id ? { ...n, vu: true } : n)
                       );
-
+                      const isDonateur = currentUser?.pseudo === notification.emetteur?.pseudo;
+                      if (isDonateur) {
+                        alert("Vous êtes le donateur. Vous ne pouvez pas ouvrir cette messagerie.");
+                        return;
+                      }
                       navigate('/message', {
                         state: {
                           user: {
@@ -115,8 +119,8 @@ const NotificationPage = () => {
                           },
                           messageInitial: {
                             don_id: notification.don?._id,
-                            envoye_par: notification.emetteur?.pseudo,  
-                            recu_par: currentUser?.pseudo,              
+                            recu_par: notification.emetteur?.pseudo,  
+                            envoyer_par: currentUser?.pseudo,              
                             image: notification.don?.image_url || "https://via.placeholder.com/150",
                             description: notification.don?.description || "Aucune description fournie"
                           }
