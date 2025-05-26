@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function ConversationList({ conversations = [] }) {
   const navigate = useNavigate();
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+
 
   return (
     <div className="w-1/3 bg-white border-r p-4 overflow-y-auto">
@@ -15,16 +17,23 @@ export default function ConversationList({ conversations = [] }) {
             <li
               key={conv._id}
               className="p-2 border-b hover:bg-gray-100 cursor-pointer"
-              onClick={() => { 
+              onClick={() => {
                 navigate("/message", {
                   state: {
                     user: {
-                      pseudo: conv.pseudo || "Preneur inconnu",
-                      avatar: conv.avatar || "https://via.placeholder.com/50",
+                      pseudo: currentUser?.pseudo,
+                      avatar: currentUser?.avatar,
                     },
-                    messageInitial: conv.messageInitial || null,
-                  },
+                    messageInitial: {
+                      don_id: conv.messageInitial?.don_id,
+                      envoye_par: currentUser?.pseudo,
+                      recu_par: conv.pseudo,
+                      image: conv.messageInitial?.image,
+                      description: conv.messageInitial?.description,
+                    }
+                  }
                 });
+
               }}
             >
               <div className="font-semibold">

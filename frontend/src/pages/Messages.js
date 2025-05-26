@@ -6,9 +6,6 @@ import Header from '../components/Header';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 
-
-
-
 const Message = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [conversations, setConversations] = useState([]);
@@ -17,6 +14,10 @@ const Message = () => {
   const location = useLocation();
   const { user, messageInitial } = location.state || {};
 
+  // ✅ Calculer l’interlocuteur une seule fois (preneur)
+  const destinataire = messageInitial?.envoye_par === user?.pseudo
+    ? messageInitial?.recu_par
+    : messageInitial?.envoye_par;
 
   // Gérer l'alerte de réservation
   useEffect(() => {
@@ -26,40 +27,43 @@ const Message = () => {
       localStorage.removeItem("AlerteReservation");
     }
   }, []);
+
+  // Charger les conversations du localStorage
   useEffect(() => {
-  const savedConversations = JSON.parse(localStorage.getItem("conversations") || "[]");
-  setConversations(savedConversations);
-}, []);
+    const savedConversations = JSON.parse(localStorage.getItem("conversations") || "[]");
+    setConversations(savedConversations);
+  }, []);
 
-useEffect(() => {
-  localStorage.setItem("conversations", JSON.stringify(conversations));
-}, [conversations]);
-
-
-
-  // Ajouter automatiquement le preneur à la liste des conversations (sans duplication)
+  // Enregistrer dans le localStorage à chaque modification
   useEffect(() => {
-  if (user?.pseudo) {
-    setConversations(prev => {
-      const exists = prev.find(conv => conv.pseudo === user.pseudo);
-      if (exists) return prev;
+    localStorage.setItem("conversations", JSON.stringify(conversations));
+  }, [conversations]);
 
-      const newConv = {
-        _id: Date.now(),
-        pseudo: user.pseudo,
-        avatar: user.avatar || "https://via.placeholder.com/50",
-        dernierMessage: "Merci pour les infos, je suis intéressé.",
-        messageInitial: messageInitial,
-      };
+  // Ajouter automatiquement le preneur à la liste des conversations (si pas déjà présent)
+  useEffect(() => {
+    if (destinataire) {
+      setConversations(prev => {
+        const exists = prev.find(conv => conv.pseudo === destinataire);
+        if (exists) return prev;
 
-      const updated = [...prev, newConv];
-      localStorage.setItem("conversations", JSON.stringify(updated));
-      return updated;
-    });
-  }
-}, [user, messageInitial]);
+        const newConv = {
+          _id: Date.now(),
+          pseudo: destinataire,
+          avatar: "https://ui-avatars.com/api/?name=" + destinataire,
+          dernierMessage: "Merci pour les infos, je suis intéressé.",
+          messageInitial: {
+            don_id: messageInitial?.don_id,
+            image: messageInitial?.image,
+            description: messageInitial?.description,
+            envoye_par: messageInitial?.envoye_par,
+            recu_par: messageInitial?.recu_par,
+          },
+        };
 
-
+        return [...prev, newConv];
+      });
+    }
+  }, [destinataire, messageInitial]);
 
   return (
     <div className="p-4">

@@ -8,6 +8,12 @@ const API_BASE_URL = 'https://diapo-app.onrender.com/api/messages';
 export default function MessageBox() {
   const location = useLocation();
   const { user, messageInitial } = location.state || {};
+  const destinatairePseudo = messageInitial?.envoye_par === user.pseudo
+  ? messageInitial?.recu_par
+  : messageInitial?.envoye_par;
+
+const destinataireAvatar = "https://ui-avatars.com/api/?name=" + destinatairePseudo;
+
 
   console.log("✅ Chargement MessageBox");
   console.log("👤 user =", user);
@@ -84,6 +90,8 @@ export default function MessageBox() {
           ? messageInitial?.recu_par
           : messageInitial?.envoye_par,
     };
+      console.log("🟡 Envoi du message vers backend :", newMessage);
+
 
     socketRef.current.emit('sendMessage', newMessage); // ✅ Envoie via socket
     setMessages((prev) => [...prev, newMessage]);
@@ -93,15 +101,13 @@ export default function MessageBox() {
     <div className="flex flex-col w-2/3 bg-white">
       {/* Header */}
       <div className="flex items-center gap-4 border-b p-4">
-        {user?.avatar && (
-          <img
-            src={user.avatar}
-            alt="avatar"
-            className="w-12 h-12 rounded-full object-cover"
-          />
-        )}
+        <img
+          src={destinataireAvatar}
+          alt="avatar"
+          className="w-12 h-12 rounded-full object-cover"
+        />
         <div>
-          <h3 className="font-semibold text-lg">{user?.pseudo || "Utilisateur"}</h3>
+          <h3 className="font-semibold text-lg">{destinatairePseudo || "Utilisateur"}</h3>
         </div>
       </div>
 
