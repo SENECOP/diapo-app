@@ -63,10 +63,28 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   console.log('🟢 Un client est connecté :', socket.id);
 
-  socket.on('sendMessage', (message) => {
-    console.log('📨 Nouveau message reçu :', message);
-    io.emit('receiveMessage', message); // Broadcast à tous
-  });
+  socket.on('sendMessage', async (message) => {
+  console.log('📨 Nouveau message reçu :', message);
+
+  try {
+    const savedMessage = await Message.create({
+      contenu: message.contenu,
+      don_id: message.don_id,
+      envoye_par: message.envoye_par,
+      recu_par: message.recu_par,
+      envoye_le: new Date(), // Optionnel, si tu as ce champ
+    });
+
+    console.log("✅ Message sauvegardé dans MongoDB :", savedMessage);
+
+
+    // Broadcast le message enregistré
+    io.emit('receiveMessage', savedMessage);
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'enregistrement du message :', error.message);
+  }
+});
+
 
   socket.on('disconnect', () => {
     console.log('🔌 Un client s’est déconnecté :', socket.id);
