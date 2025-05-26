@@ -56,11 +56,7 @@ export default function MessageBox() {
       });
 
     socket.on('receiveMessage', (data) => {
-      if (
-        data.don_id === donId &&
-        data.envoye_par !== user1 &&
-        (data.envoye_par === user2 || data.recu_par === user2)
-      ) {
+      if (data.don_id === donId) {
         setMessages((prev) => [...prev, data]);
       }
     });

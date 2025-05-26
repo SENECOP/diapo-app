@@ -1,7 +1,8 @@
 const Message = require('../models/Message');
 const mongoose = require('mongoose');
 
-// ✅ Créer un nouveau message
+
+// Créer un nouveau message
 const createMessage = async (req, res) => {
   const { contenu, don_id, envoye_par, recu_par } = req.body;
 
@@ -20,15 +21,12 @@ const createMessage = async (req, res) => {
 
     res.status(201).json(newMessage);
   } catch (error) {
-    console.error('❌ Erreur lors de la création du message :', error.message);
-    res.status(500).json({
-      message: "Erreur lors de l'enregistrement du message",
-      error: error.message
-    });
+    res.status(500).json({ message: 'Erreur lors de l\'enregistrement du message', error });
   }
 };
 
-// ✅ Récupérer les messages entre deux utilisateurs pour un don donné
+
+// Récupérer les messages entre deux utilisateurs pour un don donné
 const getMessagesByDonAndUsers = async (req, res) => {
   const { donId, user1, user2 } = req.params;
 
@@ -36,13 +34,9 @@ const getMessagesByDonAndUsers = async (req, res) => {
     return res.status(400).json({ message: 'Paramètres manquants : donId, user1 ou user2' });
   }
 
-  if (!mongoose.Types.ObjectId.isValid(donId)) {
-    return res.status(400).json({ message: 'donId invalide' });
-  }
-
   try {
     const messages = await Message.find({
-      don_id: objectId,
+      don_id: donId,
       $or: [
         { envoye_par: user1, recu_par: user2 },
         { envoye_par: user2, recu_par: user1 }
@@ -51,15 +45,16 @@ const getMessagesByDonAndUsers = async (req, res) => {
 
     res.status(200).json(messages);
   } catch (error) {
-    console.error("❌ Erreur dans getMessagesByDonAndUsers :", error.message);
     res.status(500).json({
-      message: "Erreur lors de la récupération des messages",
-      error: error.message
+      message: 'Erreur lors de la récupération des messages',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
 
+
+
 module.exports = {
   getMessagesByDonAndUsers,
-  createMessage,
+   createMessage,
 };

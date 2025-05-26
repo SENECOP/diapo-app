@@ -25,15 +25,10 @@ export default function ConversationList({ conversations = [] }) {
                       avatar: currentUser?.avatar,
                     },
                     messageInitial: {
-                      don_id: conv.messageInitial?.don_id,
-                      envoye_par: currentUser?.pseudo,
-                      recu_par: conv.pseudo,
-                      image: conv.messageInitial?.image,
-                      description: conv.messageInitial?.description,
+                      ...conv.messageInitial, 
                     }
                   }
                 });
-
               }}
             >
               <div className="font-semibold">
