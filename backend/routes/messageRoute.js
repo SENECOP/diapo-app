@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getMessagesByDonAndUsers, createMessage } = require('../controllers/messageApi');
-const { getConversationsByPseudo } = require("../controllers/messageController");
+const { getConversationsByPseudo } = require("../controllers/messageApi");
 
 
 // GET /api/messages/:donId/:user1/:user2
