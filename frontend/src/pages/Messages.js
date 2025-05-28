@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 
-const Message = () => {
+const MessagePage = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [conversations, setConversations] = useState([]);
 
@@ -65,6 +65,8 @@ const Message = () => {
     }
   }, [destinataire, messageInitial]);
 
+  
+
   return (
     <div className="p-4">
       <Header />
@@ -95,4 +97,4 @@ const Message = () => {
   );
 };
 
-export default Message;
+export default MessagePage;

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from "react-router-dom";
 import MessageInput from './MessageInput';
 import { io } from 'socket.io-client';
+import { socket } from "../../socket";
 
 const API_BASE_URL = 'https://diapo-app.onrender.com/api/messages';
 
@@ -34,6 +35,8 @@ export default function MessageBox() {
     socket.on('connect', () => {
       console.log("✅ Connecté au serveur WebSocket :", socket.id);
     });
+    socket.emit("userConnected", user.pseudo);
+
 
     socket.on('connect_error', (err) => {
       console.error("❌ Erreur de connexion WebSocket :", err.message);
@@ -67,6 +70,35 @@ export default function MessageBox() {
       console.log("🔌 Déconnecté du serveur WebSocket");
     };
   }, [user, messageInitial, destinatairePseudo]);
+
+  useEffect(() => {
+    if (!messageInitial || !user) return;
+
+  const handleReceiveMessage = (msg) => {
+    if (
+      msg.don_id === messageInitial?.don_id &&
+      (msg.envoye_par === user?.pseudo || msg.recu_par === user?.pseudo)
+    ) {
+      setMessages((prev) => [...prev, msg]);
+    }
+  };
+
+  socket.on("receiveMessage", handleReceiveMessage);
+
+  return () => {
+    socket.off("receiveMessage", handleReceiveMessage);
+  };
+}, [messageInitial, user]);
+
+  useEffect(() => {
+    if (!messageInitial || !messageInitial.don_id) return;
+
+  fetch(`https://diapo-app.onrender.com/api/messages/${messageInitial.don_id}`)
+    .then((res) => res.json())
+    .then((data) => setMessages(data))
+    .catch((err) => console.error("Erreur de chargement", err));
+}, [messageInitial]);
+
 
   const handleSendMessage = (content) => {
     if (!socketRef.current) return;

@@ -7,6 +7,8 @@ import Header from "../components/Header"; // adapte le chemin si besoin
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
+  const [selectedDon, setSelectedDon] = useState(null);
+
   const token = localStorage.getItem("token");
   const currentUser = JSON.parse(localStorage.getItem("user"));
 

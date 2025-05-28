@@ -52,9 +52,44 @@ const getMessagesByDonAndUsers = async (req, res) => {
   }
 };
 
+const getConversationsByPseudo = async (req, res) => {
+  const { pseudo } = req.params;
+
+  try {
+    const conversations = await Message.aggregate([
+      {
+        $match: {
+          $or: [{ envoye_par: pseudo }, { recu_par: pseudo }],
+        },
+      },
+      {
+        $sort: { date_envoi: -1 },
+      },
+      {
+        $group: {
+          _id: "$don_id",
+          lastMessage: { $first: "$$ROOT" },
+        },
+      },
+      {
+        $replaceRoot: { newRoot: "$lastMessage" },
+      },
+      {
+        $sort: { date_envoi: -1 },
+      },
+    ]);
+
+    res.json(conversations);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des conversations :", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+};
+
 
 
 module.exports = {
   getMessagesByDonAndUsers,
-   createMessage,
+  createMessage,
+  getConversationsByPseudo
 };

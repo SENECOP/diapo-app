@@ -59,12 +59,19 @@ const io = new Server(server, {
     methods: ['GET', 'POST']
   }
 });
+const connectedUsers = {};
 
 io.on('connection', (socket) => {
   console.log('🟢 Un client est connecté :', socket.id);
 
   socket.on('sendMessage', async (message) => {
   console.log('📨 Nouveau message reçu :', message);
+
+  socket.on("userConnected", (pseudo) => {
+  connectedUsers[pseudo] = socket.id;
+  console.log("👤 Utilisateur connecté :", pseudo, socket.id);
+});
+
 
   try {
     const savedMessage = await Message.create({
@@ -79,7 +86,13 @@ io.on('connection', (socket) => {
 
 
     // Broadcast le message enregistré
-    io.emit('receiveMessage', savedMessage);
+const destinataireSocketId = connectedUsers[message.recu_par];
+  if (destinataireSocketId) {
+    io.to(destinataireSocketId).emit('receiveMessage', savedMessage);
+    console.log("📤 Message envoyé à", message.recu_par, "via socket", destinataireSocketId);
+  } else {
+    console.log("⚠️ Destinataire", message.recu_par, "non connecté.");
+  }
   } catch (error) {
     console.error('❌ Erreur lors de l\'enregistrement du message :', error.message);
   }
@@ -87,6 +100,14 @@ io.on('connection', (socket) => {
 
 
   socket.on('disconnect', () => {
+    for (const pseudo in connectedUsers) {
+  if (connectedUsers[pseudo] === socket.id) {
+    console.log(`👋 ${pseudo} (${socket.id}) déconnecté`);
+    delete connectedUsers[pseudo];
+    break;
+  }
+}
+
     console.log('🔌 Un client s’est déconnecté :', socket.id);
   });
 });
