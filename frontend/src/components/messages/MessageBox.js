@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from "react-router-dom";
 import MessageInput from './MessageInput';
 import { io } from 'socket.io-client';
-import { socket } from "../../socket";
 
 const API_BASE_URL = 'https://diapo-app.onrender.com/api/messages';
 
@@ -10,7 +9,6 @@ export default function MessageBox() {
   const location = useLocation();
   const { user, messageInitial } = location.state || {};
 
-  // 🔴 Les hooks doivent TOUJOURS être appelés, même si les données sont manquantes
   const [messages, setMessages] = useState([]);
   const socketRef = useRef(null);
 
@@ -19,103 +17,76 @@ export default function MessageBox() {
       ? messageInitial?.recu_par
       : messageInitial?.envoye_par;
 
-  const destinataireAvatar = "https://ui-avatars.com/api/?name=" + destinatairePseudo;
+  const destinataireAvatar = `https://ui-avatars.com/api/?name=${destinatairePseudo}`;
 
   useEffect(() => {
     if (!user || !messageInitial || !messageInitial.don_id) return;
+    
 
     const socket = io('https://diapo-app.onrender.com', {
       transports: ['websocket', 'polling'],
     });
-
     socketRef.current = socket;
 
-    console.log("📡 Tentative de connexion WebSocket...");
-
+    console.log("📡 Connexion WebSocket...");
     socket.on('connect', () => {
-      console.log("✅ Connecté au serveur WebSocket :", socket.id);
+      console.log("✅ Connecté au WebSocket :", socket.id);
+      socket.emit("userConnected", user.pseudo);
     });
-    socket.emit("userConnected", user.pseudo);
-
 
     socket.on('connect_error', (err) => {
-      console.error("❌ Erreur de connexion WebSocket :", err.message);
+      console.error("❌ Erreur de connexion :", err.message);
     });
 
     const donId = messageInitial.don_id;
     const user1 = user.pseudo;
     const user2 = destinatairePseudo;
 
+    // Charger les anciens messages
     fetch(`${API_BASE_URL}/${donId}/${user1}/${user2}`)
       .then((res) => {
         if (!res.ok) throw new Error('Erreur de récupération des messages');
         return res.json();
       })
-      .then((data) => {
-        setMessages(data);
-      })
+      .then((data) => setMessages(data))
       .catch((err) => {
         console.error('Erreur lors du fetch des messages:', err);
       });
 
-    socket.on('receiveMessage', (data) => {
-      if (data.don_id === donId) {
-        setMessages((prev) => [...prev, data]);
+    // Réception des nouveaux messages
+    const handleReceiveMessage = (msg) => {
+      if (
+        msg.don_id === messageInitial.don_id &&
+        (msg.envoye_par === user.pseudo || msg.recu_par === user.pseudo)
+      ) {
+        setMessages((prev) => [...prev, msg]);
       }
-    });
+    };
+
+    socket.on("receiveMessage", handleReceiveMessage);
 
     return () => {
-      socket.off('receiveMessage');
+      socket.off("receiveMessage", handleReceiveMessage);
       socket.disconnect();
-      console.log("🔌 Déconnecté du serveur WebSocket");
+      console.log("🔌 Déconnecté du WebSocket");
     };
   }, [user, messageInitial, destinatairePseudo]);
-
-  useEffect(() => {
-    if (!messageInitial || !user) return;
-
-  const handleReceiveMessage = (msg) => {
-    if (
-      msg.don_id === messageInitial?.don_id &&
-      (msg.envoye_par === user?.pseudo || msg.recu_par === user?.pseudo)
-    ) {
-      setMessages((prev) => [...prev, msg]);
-    }
-  };
-
-  socket.on("receiveMessage", handleReceiveMessage);
-
-  return () => {
-    socket.off("receiveMessage", handleReceiveMessage);
-  };
-}, [messageInitial, user]);
-
-  useEffect(() => {
-    if (!messageInitial || !messageInitial.don_id) return;
-
-  fetch(`https://diapo-app.onrender.com/api/messages/${messageInitial.don_id}`)
-    .then((res) => res.json())
-    .then((data) => setMessages(data))
-    .catch((err) => console.error("Erreur de chargement", err));
-}, [messageInitial]);
-
 
   const handleSendMessage = (content) => {
     if (!socketRef.current) return;
 
     const newMessage = {
       contenu: content,
-      don_id: messageInitial?.don_id,
-      envoye_par: user?.pseudo,
+      don_id: messageInitial.don_id,
+      envoye_par: user.pseudo,
       recu_par: destinatairePseudo,
     };
 
-    console.log("🟡 Envoi du message vers backend :", newMessage);
+    console.log("🟡 Envoi du message :", newMessage);
     socketRef.current.emit('sendMessage', newMessage);
     setMessages((prev) => [...prev, newMessage]);
   };
 
-  // ✅ Rendu après les hooks
   if (!user || !messageInitial) {
     return <div className="p-4 text-red-500">❌ Données utilisateur ou message manquantes.</div>;
   }
@@ -154,16 +125,26 @@ export default function MessageBox() {
           </div>
         )}
 
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`mb-2 flex ${msg.envoye_par === user.pseudo ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className="bg-blue-200 rounded-lg p-3 max-w-xs text-sm">
-              {msg.contenu}
+        {messages.map((msg, index) => {
+          const isSender = msg.envoye_par === user.pseudo;
+          return (
+            <div
+              key={index}
+              className={`mb-2 flex ${isSender ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`p-3 max-w-xs rounded-lg text-sm shadow-md ${
+                  isSender
+                    ? 'bg-blue-500 text-white rounded-br-none'
+                    : 'bg-gray-200 text-gray-800 rounded-bl-none'
+                }`}
+              >
+                {msg.contenu}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
+
       </div>
 
       {/* Input + Suggestions */}

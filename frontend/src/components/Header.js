@@ -14,51 +14,38 @@ const Header = () => {
   const [searchCategory, setSearchCategory] = useState('');
   const [searchCity, setSearchCity] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState({ category: false, city: false });
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   const token = localStorage.getItem("token");
   const categories = ["Technologie", "Vêtements", "Meuble"];
   const villes = ["Dakar", "Thiès", "Saint-Louis", "Mbour", "Yoff"];
 
-  // Gérer le clic en dehors des filtres
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
-        setShowFilters(false);
-        setDropdownOpen({ category: false, city: false });
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Réinitialiser les notifications à 0 si sur la page message
+  // Réinitialiser si on est sur /message
   useEffect(() => {
     if (location.pathname === "/message") {
-      setUnreadCount(0);
+      setUnreadMessages(0);
     }
   }, [location.pathname]);
 
-  // Charger les notifications
+  // Charger les messages non lus
   useEffect(() => {
-    const fetchNotifications = async () => {
+    const fetchUnreadMessages = async () => {
       try {
-        const response = await fetch("https://diapo-app.onrender.com/api/notifications", {
+        const response = await fetch("https://diapo-app.onrender.com/api/messages/unread", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!response.ok) throw new Error("Erreur lors du chargement des notifications");
+        if (!response.ok) throw new Error("Erreur lors du chargement des messages non lus");
         const data = await response.json();
-        const unread = data.notifications.filter(n => !n.vu).length;
-        setUnreadCount(unread);
+        setUnreadMessages(data?.unreadCount || 0);
       } catch (error) {
-        console.error("Erreur chargement notifications :", error.message);
+        console.error("Erreur chargement messages :", error.message);
       }
     };
 
-    if (token) fetchNotifications();
+    if (token) fetchUnreadMessages();
   }, [token]);
 
-  // Gérer les sockets
+  // Socket pour écouter les nouveaux messages
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user"));
     const socket = io("https://diapo-app.onrender.com", {
@@ -72,8 +59,9 @@ const Header = () => {
     socketRef.current = socket;
 
     socket.on("receiveMessage", (message) => {
+      console.log("Message reçu via socket :", message);
       if (message.recu_par === currentUser?.pseudo) {
-        setUnreadCount(prev => prev + 1);
+        setUnreadMessages((prev) => prev + 1);
       }
     });
 
@@ -82,9 +70,8 @@ const Header = () => {
     };
   }, []);
 
-  // Fonctions de gestion
   const toggleDropdown = (type) => {
-    setDropdownOpen(prev => ({ ...prev, [type]: !prev[type] }));
+    setDropdownOpen((prev) => ({ ...prev, [type]: !prev[type] }));
   };
 
   const handleSelection = (type, value) => {
@@ -108,7 +95,7 @@ const Header = () => {
         <img src="/logo_diapo.png" alt="Diapo Logo" className="h-16 w-auto" />
       </div>
 
-      {/* Barre de recherche + filtres */}
+      {/* Recherche + filtres */}
       <div className="flex items-center gap-2 flex-1 max-w-3xl mx-4 relative">
         <input
           type="text"
@@ -131,10 +118,7 @@ const Header = () => {
               </button>
               {dropdownOpen.category && (
                 <ul className="absolute left-0 w-full mt-1 bg-white border rounded shadow z-20">
-                  <li
-                    onClick={() => handleSelection('category', '')}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
+                  <li onClick={() => handleSelection('category', '')} className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
                     Toutes
                   </li>
                   {categories.map((cat) => (
@@ -160,10 +144,7 @@ const Header = () => {
               </button>
               {dropdownOpen.city && (
                 <ul className="absolute left-0 w-full mt-1 bg-white border rounded shadow z-20">
-                  <li
-                    onClick={() => handleSelection('city', '')}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
+                  <li onClick={() => handleSelection('city', '')} className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
                     Toutes
                   </li>
                   {villes.map((ville) => (
@@ -191,19 +172,14 @@ const Header = () => {
         {/* Notifications */}
         <Link to="/notifications" className="relative p-2 text-gray-600 hover:text-blue-600">
           <FiBell size={22} />
-          {user && unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-[1px] rounded-full">
-              {unreadCount}
-            </span>
-          )}
         </Link>
 
         {/* Messages */}
         <Link to="/message" className="relative p-2 text-gray-600 hover:text-blue-600">
           <FiMail size={22} />
-          {user && unreadCount > 0 && (
+          {user && unreadMessages > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-[1px] rounded-full">
-              {unreadCount}
+              {unreadMessages}
             </span>
           )}
         </Link>

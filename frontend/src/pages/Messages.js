@@ -9,15 +9,30 @@ import { FaArrowLeft } from 'react-icons/fa';
 const MessagePage = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [conversations, setConversations] = useState([]);
-
   const navigate = useNavigate();
   const location = useLocation();
   const { user, messageInitial } = location.state || {};
+  const [selectedConversation, setSelectedConversation] = useState(null);
+
+  
 
   // ✅ Calculer l’interlocuteur une seule fois (preneur)
   const destinataire = messageInitial?.envoye_par === user?.pseudo
     ? messageInitial?.recu_par
     : messageInitial?.envoye_par;
+
+
+  useEffect(() => {
+  if (messageInitial) {
+    setSelectedConversation({
+      pseudo: destinataire,
+      messageInitial,
+      avatar: "https://ui-avatars.com/api/?name=" + destinataire,
+      dernierMessage: messageInitial.contenu || "",
+    });
+  }
+}, [messageInitial, destinataire]);
+
 
   // Gérer l'alerte de réservation
   useEffect(() => {
@@ -88,10 +103,15 @@ const MessagePage = () => {
 
       <div className="flex h-screen">
         {/* Liste des conversations à gauche */}
-        <ConversationList conversations={conversations} />
-
-        {/* Zone des messages à droite */}
-        <MessageBox user={user} messageInitial={messageInitial} />
+       <ConversationList onSelectConversation={setSelectedConversation} />
+      {selectedConversation ? (
+        <MessageBox conversation={selectedConversation} />
+      ) : (
+        <div className="flex-1 flex items-center justify-center text-gray-500">
+          Sélectionne une conversation
+        </div>
+      )}
+        
       </div>
     </div>
   );
