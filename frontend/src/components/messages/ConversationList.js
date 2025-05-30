@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState, useContext } from "react";
 import { io } from "socket.io-client";
-import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/UserContext";
 
 export default function ConversationList({
   conversations: initialConversations = [],
   onSelectConversation,
 }) {
-  const navigate = useNavigate();
   const socketRef = useRef(null);
   const [conversations, setConversations] = useState(initialConversations);
   const [selectedId, setSelectedId] = useState(null);
