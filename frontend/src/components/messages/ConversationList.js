@@ -16,12 +16,10 @@ export default function ConversationList({
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const currentUser = storedUser || userFromContext;
 
-  // ✅ Synchroniser avec les props
   useEffect(() => {
     setConversations(initialConversations);
   }, [initialConversations]);
 
-  // ✅ Connexion socket et écoute des nouveaux messages
   useEffect(() => {
     if (!currentUser?.pseudo) return;
 
@@ -56,7 +54,7 @@ export default function ConversationList({
             );
           } else {
             const newConv = {
-              pseudo:
+              interlocuteur:
                 msg.envoye_par === currentUser.pseudo
                   ? msg.recu_par
                   : msg.envoye_par,
@@ -72,34 +70,18 @@ export default function ConversationList({
     return () => socket.disconnect();
   }, [currentUser?.pseudo]);
 
-  // ✅ Chargement initial des conversations
   useEffect(() => {
     const pseudo = currentUser?.pseudo;
     if (!pseudo) return;
-    
+    console.log("Pseudo utilisé pour charger les conversations :", pseudo);
+
     fetch(`https://diapo-app.onrender.com/api/messages/conversations/${pseudo}`)
       .then((res) => res.json())
       .then((data) => {
-        const latestMessages = {};
-
-        data.forEach((msg) => {
-          const key =
-            msg.don_id +
-            "_" +
-            (msg.envoye_par === pseudo ? msg.recu_par : msg.envoye_par);
-
-          if (
-            !latestMessages[key] ||
-            new Date(msg.envoye_le) > new Date(latestMessages[key].envoye_le)
-          ) {
-            latestMessages[key] = msg;
-          }
-        });
-
-        const formatted = Object.values(latestMessages).map((msg) => ({
-          pseudo: msg.envoye_par === pseudo ? msg.recu_par : msg.envoye_par,
-          dernierMessage: msg.contenu,
-          messageInitial: msg,
+        const formatted = data.map((conv) => ({
+          interlocuteur: conv.interlocuteur,
+          dernierMessage: conv.dernierMessage,
+          messageInitial: conv.messageInitial,
         }));
 
         setConversations((prev) => {
@@ -107,7 +89,7 @@ export default function ConversationList({
             (newConv) =>
               !prev.some(
                 (prevConv) =>
-                  prevConv.pseudo === newConv.pseudo &&
+                  prevConv.interlocuteur === newConv.interlocuteur &&
                   prevConv.messageInitial?.don_id === newConv.messageInitial?.don_id
               )
           );
@@ -117,33 +99,31 @@ export default function ConversationList({
       .catch((err) => console.error("Erreur chargement conversations", err));
   }, [currentUser?.pseudo]);
 
-  // ✅ Sélection d'une conversation
   const handleSelect = (conv) => {
-    const message = conv.messageInitial;
-    const recuPar =
-      message.envoye_par === currentUser.pseudo
-        ? message.recu_par
-        : message.envoye_par;
+  const message = conv.messageInitial;
+  const recuPar =
+    message.envoye_par === currentUser.pseudo
+      ? message.recu_par
+      : message.envoye_par;
 
-    const id = message._id || `${conv.pseudo}-${message.don_id}`;
-    setSelectedId(id);
+  const id = message._id || `${conv.interlocuteur}-${message.don_id}`;
+  setSelectedId(id);
 
-    navigate("/message", {
-      state: {
-        user: currentUser,
-        messageInitial: {
-          don_id: message.don_id,
-          envoye_par: currentUser.pseudo,
-          recu_par: recuPar,
-          image: message.image || message.image_url,
-          description: message.description,
-          contenu: message.contenu,
-        },
-      },
-    });
-
-    onSelectConversation?.(conv);
+  const formattedConv = {
+    pseudo: recuPar,
+    avatar: conv.avatar || `https://ui-avatars.com/api/?name=${recuPar}`,
+    messageInitial: {
+      don_id: message.don_id,
+      image: message.image || message.image_url,
+      description: message.description,
+      envoye_par: message.envoye_par,
+      recu_par: message.recu_par,
+      contenu: message.contenu,
+    }
   };
+
+  onSelectConversation?.(formattedConv);
+};
 
   return (
     <div className="w-1/3 bg-white border-r p-4 overflow-y-auto">
@@ -154,11 +134,11 @@ export default function ConversationList({
       ) : (
         <ul>
           {conversations
-            .filter((conv) => conv.pseudo && conv.messageInitial)
+            .filter((conv) => conv.interlocuteur && conv.messageInitial)
             .map((conv, index) => {
               const id =
                 conv.messageInitial?._id ||
-                `${conv.pseudo}-${conv.messageInitial?.don_id}` ||
+                `${conv.interlocuteur}-${conv.messageInitial?.don_id}` ||
                 `conv-${index}`;
 
               const isSelected = selectedId === id;
@@ -174,14 +154,14 @@ export default function ConversationList({
                   <img
                     src={
                       conv.avatar ||
-                      `https://ui-avatars.com/api/?name=${conv.pseudo}`
+                      `https://ui-avatars.com/api/?name=${conv.interlocuteur}`
                     }
-                    alt={conv.pseudo}
+                    alt={conv.interlocuteur}
                     className="w-10 h-10 rounded-full"
                   />
                   <div>
                     <div className="font-semibold">
-                      {conv.nomComplet || conv.pseudo || "Utilisateur inconnu"}
+                      {conv.nomComplet || conv.interlocuteur || "Utilisateur inconnu"}
                     </div>
                     <div className="text-sm text-gray-500 truncate max-w-xs">
                       {conv.dernierMessage || "Aucun message"}

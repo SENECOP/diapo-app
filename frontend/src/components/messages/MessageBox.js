@@ -1,89 +1,54 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLocation } from "react-router-dom";
 import MessageInput from './MessageInput';
 import { io } from 'socket.io-client';
 
 const API_BASE_URL = 'https://diapo-app.onrender.com/api/messages';
 
-export default function MessageBox() {
-  const location = useLocation();
-  const { user, messageInitial } = location.state || {};
+export default function MessageBox({ conversation }) {
+  const { messageInitial, pseudo: destinatairePseudo, avatar: destinataireAvatar } = conversation || {};
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const [messages, setMessages] = useState([]);
   const socketRef = useRef(null);
 
-  const destinatairePseudo =
-    messageInitial?.envoye_par === user?.pseudo
-      ? messageInitial?.recu_par
-      : messageInitial?.envoye_par;
-
-  const destinataireAvatar = `https://ui-avatars.com/api/?name=${destinatairePseudo}`;
-
   useEffect(() => {
-    if (!user || !messageInitial || !messageInitial.don_id) return;
-    
+    if (!user || !messageInitial?.don_id) return;
 
     const socket = io('https://diapo-app.onrender.com', {
       transports: ['websocket', 'polling'],
     });
+
     socketRef.current = socket;
 
-    console.log("📡 Connexion WebSocket...");
     socket.on('connect', () => {
-      console.log("✅ Connecté au WebSocket :", socket.id);
       socket.emit("userConnected", user.pseudo);
     });
 
-    socket.on('connect_error', (err) => {
-      console.error("❌ Erreur de connexion :", err.message);
-    });
-
-    const donId = messageInitial.don_id;
-    const user1 = user.pseudo;
-    const user2 = destinatairePseudo;
-
-    // Charger les anciens messages
-    fetch(`${API_BASE_URL}/${donId}/${user1}/${user2}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Erreur de récupération des messages');
-        return res.json();
-      })
-      .then((data) => setMessages(data))
-      .catch((err) => {
-        console.error('Erreur lors du fetch des messages:', err);
-      });
-
-    // Réception des nouveaux messages
-    const handleReceiveMessage = (msg) => {
-      if (
-        msg.don_id === messageInitial.don_id &&
-        (msg.envoye_par === user.pseudo || msg.recu_par === user.pseudo)
-      ) {
+    socket.on("receiveMessage", (msg) => {
+      if (msg.don_id === messageInitial.don_id &&
+          (msg.envoye_par === user.pseudo || msg.recu_par === user.pseudo)) {
         setMessages((prev) => [...prev, msg]);
       }
-    };
+    });
 
-    socket.on("receiveMessage", handleReceiveMessage);
+    fetch(`${API_BASE_URL}/${messageInitial.don_id}/${user.pseudo}/${destinatairePseudo}`)
+      .then(res => res.json())
+      .then(setMessages)
+      .catch(err => console.error("Erreur fetch messages :", err));
 
     return () => {
-      socket.off("receiveMessage", handleReceiveMessage);
       socket.disconnect();
-      console.log("🔌 Déconnecté du WebSocket");
     };
   }, [user, messageInitial, destinatairePseudo]);
 
   const handleSendMessage = (content) => {
-    if (!socketRef.current) return;
-
     const newMessage = {
       contenu: content,
       don_id: messageInitial.don_id,
       envoye_par: user.pseudo,
       recu_par: destinatairePseudo,
     };
-
-    console.log("🟡 Envoi du message :", newMessage);
-    socketRef.current.emit('sendMessage', newMessage);
+    socketRef.current?.emit('sendMessage', newMessage);
     setMessages((prev) => [...prev, newMessage]);
   };
 
