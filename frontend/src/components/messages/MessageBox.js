@@ -5,7 +5,7 @@ import { io } from 'socket.io-client';
 const API_BASE_URL = 'https://diapo-app.onrender.com/api/messages';
 
 export default function MessageBox({ conversation }) {
-  const { messageInitial, pseudo: destinatairePseudo, avatar: destinataireAvatar } = conversation || {};
+  const { messageInitial, don, pseudo: destinatairePseudo, avatar: destinataireAvatar } = conversation || {};
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [messages, setMessages] = useState([]);
@@ -55,7 +55,8 @@ export default function MessageBox({ conversation }) {
   if (!user || !messageInitial) {
     return <div className="p-4 text-red-500">❌ Données utilisateur ou message manquantes.</div>;
   }
-
+console.log("Conversation:", conversation);
+console.log("Don:", don);
   return (
     <div className="flex flex-col w-2/3 bg-white">
       {/* Header */}
@@ -72,7 +73,20 @@ export default function MessageBox({ conversation }) {
 
       {/* Messages */}
       <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
-        {messageInitial && (
+        {don && (
+          <div className="mb-4 p-4 border rounded bg-purple-50">
+            <h3 className="text-lg font-bold text-purple-800 mb-2">{don.titre}</h3>
+            {don.image_url && (
+              <img
+                src={don.image_url}
+                alt="don"
+                className="w-32 h-32 object-cover rounded mb-2"
+              />
+            )}
+            <p className="text-gray-700 text-sm">{don.description}</p>
+          </div>
+        )}
+        {messageInitial && !messages.lenght &&(
           <div className="mb-2 flex justify-start">
             <div className="bg-gray-200 rounded-lg p-3 max-w-xs">
               {messageInitial.image && (
@@ -90,25 +104,26 @@ export default function MessageBox({ conversation }) {
           </div>
         )}
 
-        {messages.map((msg, index) => {
-          const isSender = msg.envoye_par === user.pseudo;
-          return (
-            <div
-              key={index}
-              className={`mb-2 flex ${isSender ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`p-3 max-w-xs rounded-lg text-sm shadow-md ${
-                  isSender
-                    ? 'bg-blue-500 text-white rounded-br-none'
-                    : 'bg-gray-200 text-gray-800 rounded-bl-none'
-                }`}
-              >
-                {msg.contenu}
-              </div>
-            </div>
-          );
-        })}
+        {Array.isArray(messages) &&
+  messages.map((msg, index) => {
+    const isSender = msg.envoye_par === user.pseudo;
+    return (
+      <div
+        key={index}
+        className={`mb-2 flex ${isSender ? 'justify-end' : 'justify-start'}`}
+      >
+        <div
+          className={`p-3 max-w-xs rounded-lg text-sm shadow-md ${
+            isSender
+              ? 'bg-blue-500 text-white rounded-br-none'
+              : 'bg-gray-200 text-gray-800 rounded-bl-none'
+          }`}
+        >
+          {msg.contenu}
+        </div>
+      </div>
+    );
+  })}
 
       </div>
 

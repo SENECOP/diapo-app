@@ -1,33 +1,46 @@
 import ConversationList from '../components/messages/ConversationList';
 import MessageBox from '../components/messages/MessageBox';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import AlerteReservation from "../components/AlerteReservation";
 import Header from '../components/Header';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
+import { MessageContext } from "../context/MessageContext";
 
 const MessagePage = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [conversations, setConversations] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, messageInitial } = location.state || {};
+  const { user, messageInitial, don } = location.state || {};
+  const { setUnreadMessages } = useContext(MessageContext);
   const [selectedConversation, setSelectedConversation] = useState(null);
 
+  // Calcul du destinataire dans la conversation initiale
   const destinataire = messageInitial?.envoye_par === user?.pseudo
     ? messageInitial?.recu_par
     : messageInitial?.envoye_par;
 
+  // Quand on sélectionne une conversation dans la liste
+  const handleSelectConversation = (conversation) => {
+    setSelectedConversation(conversation);
+
+    // Décrémente les messages non lus
+    setUnreadMessages((prev) => Math.max(prev - 1, 0));
+  };
+
+  // Si on arrive sur la page avec une conversation initiale, on la sélectionne automatiquement
   useEffect(() => {
-    if (messageInitial) {
+    if (messageInitial && destinataire) {
       setSelectedConversation({
         pseudo: destinataire,
         messageInitial,
         avatar: "https://ui-avatars.com/api/?name=" + destinataire,
         dernierMessage: messageInitial.contenu || "",
+        don: don,
       });
     }
-  }, [messageInitial, destinataire]);
+  }, [messageInitial, destinataire, don]);
 
   useEffect(() => {
     const alertFlag = localStorage.getItem("AlerteReservation");
@@ -46,6 +59,7 @@ const MessagePage = () => {
     localStorage.setItem("conversations", JSON.stringify(conversations));
   }, [conversations]);
 
+  // Ajoute une nouvelle conversation si besoin, par exemple si messageInitial est reçu via la navigation
   useEffect(() => {
     if (destinataire && messageInitial?.don_id) {
       setConversations((prev) => {
@@ -67,10 +81,8 @@ const MessagePage = () => {
               recu_par: messageInitial.recu_par,
             },
           };
-
           return [...prev, newConv];
         }
-
         return prev;
       });
     }
@@ -83,7 +95,7 @@ const MessagePage = () => {
       <div className="bg-blue-700 text-white px-10 py-10 flex items-center h-[250px] space-x-4">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/notifications')}
+            onClick={() => navigate('/dashboard')}
             className="p-2 rounded-full bg-white text-blue-700 hover:bg-gray-100 shadow"
             title="Retour au tableau de bord"
           >
@@ -98,7 +110,7 @@ const MessagePage = () => {
       <div className="flex h-screen">
         <ConversationList
           conversations={conversations}
-          onSelectConversation={setSelectedConversation}
+          onSelectConversation={handleSelectConversation}
         />
         {selectedConversation ? (
           <MessageBox conversation={selectedConversation} />

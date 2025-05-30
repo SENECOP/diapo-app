@@ -3,6 +3,8 @@ import { UserContext } from "../context/UserContext";
 import { Link, useLocation } from "react-router-dom";
 import { FiFilter, FiX, FiBell, FiMail, FiChevronDown } from "react-icons/fi";
 import { io } from "socket.io-client";
+import { MessageContext } from "../context/MessageContext"; // <-- nouveau import
+
 
 const Header = () => {
   const { user } = useContext(UserContext);
@@ -14,7 +16,7 @@ const Header = () => {
   const [searchCategory, setSearchCategory] = useState('');
   const [searchCity, setSearchCity] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState({ category: false, city: false });
-  const [unreadMessages, setUnreadMessages] = useState(0);
+const { unreadMessages, setUnreadMessages } = useContext(MessageContext); // ✅
 
   const token = localStorage.getItem("token");
   const categories = ["Technologie", "Vêtements", "Meuble"];
@@ -25,7 +27,7 @@ const Header = () => {
     if (location.pathname === "/message") {
       setUnreadMessages(0);
     }
-  }, [location.pathname]);
+  }, [location.pathname, setUnreadMessages]);
 
   // Charger les messages non lus
   useEffect(() => {
@@ -43,7 +45,7 @@ const Header = () => {
     };
 
     if (token) fetchUnreadMessages();
-  }, [token]);
+  }, [token, setUnreadMessages]);
 
   // Socket pour écouter les nouveaux messages
   useEffect(() => {
@@ -68,7 +70,7 @@ const Header = () => {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [setUnreadMessages]);
 
   const toggleDropdown = (type) => {
     setDropdownOpen((prev) => ({ ...prev, [type]: !prev[type] }));
