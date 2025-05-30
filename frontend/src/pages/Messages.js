@@ -14,27 +14,21 @@ const MessagePage = () => {
   const { user, messageInitial } = location.state || {};
   const [selectedConversation, setSelectedConversation] = useState(null);
 
-  
-
-  // ✅ Calculer l’interlocuteur une seule fois (preneur)
   const destinataire = messageInitial?.envoye_par === user?.pseudo
     ? messageInitial?.recu_par
     : messageInitial?.envoye_par;
 
-
   useEffect(() => {
-  if (messageInitial) {
-    setSelectedConversation({
-      pseudo: destinataire,
-      messageInitial,
-      avatar: "https://ui-avatars.com/api/?name=" + destinataire,
-      dernierMessage: messageInitial.contenu || "",
-    });
-  }
-}, [messageInitial, destinataire]);
+    if (messageInitial) {
+      setSelectedConversation({
+        pseudo: destinataire,
+        messageInitial,
+        avatar: "https://ui-avatars.com/api/?name=" + destinataire,
+        dernierMessage: messageInitial.contenu || "",
+      });
+    }
+  }, [messageInitial, destinataire]);
 
-
-  // Gérer l'alerte de réservation
   useEffect(() => {
     const alertFlag = localStorage.getItem("AlerteReservation");
     if (alertFlag === "true") {
@@ -43,44 +37,44 @@ const MessagePage = () => {
     }
   }, []);
 
-  // Charger les conversations du localStorage
   useEffect(() => {
     const savedConversations = JSON.parse(localStorage.getItem("conversations") || "[]");
     setConversations(savedConversations);
   }, []);
 
-  // Enregistrer dans le localStorage à chaque modification
   useEffect(() => {
     localStorage.setItem("conversations", JSON.stringify(conversations));
   }, [conversations]);
 
-  // Ajouter automatiquement le preneur à la liste des conversations (si pas déjà présent)
   useEffect(() => {
-    if (destinataire) {
-      setConversations(prev => {
-        const exists = prev.find(conv => conv.pseudo === destinataire);
-        if (exists) return prev;
+    if (destinataire && messageInitial?.don_id) {
+      setConversations((prev) => {
+        const alreadyExists = prev.some(
+          (conv) => conv.pseudo === destinataire && conv.messageInitial?.don_id === messageInitial.don_id
+        );
 
-        const newConv = {
-          _id: Date.now(),
-          pseudo: destinataire,
-          avatar: "https://ui-avatars.com/api/?name=" + destinataire,
-          dernierMessage: "Merci pour les infos, je suis intéressé.",
-          messageInitial: {
-            don_id: messageInitial?.don_id,
-            image: messageInitial?.image,
-            description: messageInitial?.description,
-            envoye_par: messageInitial?.envoye_par,
-            recu_par: messageInitial?.recu_par,
-          },
-        };
+        if (!alreadyExists) {
+          const newConv = {
+            _id: Date.now(),
+            pseudo: destinataire,
+            avatar: `https://ui-avatars.com/api/?name=${destinataire}`,
+            dernierMessage: messageInitial?.contenu || "Nouveau message",
+            messageInitial: {
+              don_id: messageInitial.don_id,
+              image: messageInitial.image,
+              description: messageInitial.description,
+              envoye_par: messageInitial.envoye_par,
+              recu_par: messageInitial.recu_par,
+            },
+          };
 
-        return [...prev, newConv];
+          return [...prev, newConv];
+        }
+
+        return prev;
       });
     }
   }, [destinataire, messageInitial]);
-
-  
 
   return (
     <div className="p-4">
@@ -102,16 +96,17 @@ const MessagePage = () => {
       {showAlert && <AlerteReservation onClose={() => setShowAlert(false)} />}
 
       <div className="flex h-screen">
-        {/* Liste des conversations à gauche */}
-       <ConversationList onSelectConversation={setSelectedConversation} />
-      {selectedConversation ? (
-        <MessageBox conversation={selectedConversation} />
-      ) : (
-        <div className="flex-1 flex items-center justify-center text-gray-500">
-          Sélectionne une conversation
-        </div>
-      )}
-        
+        <ConversationList
+          conversations={conversations}
+          onSelectConversation={setSelectedConversation}
+        />
+        {selectedConversation ? (
+          <MessageBox conversation={selectedConversation} />
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Sélectionne une conversation
+          </div>
+        )}
       </div>
     </div>
   );

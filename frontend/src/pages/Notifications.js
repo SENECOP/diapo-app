@@ -1,24 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { FaGift } from "react-icons/fa";
+import { FaGift, FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft } from 'react-icons/fa';
 import Footer from "../components/Footer";
-import Header from "../components/Header"; // adapte le chemin si besoin
+import Header from "../components/Header";
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
+  const [selectedDon, setSelectedDon] = useState(null);
   const token = localStorage.getItem("token");
   const currentUser = JSON.parse(localStorage.getItem("user"));
-
   const navigate = useNavigate();
 
-
   useEffect(() => {
-      const user = JSON.parse(localStorage.getItem("user"));
-  if (!user || !user.token) {
-    console.log("Utilisateur non connecté, pas de récupération des notifications.");
-    return; 
-  }
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.token) {
+      console.log("Utilisateur non connecté, pas de récupération des notifications.");
+      return;
+    }
 
     const fetchNotifications = async () => {
       try {
@@ -34,7 +32,7 @@ const NotificationPage = () => {
         if (Array.isArray(data.notifications)) {
           setNotifications(data.notifications);
         } else {
-          setNotifications([]); // fallback sécurisé
+          setNotifications([]);
         }
       } catch (error) {
         console.error("Erreur chargement notifications :", error.message);
@@ -47,44 +45,43 @@ const NotificationPage = () => {
   }, [token]);
 
   const markAsRead = async (notificationId) => {
-  try {
-    const response = await fetch(`https://diapo-app.onrender.com/api/notifications/read/${notificationId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const response = await fetch(`https://diapo-app.onrender.com/api/notifications/read/${notificationId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error("Échec lors de la mise à jour de la notification.");
+      if (!response.ok) {
+        throw new Error("Échec lors de la mise à jour de la notification.");
+      }
+    } catch (error) {
+      console.error("Erreur lors du marquage comme lu :", error.message);
     }
-  } catch (error) {
-    console.error("Erreur lors du marquage comme lu :", error.message);
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* HEADER EN HAUT */}
+      {/* HEADER */}
       <Header />
-      
+
+      {/* BANNIÈRE */}
       <div className="bg-blue-700 text-white px-10 py-10 flex items-center h-[250px] space-x-4">
-         <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="p-2 rounded-full bg-white text-blue-700 hover:bg-gray-100 shadow"
-              title="Retour au tableau de bord"
-            >
-              <FaArrowLeft />
-            </button>
-            <h1 className="text-3xl font-semibold">Notifications</h1>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="p-2 rounded-full bg-white text-blue-700 hover:bg-gray-100 shadow"
+            title="Retour au tableau de bord"
+          >
+            <FaArrowLeft />
+          </button>
+          <h1 className="text-3xl font-semibold">Notifications</h1>
         </div>
-      
       </div>
 
-      {/* CONTENU PRINCIPAL EN DESSOUS */}
+      {/* CONTENU PRINCIPAL */}
       <div className="flex flex-1">
         {/* Colonne Gauche : Notifications */}
         <div className="w-1/3 bg-gray-300 border-r">
@@ -99,36 +96,43 @@ const NotificationPage = () => {
                 <div
                   key={notification._id}
                   className={`bg-white rounded-md shadow-sm p-3 mb-2 flex items-start justify-between hover:bg-blue-50 cursor-pointer ${
-                      notification.vu ? 'opacity-50' : 'opacity-100'
-                    }`}                  
-                    onClick={async () => {
-                      await markAsRead(notification._id); // Marque comme lu
-                      setNotifications(prev =>
-                        prev.map(n => n._id === notification._id ? { ...n, vu: true } : n)
-                      );
-                      const isDonateur = currentUser?.pseudo === notification.emetteur?.pseudo;
-                      if (isDonateur) {
-                        alert("Vous êtes le donateur. Vous ne pouvez pas ouvrir cette messagerie.");
-                        return;
-                      }
-                      navigate('/message', {
-                        state: {
-                          user: {
-                            pseudo: currentUser?.pseudo || "Moi",
-                            avatar: currentUser?.avatar || "https://via.placeholder.com/50"
-                          },
-                          messageInitial: {
-                            don_id: notification.don?._id,
-                            envoye_par: currentUser?.pseudo,               // 👈 l'utilisateur connecté envoie
-                            recu_par: notification.emetteur?.pseudo,            
-                            image: notification.don?.image_url || "https://via.placeholder.com/150",
-                            description: notification.don?.description || "Aucune description fournie"
-                          }
-                        }
-                      });
-                    }}
+                    notification.vu ? 'opacity-50' : 'opacity-100'
+                  }`}
+                  onClick={async () => {
+                  await markAsRead(notification._id);
+                  setNotifications(prev =>
+                    prev.map(n => n._id === notification._id ? { ...n, vu: true } : n)
+                  );
 
-                 >
+                  const isDonateur = currentUser?.pseudo === notification.emetteur?.pseudo;
+                  if (isDonateur) {
+                    alert("Vous êtes le donateur. Vous ne pouvez pas ouvrir cette messagerie.");
+                    return;
+                  }
+
+                  const donId = notification.don?._id;
+                  if (!donId) {
+                    alert("Aucun identifiant de don trouvé.");
+                    return;
+                  }
+
+                  try {
+                    const res = await fetch(`https://diapo-app.onrender.com/api/dons/${donId}`, {
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    });
+
+                    if (!res.ok) throw new Error("Erreur lors de la récupération du don");
+
+                    const donComplet = await res.json(); 
+                    setSelectedDon(donComplet);          
+                  } catch (error) {
+                    console.error("Erreur récupération du don :", error.message);
+                  }
+                }}
+
+                >
                   <div className="flex gap-2">
                     <div className="p-2 bg-gray-200 rounded-full">
                       <FaGift className="text-blue-600" />
@@ -144,7 +148,10 @@ const NotificationPage = () => {
                   </div>
                   <span className="text-[10px] text-gray-400 mt-1 whitespace-nowrap">
                     {new Date(notification.createdAt).toLocaleString("fr-FR", {
-                      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit"
                     })}
                   </span>
                 </div>
@@ -153,12 +160,66 @@ const NotificationPage = () => {
           </div>
         </div>
 
-        {/* Colonne Droite : Contenu statique ou détail */}
-        <div className="flex-1 p-6 bg-white ">
-          <h2 className="text-xl font-bold mb-2">Liste des Dons</h2>
-          <p className="text-sm text-gray-500">Subheading</p>
+        {/* Colonne Droite : Détails du don sélectionné */}
+        <div className="flex-1 p-6 bg-white">
+          <h2 className="text-xl font-bold mb-4">Détail du Don</h2>
+          {!selectedDon ? (
+            <p className="text-sm text-gray-500">
+              Sélectionnez une notification pour voir les détails du don.
+            </p>
+          ) : (
+                    <div className="bg-gray-50 p-6 rounded-lg shadow-md max-w-3xl mx-auto space-y-6">
+            {/* Image du don */}
+            <div className="flex justify-center">
+              <img
+                src={selectedDon.image_url || "https://via.placeholder.com/400x250"}
+                alt="Don"
+                className="rounded-lg shadow-lg max-h-64 object-cover"
+              />
+            </div>
+
+            {/* Titre */}
+            <div>
+              <h3 className="text-2xl font-bold text-blue-700 mb-2">
+                {selectedDon.titre || "Titre non renseigné"}
+              </h3>
+              <p className="text-gray-700">{selectedDon.description || "Aucune description fournie."}</p>
+            </div>
+
+            {/* Détails du don en grille */}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="font-semibold text-gray-600">Ville</p>
+                <p>{selectedDon.ville_don || "Non précisée"}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-600">Catégorie</p>
+                <p>{selectedDon.categorie || "Non précisée"}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-600">État</p>
+                <p>{selectedDon.statut || "Non précisé"}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-600">Donateur</p>
+                <p>{selectedDon.donateur?.pseudo || "Non identifié"}</p>
+              </div>
+            </div>
+
+            {/* Date de création du don (optionnel) */}
+            {selectedDon.createdAt && (
+              <div className="text-right text-xs text-gray-400">
+                Don créé le : {new Date(selectedDon.createdAt).toLocaleDateString("fr-FR", {
+                  year: "numeric", month: "long", day: "numeric"
+                })}
+              </div>
+            )}
+          </div>
+          )}
         </div>
       </div>
+
+      {/* FOOTER */}
       <Footer />
     </div>
   );

@@ -43,51 +43,40 @@ const getMessagesByDonAndUsers = async (req, res) => {
 };
 
 
-// Récupérer les messages entre deux utilisateurs pour un don donné
+
 const getConversationsByPseudo = async (req, res) => {
   const { pseudo } = req.params;
 
   try {
-    const conversations = await Message.aggregate([
-      {
-        $match: {
-          $or: [{ envoye_par: pseudo }, { recu_par: pseudo }],
-        },
-      },
-      {
-        $sort: { envoye_le: -1 },
-      },
-      {
-        $group: {
-          _id: {
-            don_id: "$don_id",
-            autreUser: {
-              $cond: [
-                { $eq: ["$envoye_par", pseudo] },
-                "$recu_par",
-                "$envoye_par"
-              ]
-            }
-          },
-          lastMessage: { $first: "$$ROOT" },
-        },
-      },
-      {
-        $project: {
-          pseudo: "$_id.autreUser",
-          dernierMessage: "$lastMessage.contenu",
-          messageInitial: "$lastMessage",
-          _id: 0
-        }
-      },
-      {
-        $sort: { "messageInitial.envoye_le": -1 }
+    // Étape 1: Récupérer toutes les conversations impliquant l'utilisateur
+    const messages = await Message.find({
+      $or: [{ envoye_par: pseudo }, { recu_par: pseudo }]
+    }).sort({ envoye_le: -1 });
+
+    // Étape 2: Grouper par don et par interlocuteur
+    const conversationsMap = new Map();
+
+    messages.forEach(msg => {
+      const key = `${msg.don_id}_${msg.envoye_par === pseudo ? msg.recu_par : msg.envoye_par}`;
+      
+      if (!conversationsMap.has(key)) {
+        conversationsMap.set(key, {
+          don_id: msg.don_id,
+          interlocuteur: msg.envoye_par === pseudo ? msg.recu_par : msg.envoye_par,
+          dernierMessage: msg.contenu,
+          messageInitial: msg,
+          createdAt: msg.envoye_le
+        });
       }
-    ]);
+    });
+
+    // Étape 3: Convertir en tableau et trier
+    const conversations = Array.from(conversationsMap.values())
+      .sort((a, b) => b.createdAt - a.createdAt);
 
     res.json(conversations);
   } catch (error) {
-    console.error("Erreur lors de la récupération des conversations :", error);
+    console.error("Erreur:", error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
