@@ -1,14 +1,16 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import { UserContext } from "../context/UserContext";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiFilter, FiX, FiBell, FiMail, FiChevronDown } from "react-icons/fi";
 import { io } from "socket.io-client";
-import { MessageContext } from "../context/MessageContext"; // <-- nouveau import
-
+import { MessageContext } from "../context/MessageContext";
 
 const Header = () => {
   const { user } = useContext(UserContext);
+  const { unreadMessages, setUnreadMessages } = useContext(MessageContext);
+
   const location = useLocation();
+  const navigate = useNavigate();
   const socketRef = useRef(null);
   const filterMenuRef = useRef(null);
 
@@ -16,20 +18,27 @@ const Header = () => {
   const [searchCategory, setSearchCategory] = useState('');
   const [searchCity, setSearchCity] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState({ category: false, city: false });
-const { unreadMessages, setUnreadMessages } = useContext(MessageContext); // ✅
 
   const token = localStorage.getItem("token");
+  const don = location.state?.don || null;
+
+  const tonMessageInitial = don && user ? {
+    don_id: don._id,
+    image: don.image_url,
+    description: don.description,
+    envoye_par: user.pseudo,
+    recu_par: don.proprietaire?.pseudo || ""
+  } : null;
+
   const categories = ["Technologie", "Vêtements", "Meuble"];
   const villes = ["Dakar", "Thiès", "Saint-Louis", "Mbour", "Yoff"];
 
-  // Réinitialiser si on est sur /message
   useEffect(() => {
     if (location.pathname === "/message") {
       setUnreadMessages(0);
     }
   }, [location.pathname, setUnreadMessages]);
 
-  // Charger les messages non lus
   useEffect(() => {
     const fetchUnreadMessages = async () => {
       try {
@@ -47,7 +56,6 @@ const { unreadMessages, setUnreadMessages } = useContext(MessageContext); // ✅
     if (token) fetchUnreadMessages();
   }, [token, setUnreadMessages]);
 
-  // Socket pour écouter les nouveaux messages
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user"));
     const socket = io("https://diapo-app.onrender.com", {
@@ -120,17 +128,9 @@ const { unreadMessages, setUnreadMessages } = useContext(MessageContext); // ✅
               </button>
               {dropdownOpen.category && (
                 <ul className="absolute left-0 w-full mt-1 bg-white border rounded shadow z-20">
-                  <li onClick={() => handleSelection('category', '')} className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                    Toutes
-                  </li>
+                  <li onClick={() => handleSelection('category', '')} className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Toutes</li>
                   {categories.map((cat) => (
-                    <li
-                      key={cat}
-                      onClick={() => handleSelection('category', cat)}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                    >
-                      {cat}
-                    </li>
+                    <li key={cat} onClick={() => handleSelection('category', cat)} className="px-4 py-2 hover:bg-gray-100 cursor-pointer">{cat}</li>
                   ))}
                 </ul>
               )}
@@ -146,17 +146,9 @@ const { unreadMessages, setUnreadMessages } = useContext(MessageContext); // ✅
               </button>
               {dropdownOpen.city && (
                 <ul className="absolute left-0 w-full mt-1 bg-white border rounded shadow z-20">
-                  <li onClick={() => handleSelection('city', '')} className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                    Toutes
-                  </li>
+                  <li onClick={() => handleSelection('city', '')} className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Toutes</li>
                   {villes.map((ville) => (
-                    <li
-                      key={ville}
-                      onClick={() => handleSelection('city', ville)}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                    >
-                      {ville}
-                    </li>
+                    <li key={ville} onClick={() => handleSelection('city', ville)} className="px-4 py-2 hover:bg-gray-100 cursor-pointer">{ville}</li>
                   ))}
                 </ul>
               )}
@@ -177,14 +169,25 @@ const { unreadMessages, setUnreadMessages } = useContext(MessageContext); // ✅
         </Link>
 
         {/* Messages */}
-        <Link to="/message" className="relative p-2 text-gray-600 hover:text-blue-600">
+        <button
+          onClick={() =>
+            navigate("/message", {
+              state: {
+                user: user,
+                messageInitial: tonMessageInitial,
+                don: don
+              }
+            })
+          }
+          className="relative p-2 text-gray-600 hover:text-blue-600"
+        >
           <FiMail size={22} />
           {user && unreadMessages > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-[1px] rounded-full">
               {unreadMessages}
             </span>
           )}
-        </Link>
+        </button>
 
         {/* Profil utilisateur */}
         {user && user.pseudo ? (

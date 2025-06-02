@@ -58,7 +58,8 @@ const getConversationsByPseudo = async (req, res) => {
 
     messages.forEach(msg => {
       const key = `${msg.don_id}_${msg.envoye_par === pseudo ? msg.recu_par : msg.envoye_par}`;
-      
+      console.log("Clé de conversation générée :", key);
+
       if (!conversationsMap.has(key)) {
         conversationsMap.set(key, {
           don_id: msg.don_id,
@@ -71,10 +72,34 @@ const getConversationsByPseudo = async (req, res) => {
     });
 
     // Étape 3: Convertir en tableau et trier
-    const conversations = Array.from(conversationsMap.values())
-      .sort((a, b) => b.createdAt - a.createdAt);
+    // Étape 3: Convertir en tableau
+let conversations = Array.from(conversationsMap.values());
 
-    res.json(conversations);
+// Étape 4: Charger les détails du don pour chaque conversation
+const donIds = conversations.map(conv => conv.don_id);
+const dons = await Don.find({ _id: { $in: donIds } });
+
+const donsMap = new Map();
+dons.forEach(d => donsMap.set(d._id.toString(), d));
+
+// Étape 5: Ajouter les infos du don à chaque conversation
+conversations = conversations.map(conv => {
+  const don = donsMap.get(conv.don_id.toString());
+  return {
+    ...conv,
+    don: don ? {
+      titre: don.titre,
+      image: don.image,
+      description: don.description,
+      categorie: don.categorie
+    } : null
+  };
+});
+
+// Étape 6: Trier par date (optionnel si déjà trié)
+conversations.sort((a, b) => b.createdAt - a.createdAt);
+
+res.json(conversations);
   } catch (error) {
     console.error("Erreur:", error);
     res.status(500).json({ error: "Erreur serveur" });

@@ -59,7 +59,6 @@ const MessagePage = () => {
     localStorage.setItem("conversations", JSON.stringify(conversations));
   }, [conversations]);
 
-  // Ajoute une nouvelle conversation si besoin, par exemple si messageInitial est reçu via la navigation
   useEffect(() => {
     if (destinataire && messageInitial?.don_id) {
       setConversations((prev) => {
@@ -68,25 +67,26 @@ const MessagePage = () => {
         );
 
         if (!alreadyExists) {
-          const newConv = {
-            _id: Date.now(),
-            pseudo: destinataire,
-            avatar: `https://ui-avatars.com/api/?name=${destinataire}`,
-            dernierMessage: messageInitial?.contenu || "Nouveau message",
-            messageInitial: {
-              don_id: messageInitial.don_id,
-              image: messageInitial.image,
-              description: messageInitial.description,
-              envoye_par: messageInitial.envoye_par,
-              recu_par: messageInitial.recu_par,
-            },
-          };
-          return [...prev, newConv];
-        }
+        const newConv = {
+          _id: Date.now(),
+          pseudo: destinataire,
+          avatar: `https://ui-avatars.com/api/?name=${destinataire}`,
+          dernierMessage: messageInitial?.contenu || "Nouveau message",
+          messageInitial: {
+            don_id: messageInitial.don_id,
+            image: messageInitial.url_image,
+            description: messageInitial.description,
+            envoye_par: messageInitial.envoye_par,
+            recu_par: messageInitial.recu_par,
+          },
+          don: don, 
+        };
+        return [...prev, newConv];
+      }
         return prev;
       });
     }
-  }, [destinataire, messageInitial]);
+  }, [destinataire, messageInitial, don]);
 
   return (
     <div className="p-4">
