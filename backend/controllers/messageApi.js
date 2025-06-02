@@ -45,10 +45,6 @@ const getMessagesByDonAndUsers = async (req, res) => {
 };
 
 
-
-const mongoose = require("mongoose");
-const Message = require("../models/Message");
-
 exports.getConversationsByUserId = async (req, res) => {
   const userId = req.params.userId;
 
