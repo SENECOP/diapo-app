@@ -34,6 +34,7 @@ const MessagePage = () => {
     if (messageInitial && destinataire) {
       setSelectedConversation({
         pseudo: destinataire,
+        interlocuteur: destinataire,
         messageInitial,
         avatar: "https://ui-avatars.com/api/?name=" + destinataire,
         dernierMessage: messageInitial.contenu || "",
@@ -70,6 +71,7 @@ const MessagePage = () => {
         const newConv = {
           _id: Date.now(),
           pseudo: destinataire,
+          interlocuteur: destinataire,
           avatar: `https://ui-avatars.com/api/?name=${destinataire}`,
           dernierMessage: messageInitial?.contenu || "Nouveau message",
           messageInitial: {

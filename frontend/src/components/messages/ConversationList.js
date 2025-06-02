@@ -7,17 +7,45 @@ export default function ConversationList({
   onSelectConversation,
 }) {
   const socketRef = useRef(null);
-  const [conversations, setConversations] = useState(initialConversations);
+  const [conversations, setConversations] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
 
   const { user: userFromContext } = useContext(UserContext);
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const currentUser = storedUser || userFromContext;
+console.log("currentUser complet :", currentUser);
 
-  useEffect(() => {
-    setConversations(initialConversations);
-  }, [initialConversations]);
+  // Charger les conversations
+ useEffect(() => {
+  const userId = currentUser?.id;
+  if (!userId) return;
 
+  console.log("userId utilisé pour fetch:", userId);
+
+  fetch(`https://diapo-app.onrender.com/api/messages/conversations/${userId}`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Réponse brute de l'API:", data);
+
+      if (Array.isArray(data)) {
+        const formatted = data.map((conv) => ({
+          interlocuteur: conv.interlocuteur,
+          avatar: `https://ui-avatars.com/api/?name=${conv.interlocuteur}`,
+          dernierMessage: conv.lastMessage?.content,
+          messageInitial: conv.lastMessage?.createdAt,
+          don: conv.lastMessage?.don || null,
+        }));
+        setConversations(formatted);
+      } else {
+        console.error("Réponse inattendue :", data);
+      }
+    })
+    .catch((err) => console.error("Erreur chargement conversations", err));
+}, [currentUser]);
+
+
+
+  // Socket
   useEffect(() => {
     if (!currentUser?.pseudo) return;
 
@@ -29,99 +57,56 @@ export default function ConversationList({
     socket.emit("userConnected", currentUser.pseudo);
 
     socket.on("receiveMessage", (msg) => {
-      if (msg.recu_par === currentUser.pseudo) {
-        setConversations((prevConvs) => {
-          const existing = prevConvs.find(
-            (c) =>
-              c.messageInitial?.don_id === msg.don_id &&
-              (c.messageInitial?.envoye_par === msg.envoye_par ||
-                c.messageInitial?.recu_par === msg.envoye_par)
-          );
+      if (msg.recu_par !== currentUser.pseudo && msg.envoye_par !== currentUser.pseudo) return;
 
-          if (existing) {
-            return prevConvs.map((conv) =>
-              conv.messageInitial?.don_id === msg.don_id &&
-              (conv.messageInitial?.envoye_par === msg.envoye_par ||
-                conv.messageInitial?.recu_par === msg.envoye_par)
-                ? {
-                    ...conv,
-                    dernierMessage: msg.contenu,
-                    messageInitial: msg,
-                  }
-                : conv
-            );
-          } else {
-            const newConv = {
-              interlocuteur:
-                msg.envoye_par === currentUser.pseudo
-                  ? msg.recu_par
-                  : msg.envoye_par,
-              dernierMessage: msg.contenu,
-              messageInitial: msg,
-            };
-            return [newConv, ...prevConvs];
-          }
-        });
-      }
+      setConversations((prevConvs) => {
+        const idx = prevConvs.findIndex(
+          (c) =>
+            c.messageInitial?.don_id === msg.don_id &&
+            (c.messageInitial?.envoye_par === msg.envoye_par ||
+              c.messageInitial?.recu_par === msg.envoye_par)
+        );
+
+        if (idx !== -1) {
+          const updated = [...prevConvs];
+          updated[idx] = {
+            ...updated[idx],
+            dernierMessage: msg.contenu,
+            messageInitial: msg,
+          };
+          return [updated[idx], ...updated.filter((_, i) => i !== idx)];
+        } else {
+          const newConv = {
+            interlocuteur: msg.envoye_par === currentUser.pseudo ? msg.recu_par : msg.envoye_par,
+            avatar: `https://ui-avatars.com/api/?name=${msg.envoye_par}`,
+            dernierMessage: msg.contenu,
+            messageInitial: msg,
+            don: null, // pas encore connu
+          };
+          return [newConv, ...prevConvs];
+        }
+      });
     });
 
     return () => socket.disconnect();
   }, [currentUser?.pseudo]);
 
-  useEffect(() => {
-    const pseudo = currentUser?.pseudo;
-    if (!pseudo) return;
-    console.log("Pseudo utilisé pour charger les conversations :", pseudo);
-
-    fetch(`https://diapo-app.onrender.com/api/messages/conversations/${pseudo}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const formatted = data.map((conv) => ({
-          interlocuteur: conv.interlocuteur,
-          dernierMessage: conv.dernierMessage,
-          messageInitial: conv.messageInitial,
-        }));
-
-        setConversations((prev) => {
-          const unique = formatted.filter(
-            (newConv) =>
-              !prev.some(
-                (prevConv) =>
-                  prevConv.interlocuteur === newConv.interlocuteur &&
-                  prevConv.messageInitial?.don_id === newConv.messageInitial?.don_id
-              )
-          );
-          return [...unique, ...prev];
-        });
-      })
-      .catch((err) => console.error("Erreur chargement conversations", err));
-  }, [currentUser?.pseudo]);
-
   const handleSelect = (conv) => {
-  const message = conv.messageInitial;
-  const recuPar =
-    message.envoye_par === currentUser.pseudo
-      ? message.recu_par
-      : message.envoye_par;
+    const msg = conv.messageInitial;
+    const recuPar = msg.envoye_par === currentUser.pseudo ? msg.recu_par : msg.envoye_par;
 
-  const id = message._id || `${conv.interlocuteur}-${message.don_id}`;
-  setSelectedId(id);
+    const id = msg._id || `${conv.interlocuteur}-${msg.don_id}`;
+    setSelectedId(id);
 
-  const formattedConv = {
-    pseudo: recuPar,
-    avatar: conv.avatar || `https://ui-avatars.com/api/?name=${recuPar}`,
-    messageInitial: {
-      don_id: message.don_id,
-      image: message.image || message.image_url,
-      description: message.description,
-      envoye_par: message.envoye_par,
-      recu_par: message.recu_par,
-      contenu: message.contenu,
-    }
+    const formattedConv = {
+      pseudo: recuPar,
+      avatar: conv.avatar,
+      messageInitial: msg,
+      don: conv.don || null,
+    };
+
+    onSelectConversation?.(formattedConv);
   };
-
-  onSelectConversation?.(formattedConv);
-};
 
   return (
     <div className="w-1/3 bg-white border-r p-4 overflow-y-auto">
@@ -131,43 +116,35 @@ export default function ConversationList({
         <p className="text-gray-500">Aucune conversation</p>
       ) : (
         <ul>
-          {conversations
-            .filter((conv) => conv.interlocuteur && conv.messageInitial)
-            .map((conv, index) => {
-              const id =
-                conv.messageInitial?._id ||
-                `${conv.interlocuteur}-${conv.messageInitial?.don_id}` ||
-                `conv-${index}`;
+          {conversations.map((conv, index) => {
+            const id =
+              conv.messageInitial?._id ||
+              `${conv.interlocuteur}-${conv.messageInitial?.don_id}` ||
+              `conv-${index}`;
+            const isSelected = selectedId === id;
 
-              const isSelected = selectedId === id;
-
-              return (
-                <li
-                  key={id}
-                  onClick={() => handleSelect(conv)}
-                  className={`p-2 border-b cursor-pointer flex items-center gap-3 ${
-                    isSelected ? "bg-blue-100" : "hover:bg-gray-100"
-                  }`}
-                >
-                  <img
-                    src={
-                      conv.avatar ||
-                      `https://ui-avatars.com/api/?name=${conv.interlocuteur}`
-                    }
-                    alt={conv.interlocuteur}
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div>
-                    <div className="font-semibold">
-                      {conv.nomComplet || conv.interlocuteur || "Utilisateur inconnu"}
-                    </div>
-                    <div className="text-sm text-gray-500 truncate max-w-xs">
-                      {conv.dernierMessage || "Aucun message"}
-                    </div>
+            return (
+              <li
+                key={id}
+                onClick={() => handleSelect(conv)}
+                className={`p-2 border-b cursor-pointer flex items-center gap-3 ${
+                  isSelected ? "bg-blue-100" : "hover:bg-gray-100"
+                }`}
+              >
+                <img
+                  src={conv.avatar}
+                  alt={conv.interlocuteur}
+                  className="w-10 h-10 rounded-full"
+                />
+                <div>
+                  <div className="font-semibold">{conv.interlocuteur}</div>
+                  <div className="text-sm text-gray-500 truncate max-w-xs">
+                    {conv.dernierMessage || "Aucun message"}
                   </div>
-                </li>
-              );
-            })}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

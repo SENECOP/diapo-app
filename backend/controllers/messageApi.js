@@ -1,5 +1,7 @@
 const Message = require('../models/Message');
 const mongoose = require('mongoose');
+const Don = require('../models/Don');
+
 
 
 // Créer un nouveau message
@@ -44,89 +46,57 @@ const getMessagesByDonAndUsers = async (req, res) => {
 
 
 
-const getConversationsByPseudo = async (req, res) => {
-  const { pseudo } = req.params;
+const mongoose = require("mongoose");
+const Message = require("../models/Message");
+
+exports.getConversationsByUserId = async (req, res) => {
+  const userId = req.params.userId;
+
+  // Vérification de l'ObjectId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: "ID utilisateur invalide." });
+  }
+console.log("userId reçu par le backend:", req.params.userId);
 
   try {
-    // Étape 1: Récupérer toutes les conversations impliquant l'utilisateur
-    const messages = await Message.find({
-      $or: [{ envoye_par: pseudo }, { recu_par: pseudo }]
-    }).sort({ envoye_le: -1 });
+    const conversations = await Message.aggregate([
+      {
+        $match: {
+          $or: [
+            { senderId: new mongoose.Types.ObjectId(userId) },
+            { receiverId: new mongoose.Types.ObjectId(userId) },
+          ],
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $eq: ["$senderId", new mongoose.Types.ObjectId(userId)] },
+              "$receiverId",
+              "$senderId",
+            ],
+          },
+          lastMessage: { $first: "$$ROOT" },
+        },
+      },
+    ]);
 
-    // Étape 2: Grouper par don et par interlocuteur
-    const conversationsMap = new Map();
-
-    messages.forEach(msg => {
-      const key = `${msg.don_id}_${msg.envoye_par === pseudo ? msg.recu_par : msg.envoye_par}`;
-      console.log("Clé de conversation générée :", key);
-
-      if (!conversationsMap.has(key)) {
-        conversationsMap.set(key, {
-          don_id: msg.don_id,
-          interlocuteur: msg.envoye_par === pseudo ? msg.recu_par : msg.envoye_par,
-          dernierMessage: msg.contenu,
-          messageInitial: msg,
-          createdAt: msg.envoye_le
-        });
-      }
-    });
-
-    // Étape 3: Convertir en tableau et trier
-    // Étape 3: Convertir en tableau
-let conversations = Array.from(conversationsMap.values());
-
-// Étape 4: Charger les détails du don pour chaque conversation
-const donIds = conversations.map(conv => conv.don_id);
-const dons = await Don.find({ _id: { $in: donIds } });
-
-const donsMap = new Map();
-dons.forEach(d => donsMap.set(d._id.toString(), d));
-
-// Étape 5: Ajouter les infos du don à chaque conversation
-conversations = conversations.map(conv => {
-  const don = donsMap.get(conv.don_id.toString());
-  return {
-    ...conv,
-    don: don ? {
-      titre: don.titre,
-      image: don.image,
-      description: don.description,
-      categorie: don.categorie
-    } : null
-  };
-});
-
-// Étape 6: Trier par date (optionnel si déjà trié)
-conversations.sort((a, b) => b.createdAt - a.createdAt);
-
-res.json(conversations);
+    res.status(200).json(conversations);
   } catch (error) {
-    console.error("Erreur:", error);
-    res.status(500).json({ error: "Erreur serveur" });
+    console.error("Erreur serveur:", error);
+    res.status(500).json({ error: "Erreur lors du chargement des conversations." });
   }
 };
 
-const getUnreadMessagesCount = async (req, res) => {
-  try {
-    const pseudo = req.user.pseudo;
-
-    const unreadCount = await Message.countDocuments({
-      recu_par: pseudo,
-      lu: false,
-    });
-
-    res.json({ unreadCount });
-  } catch (error) {
-    console.error("Erreur fetch messages non lus :", error.message);
-    res.status(500).json({ message: "Erreur serveur" });
-  }
-};
 
 
 
 module.exports = {
   getMessagesByDonAndUsers,
   createMessage,
-  getConversationsByPseudo,
   getUnreadMessagesCount,
 };
