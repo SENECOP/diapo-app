@@ -9,27 +9,18 @@ import { MessageContext } from "../context/MessageContext";
 
 const MessagePage = () => {
   const [showAlert, setShowAlert] = useState(false);
-  const [conversations, setConversations] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, messageInitial, don } = location.state || {};
   const { setUnreadMessages } = useContext(MessageContext);
   const [selectedConversation, setSelectedConversation] = useState(null);
 
-  // Calcul du destinataire dans la conversation initiale
+  // 👉 Conversation initiale
   const destinataire = messageInitial?.envoye_par === user?.pseudo
     ? messageInitial?.recu_par
     : messageInitial?.envoye_par;
 
-  // Quand on sélectionne une conversation dans la liste
-  const handleSelectConversation = (conversation) => {
-    setSelectedConversation(conversation);
-
-    // Décrémente les messages non lus
-    setUnreadMessages((prev) => Math.max(prev - 1, 0));
-  };
-
-  // Si on arrive sur la page avec une conversation initiale, on la sélectionne automatiquement
+  // Sélection automatique si conversation initiale
   useEffect(() => {
     if (messageInitial && destinataire) {
       setSelectedConversation({
@@ -43,6 +34,7 @@ const MessagePage = () => {
     }
   }, [messageInitial, destinataire, don]);
 
+  // Alerte réservation
   useEffect(() => {
     const alertFlag = localStorage.getItem("AlerteReservation");
     if (alertFlag === "true") {
@@ -51,44 +43,11 @@ const MessagePage = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const savedConversations = JSON.parse(localStorage.getItem("conversations") || "[]");
-    setConversations(savedConversations);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("conversations", JSON.stringify(conversations));
-  }, [conversations]);
-
-  useEffect(() => {
-    if (destinataire && messageInitial?.don_id) {
-      setConversations((prev) => {
-        const alreadyExists = prev.some(
-          (conv) => conv.pseudo === destinataire && conv.messageInitial?.don_id === messageInitial.don_id
-        );
-
-        if (!alreadyExists) {
-        const newConv = {
-          _id: Date.now(),
-          pseudo: destinataire,
-          interlocuteur: destinataire,
-          avatar: `https://ui-avatars.com/api/?name=${destinataire}`,
-          dernierMessage: messageInitial?.contenu || "Nouveau message",
-          messageInitial: {
-            don_id: messageInitial.don_id,
-            image: messageInitial.url_image,
-            description: messageInitial.description,
-            envoye_par: messageInitial.envoye_par,
-            recu_par: messageInitial.recu_par,
-          },
-          don: don, 
-        };
-        return [...prev, newConv];
-      }
-        return prev;
-      });
-    }
-  }, [destinataire, messageInitial, don]);
+  // Sélection depuis la liste des conversations
+  const handleSelectConversation = (conversation) => {
+    setSelectedConversation(conversation);
+    setUnreadMessages((prev) => Math.max(prev - 1, 0));
+  };
 
   return (
     <div className="p-4">
@@ -110,10 +69,8 @@ const MessagePage = () => {
       {showAlert && <AlerteReservation onClose={() => setShowAlert(false)} />}
 
       <div className="flex h-screen">
-        <ConversationList
-          conversations={conversations}
-          onSelectConversation={handleSelectConversation}
-        />
+        {/* ❗️On ne passe plus les conversations en props (elles sont chargées dans ConversationList) */}
+        <ConversationList onSelectConversation={handleSelectConversation} />
         {selectedConversation ? (
           <MessageBox conversation={selectedConversation} />
         ) : (

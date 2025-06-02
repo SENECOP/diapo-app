@@ -1,6 +1,7 @@
 const Message = require('../models/Message');
 const mongoose = require('mongoose');
 const Don = require('../models/Don');
+const User = require('../models/User'); // Assure-toi que ce modèle est bien défini
 
 // Créer un nouveau message
 const createMessage = async (req, res) => {
@@ -28,6 +29,7 @@ const createMessage = async (req, res) => {
 // Récupérer les messages entre deux utilisateurs pour un don
 const getMessagesByDonAndUsers = async (req, res) => {
   const { donId, user1, user2 } = req.params;
+
   try {
     const messages = await Message.find({
       don_id: donId,
@@ -43,41 +45,39 @@ const getMessagesByDonAndUsers = async (req, res) => {
   }
 };
 
-// Récupérer la liste des conversations d'un utilisateur
-const getConversationsByUserId = async (req, res) => {
-  const userId = req.params.userId;
-
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return res.status(400).json({ error: "ID utilisateur invalide." });
-  }
-
-  console.log("userId reçu par le backend:", req.params.userId);
+// Récupérer la liste des conversations d'un utilisateur (par pseudo)
+const getConversationsByPseudo = async (req, res) => {
+  const pseudo = req.params.pseudo;
 
   try {
     const conversations = await Message.aggregate([
       {
         $match: {
           $or: [
-            { senderId: new mongoose.Types.ObjectId(userId) },
-            { receiverId: new mongoose.Types.ObjectId(userId) },
+            { envoye_par: pseudo },
+            { recu_par: pseudo },
           ],
         },
       },
-      {
-        $sort: { createdAt: -1 },
-      },
+      { $sort: { createdAt: -1 } },
       {
         $group: {
           _id: {
             $cond: [
-              { $eq: ["$senderId", new mongoose.Types.ObjectId(userId)] },
-              "$receiverId",
-              "$senderId",
+              { $eq: ["$envoye_par", pseudo] },
+              "$recu_par",
+              "$envoye_par"
             ],
           },
-          lastMessage: { $first: "$$ROOT" },
-        },
+          lastMessage: { $first: "$$ROOT" }
+        }
       },
+      {
+        $project: {
+          interlocuteur: "$_id",
+          lastMessage: 1,
+        }
+      }
     ]);
 
     res.status(200).json(conversations);
@@ -86,14 +86,11 @@ const getConversationsByUserId = async (req, res) => {
     res.status(500).json({ error: "Erreur lors du chargement des conversations." });
   }
 };
-
-const getUnreadMessagesCount = (req, res) => {
-  res.status(200).json({ count: 0 }); 
-};
+;
 
 module.exports = {
   getMessagesByDonAndUsers,
   createMessage,
-  getConversationsByUserId,
+  getConversationsByPseudo,
   getUnreadMessagesCount,
 };

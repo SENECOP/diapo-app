@@ -13,39 +13,34 @@ export default function ConversationList({
   const { user: userFromContext } = useContext(UserContext);
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const currentUser = storedUser || userFromContext;
-console.log("currentUser complet :", currentUser);
 
-  // Charger les conversations
- useEffect(() => {
-  const userId = currentUser?.id;
-  if (!userId) return;
+  useEffect(() => {
+    const pseudo = currentUser?.pseudo;
+    if (!pseudo) {
+      console.warn("Aucun pseudo disponible pour récupérer les conversations.");
+      return;
+    }
 
-  console.log("userId utilisé pour fetch:", userId);
+    fetch(`https://diapo-app.onrender.com/api/messages/conversations/${pseudo}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const formatted = data.map((conv) => ({
+            interlocuteur: conv.interlocuteur,
+            avatar: `https://ui-avatars.com/api/?name=${conv.interlocuteur}`,
+            dernierMessage: conv.lastMessage?.contenu || "",
+            messageInitial: conv.lastMessage,
+            don: conv.lastMessage?.don || null,
+          }));
+          setConversations(formatted);
+        } else {
+          console.error("Réponse inattendue :", data);
+        }
+      })
+      .catch((err) => console.error("Erreur chargement conversations", err));
+  }, [currentUser]);
 
-  fetch(`https://diapo-app.onrender.com/api/messages/conversations/${userId}`)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("Réponse brute de l'API:", data);
-
-      if (Array.isArray(data)) {
-        const formatted = data.map((conv) => ({
-          interlocuteur: conv.interlocuteur,
-          avatar: `https://ui-avatars.com/api/?name=${conv.interlocuteur}`,
-          dernierMessage: conv.lastMessage?.content,
-          messageInitial: conv.lastMessage?.createdAt,
-          don: conv.lastMessage?.don || null,
-        }));
-        setConversations(formatted);
-      } else {
-        console.error("Réponse inattendue :", data);
-      }
-    })
-    .catch((err) => console.error("Erreur chargement conversations", err));
-}, [currentUser]);
-
-
-
-  // Socket
+  // Gestion socket
   useEffect(() => {
     if (!currentUser?.pseudo) return;
 
@@ -57,7 +52,11 @@ console.log("currentUser complet :", currentUser);
     socket.emit("userConnected", currentUser.pseudo);
 
     socket.on("receiveMessage", (msg) => {
-      if (msg.recu_par !== currentUser.pseudo && msg.envoye_par !== currentUser.pseudo) return;
+      if (
+        msg.recu_par !== currentUser.pseudo &&
+        msg.envoye_par !== currentUser.pseudo
+      )
+        return;
 
       setConversations((prevConvs) => {
         const idx = prevConvs.findIndex(
@@ -77,11 +76,14 @@ console.log("currentUser complet :", currentUser);
           return [updated[idx], ...updated.filter((_, i) => i !== idx)];
         } else {
           const newConv = {
-            interlocuteur: msg.envoye_par === currentUser.pseudo ? msg.recu_par : msg.envoye_par,
+            interlocuteur:
+              msg.envoye_par === currentUser.pseudo
+                ? msg.recu_par
+                : msg.envoye_par,
             avatar: `https://ui-avatars.com/api/?name=${msg.envoye_par}`,
             dernierMessage: msg.contenu,
             messageInitial: msg,
-            don: null, // pas encore connu
+            don: null,
           };
           return [newConv, ...prevConvs];
         }
@@ -93,7 +95,8 @@ console.log("currentUser complet :", currentUser);
 
   const handleSelect = (conv) => {
     const msg = conv.messageInitial;
-    const recuPar = msg.envoye_par === currentUser.pseudo ? msg.recu_par : msg.envoye_par;
+    const recuPar =
+      msg.envoye_par === currentUser.pseudo ? msg.recu_par : msg.envoye_par;
 
     const id = msg._id || `${conv.interlocuteur}-${msg.don_id}`;
     setSelectedId(id);
