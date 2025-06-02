@@ -86,7 +86,10 @@ const getConversationsByPseudo = async (req, res) => {
     res.status(500).json({ error: "Erreur lors du chargement des conversations." });
   }
 };
-;
+
+const getUnreadMessagesCount = (req, res) => {
+  res.status(200).json({ count: 0 });
+};
 
 module.exports = {
   getMessagesByDonAndUsers,
