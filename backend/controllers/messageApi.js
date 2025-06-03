@@ -16,6 +16,7 @@ const createMessage = async (req, res) => {
       envoye_par,
       recu_par,
       envoye_le: new Date(),
+      lu: false,
     });
 
     res.status(201).json(newMessage);
@@ -122,6 +123,27 @@ const getConversationsByPseudo = async (req, res) => {
   }
 };
 
+// ➤ Marquer tous les messages comme lus entre user et un interlocuteur pour un don
+const markMessagesAsRead = async (req, res) => {
+  const { donId, user1, user2 } = req.params;
+
+  try {
+    await Message.updateMany(
+      {
+        don_id: donId,
+        envoye_par: user2,
+        recu_par: user1,
+        lu: false,
+      },
+      { $set: { lu: true } }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Erreur lors du marquage comme lus :", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+};
 
 
 
@@ -147,5 +169,6 @@ module.exports = {
   createMessage,
   getMessagesByDonAndUsers,
   getConversationsByPseudo,
+  markMessagesAsRead,
   getUnreadMessagesCount,
 };

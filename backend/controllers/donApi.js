@@ -273,6 +273,26 @@ const getDonsDuDonateur = async (req, res) => {
   }
 };
 
+const marquerCommeVu = async (req, res) => {
+  const { donId } = req.params;
+  const userId = req.user.id; // ou req.user._id si tu utilises JWT
+
+  try {
+    const don = await Don.findById(donId);
+    if (!don) return res.status(404).json({ message: "Don non trouvé" });
+
+    if (!don.vusPar.includes(userId)) {
+      don.vusPar.push(userId);
+      await don.save();
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Erreur marquage comme vu :", err);
+    res.status(500).json({ message: "Erreur serveur", error: err });
+  }
+};
+
 
 
 
@@ -289,5 +309,6 @@ module.exports = {
   getArchivedDons, 
   reserverDon,
   getDonsDuDonateur,
+  marquerCommeVu,
 };
 

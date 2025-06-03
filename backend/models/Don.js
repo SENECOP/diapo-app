@@ -18,7 +18,12 @@ const donSchema = new mongoose.Schema(
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }
-],
+    ],
+    vusPar: {
+  type: [mongoose.Schema.Types.ObjectId], // ou simplement [String] si tu stockes des pseudos
+  default: [],
+},
+
 
     preneur: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }],
     archived: { type: Boolean, default: false },

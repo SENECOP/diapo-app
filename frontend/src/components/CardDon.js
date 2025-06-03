@@ -27,6 +27,22 @@ const CardDon = ({ don, onReservationSuccess }) => {
     setPreneurDon(don.preneur);
   }, [don]);
 
+  useEffect(() => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
+
+  if (user && don?._id) {
+    fetch(`https://diapo-app.onrender.com/api/dons/${don._id}/vu`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }).catch(err => console.error("Erreur marquage don vu :", err));
+  }
+}, [don]);
+
+
   if (!don) return null;
 
 

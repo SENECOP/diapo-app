@@ -127,6 +127,25 @@ export default function ConversationList({ onSelectConversation }) {
     };
 
     onSelectConversation?.(formattedConv);
+    // Marquer les messages comme lus
+fetch(`https://diapo-app.onrender.com/api/messages/read/${message.don_id}/${currentUser.pseudo}/${recuPar}`, {
+  method: "PATCH",
+})
+  .then(() => {
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (
+          c.messageInitial?.don_id === message.don_id &&
+          (c.messageInitial?.envoye_par === recuPar || c.messageInitial?.recu_par === recuPar)
+        ) {
+          return { ...c, nonLus: false };
+        }
+        return c;
+      })
+    );
+  })
+  .catch((err) => console.error("Erreur marquage comme lu", err));
+
   };
 
   return (
