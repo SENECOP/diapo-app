@@ -1,14 +1,24 @@
-import { useEffect, useState } from "react";
-import { fetchMesDons } from "../Services/donService"; // Assure-toi d'importer la fonction correctement
+import { useEffect, useState, useContext } from "react";
+import { fetchMesDons } from "../Services/donService";
+import { AuthContext } from "../context/AuthContext";
 
 const ListeDons = () => {
   const [mesDons, setMesDons] = useState([]);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
+    if (!user) {
+      console.log("user non défini, on attend");
+      return;
+    }
+
     fetchMesDons()
-      .then(setMesDons)
+      .then((data) => {
+        console.log("Dons récupérés pour l'utilisateur :", data);
+        setMesDons(data);
+      })
       .catch((err) => console.error("Erreur chargement dons:", err));
-  }, []);
+  }, [user]); // dépendance : quand user est prêt
 
   return (
     <div className="container mx-auto p-4">

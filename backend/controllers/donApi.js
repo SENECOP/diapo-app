@@ -1,6 +1,10 @@
 const Don = require('../models/Don');
+const Message = require('../models/Message');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const Conversation = require('../models/conversation');
+
+
 
 // Créer un don
 const createDon = async (req, res) => {
@@ -73,21 +77,20 @@ const getDonById = async (req, res) => {
 
 // Modifier un don
 const updateDon = async (req, res) => {
-  if (don.user.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ message: "Accès non autorisé" });
-  }
-
   try {
     const don = await Don.findById(req.params.id);
     if (!don) {
       return res.status(404).json({ message: 'Don non trouvé' });
     }
 
+    if (don.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Accès non autorisé" });
+    }
+
     don.titre = req.body.titre || don.titre;
     don.description = req.body.description || don.description;
     don.ville_don = req.body.ville_don || don.ville_don;
 
-    // Si une nouvelle image est envoyée
     if (req.files && req.files.length > 0) {
       don.url_image = req.files.map(file =>
         `${req.protocol}://${req.get('host')}/uploads/${file.filename}`
@@ -100,40 +103,52 @@ const updateDon = async (req, res) => {
     console.error('Erreur dans updateDon :', error);
     res.status(500).json({ message: error.message });
   }
-}; 
+};
+
 
 // Supprimer un don
 const deleteDon = async (req, res) => {
-  if (don.user.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ message: "Accès non autorisé" });
-  }
-
   try {
-    const don = await Don.findByIdAndDelete(req.params.id);
-    if (!don) return res.status(404).json({ message: 'Don non trouvé' });
-    res.status(200).json({ message: 'Don supprimé avec succès' });
+    const don = await Don.findById(req.params.id);
+    if (!don) {
+      return res.status(404).json({ message: 'Don non trouvé' });
+    }
+
+    if (don.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Accès non autorisé" });
+    }
+
+    await don.deleteOne(); // ou don.remove() selon ta version de Mongoose
+    res.json({ message: 'Don supprimé avec succès' });
   } catch (error) {
+    console.error('Erreur dans deleteDon :', error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Archiver / désarchiver un don
 const archiveDon = async (req, res) => {
   try {
-    if (don.user.toString() !== req.user._id.toString()) {
-     return res.status(403).json({ message: "Accès non autorisé" });
+    const don = await Don.findById(req.params.id);
+    if (!don) {
+      return res.status(404).json({ message: 'Don non trouvé' });
     }
 
-    const don = await Don.findById(req.params.id);
-    if (!don) return res.status(404).json({ message: "Don non trouvé" });
+    if (don.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Accès non autorisé" });
+    }
 
     don.archived = true;
     await don.save();
-    res.status(200).json({ message: "Don archivé avec succès", don });
+
+    res.json({ message: 'Don archivé avec succès', don });
   } catch (error) {
+    console.error('Erreur dans archiveDon :', error);
     res.status(500).json({ message: error.message });
   }
 };
+
 const unarchiveDon = async (req, res) => {
   try {
     const don = await Don.findById(req.params.id);
@@ -230,7 +245,7 @@ const reserverDon = async (req, res) => {
       return res.status(400).json({ message: "Vous avez déjà réservé ce don." });
     }
 
-     // Ajouter l'utilisateur aux intéressés s'il n'y est pas déjà
+    // Ajouter l'utilisateur aux intéressés
     if (!don.interesses.includes(req.user._id)) {
       don.interesses.push(req.user._id);
     }
@@ -239,9 +254,8 @@ const reserverDon = async (req, res) => {
     don.statut = "reserve";
     await don.save();
 
-
-    // ✅ Crée la notification et enregistre-la dans une variable
-    const notification = await Notification.create({
+    // ✅ Notification au donateur
+    await Notification.create({
       destinataire: don.user._id,
       emetteur: req.user._id,
       message: `${req.user.pseudo} est intéressé(e) par votre don "${don.titre}".`,
@@ -249,10 +263,43 @@ const reserverDon = async (req, res) => {
       vu: false,
     });
 
+    // ✅ Vérifier s'il existe déjà une conversation entre les deux
+    let conversation = await Conversation.findOne({
+      participants: { $all: [don.user._id, req.user._id] },
+    });
+
+    // ✅ Si aucune, la créer
+    if (!conversation) {
+      conversation = await Conversation.create({
+        participants: [don.user._id, req.user._id],
+      });
+    }
+
+    // ✅ Créer le message initial dans la conversation
+   
+      const newMessage = await Message.create({
+        conversation: conversation._id,
+        sender: req.user._id,
+        text: `Bonjour, je suis intéressé(e) par votre don "${don.titre}".`,
+        createdAt: new Date(),
+      });
+
+      // ✅ Mettre à jour la conversation (si tu stockes les messages dedans)
+      if (!conversation.messages) conversation.messages = [];
+
+      conversation.messages.push(newMessage._id);
+      conversation.updatedAt = new Date(); // utile pour trier les conversations
+      await conversation.save();
+
+
     res.status(200).json({
-      message: "Don réservé avec succès. Notification envoyée au donateur.",
+      message: "Don réservé avec succès. Notification envoyée. Conversation démarrée.",
       don,
     });
+    io.to(don.user._id.toString()).emit("newNotification", {
+  message: `${req.user.pseudo} est intéressé(e) par votre don "${don.titre}".`,
+});
+
   } catch (error) {
     console.error("Erreur dans reserverDon:", error);
     res.status(500).json({ message: "Erreur serveur", error });
@@ -293,7 +340,48 @@ const marquerCommeVu = async (req, res) => {
   }
 };
 
+const takeDon = async (req, res) => {
+  const { id } = req.params;
+  const { pris_par } = req.body;
 
+  if (!pris_par) {
+    return res.status(400).json({ message: "Le pseudo du preneur est requis." });
+  }
+
+  try {
+    // 1. Mettre à jour le don
+    const don = await Don.findById(id);
+    if (!don) return res.status(404).json({ message: "Don non trouvé." });
+
+    if (don.pris_par) {
+      return res.status(400).json({ message: "Ce don est déjà réservé." });
+    }
+
+    don.pris_par = pris_par;
+    don.etat = "réservé"; // si tu gères un champ `etat`
+    await don.save();
+
+    // 2. Créer un message automatique
+    const newMessage = new Message({
+      contenu: `Bonjour, je suis intéressé(e) par votre don : "${don.description}"`,
+      don_id: don._id,
+      envoye_par: pris_par,
+      recu_par: don.donateur,
+      image: don.image_url || "",
+      description: don.description,
+    });
+
+    await newMessage.save();
+
+    // 3. Éventuellement, émettre le message via socket.io
+    req.io?.emit("receiveMessage", newMessage); // facultatif
+
+    res.status(200).json({ message: "Don réservé et message envoyé.", don, newMessage });
+  } catch (err) {
+    console.error("Erreur takeDon:", err);
+    res.status(500).json({ message: "Erreur serveur." });
+  }
+};
 
 
 module.exports = {
@@ -310,5 +398,6 @@ module.exports = {
   reserverDon,
   getDonsDuDonateur,
   marquerCommeVu,
+  takeDon,
 };
 

@@ -216,6 +216,50 @@ const NotificationPage = () => {
             )}
           </div>
           )}
+          {selectedDon && (
+  <div className="text-center mt-4">
+    <button
+      onClick={async () => {
+  try {
+    const response = await fetch("https://diapo-app.onrender.com/api/conversations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        don_id: selectedDon._id,
+        utilisateur_1: currentUser?.pseudo,
+        utilisateur_2: selectedDon.donateur?.pseudo,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la création ou récupération de la conversation");
+    }
+
+    const data = await response.json();
+    console.log("Conversation trouvée/créée :", data);
+
+    // Redirige vers la messagerie si un ID est retourné
+    if (data?._id) {
+      navigate(`/messages/${data._id}`);
+    } else {
+      alert("Impossible de rediriger vers la messagerie.");
+    }
+  } catch (error) {
+    console.error("Erreur création conversation :", error.message);
+    alert("Impossible de démarrer la conversation.");
+  }
+}}
+
+      className="bg-blue-600 text-white px-6 py-2 rounded-md shadow hover:bg-blue-700 transition"
+    >
+      Contacter le donateur
+    </button>
+  </div>
+)}
+
         </div>
       </div>
 

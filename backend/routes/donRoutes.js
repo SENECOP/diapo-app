@@ -44,6 +44,8 @@ router.put("/:id/reserver", verifyToken, donController.reserverDon);
 router.put('/:id/archives', verifyToken, donController.archiveDon);
 router.put('/:id/desarchiver', verifyToken, donController.unarchiveDon);
 router.post('/:id/prendre', verifyToken, donController.prendreDon);
+router.post('/:id/take', verifyToken, donController.takeDon);
+
 router.put('/:id', verifyToken, upload.single('url_image'), donController.updateDon);
 router.delete('/:id', verifyToken, donController.deleteDon);
 router.patch('/dons/:donId/vu', verifyToken, donController.marquerCommeVu);

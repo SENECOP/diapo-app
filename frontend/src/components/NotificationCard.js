@@ -1,5 +1,5 @@
-// src/components/NotificationCard.js
 import React from "react";
+
 const NotificationCard = ({ titre, message, onVoir, onIgnorer }) => {
   return (
     <div className="bg-white shadow-md rounded-lg p-4 w-72 border border-gray-200">
@@ -16,7 +16,7 @@ const NotificationCard = ({ titre, message, onVoir, onIgnorer }) => {
           onClick={onIgnorer}
           className="text-sm text-gray-500 hover:text-gray-700"
         >
-          ignorer
+          Ignorer
         </button>
         <button
           onClick={onVoir}

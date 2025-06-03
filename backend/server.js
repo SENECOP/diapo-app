@@ -10,6 +10,9 @@ const donRoutes = require('./routes/donRoutes');
 const notificationsRoutes = require('./routes/notificationsRoute');
 const messageRoute = require('./routes/messageRoute');
 const Message = require('./models/Message');
+const Conversation = require('./models/conversation');
+const conversationRoutes = require('./routes/conversationRoutes');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +38,8 @@ app.use('/api/dons', donRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/messages', messageRoute);
 app.use('/uploads', express.static('uploads'));
+app.use('/api/conversations', conversationRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Backend Diapo fonctionne avec MongoDB !");
@@ -65,13 +70,26 @@ io.on('connection', (socket) => {
     console.log('📨 Nouveau message reçu :', message);
 
     try {
+
+      let conversation = await Conversation.findOne({
+        participants: { $all: [message.envoye_par, message.recu_par] }
+      });
+
+      if (!conversation) {
+        conversation = await Conversation.create({
+          participants: [message.envoye_par, message.recu_par],
+        });
+      }
+
       const savedMessage = await Message.create({
         contenu: message.contenu,
         don_id: message.don_id,
         envoye_par: message.envoye_par,
         recu_par: message.recu_par,
+        conversation: conversation._id,
         envoye_le: new Date(),
       });
+
 
       console.log("✅ Message sauvegardé dans MongoDB :", savedMessage);
 

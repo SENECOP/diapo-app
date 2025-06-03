@@ -24,25 +24,29 @@ export default function ConversationList({ onSelectConversation }) {
     fetch(`https://diapo-app.onrender.com/api/messages/conversations/${pseudo}`)
       .then((res) => res.json())
       .then((data) => {
-        const formatted = data
-          .map((conv) => {
-            const message = conv.messageInitial;
-            if (!message?.don_id || !message.envoye_par || !message.recu_par) return null;
+        const formatted = [];
+const seen = new Set();
 
-            return {
-              interlocuteur: conv.interlocuteur || conv._id || "Inconnu",
-              nomComplet: conv.nomComplet || "",
-              avatar: `https://ui-avatars.com/api/?name=${conv.interlocuteur || conv._id}`,
-              dernierMessage: message.contenu || "",
-              messageInitial: message,
-              nonLus: conv.nonLus || false,
-            };
-          })
-          .filter(Boolean);
+      for (const conv of data) {
+        const message = conv.messageInitial;
+        const interlocuteur = conv.interlocuteur || conv._id || "Inconnu";
+        if (!message?.don_id || !message.envoye_par || !message.recu_par || seen.has(interlocuteur)) continue;
+
+        seen.add(interlocuteur);
+
+        formatted.push({
+          interlocuteur,
+          nomComplet: conv.nomComplet || "",
+          avatar: `https://ui-avatars.com/api/?name=${interlocuteur}`,
+          dernierMessage: message.contenu || "",
+          messageInitial: message,
+          nonLus: conv.nonLus || false,
+        });
+      }
+
 
         setConversations(formatted);
 
-        // Recalculer les non lus
         const unreadCount = formatted.filter((c) => c.nonLus).length;
         setUnreadMessages(unreadCount);
       })
@@ -61,44 +65,37 @@ export default function ConversationList({ onSelectConversation }) {
     socket.emit("userConnected", currentUser.pseudo);
 
     socket.on("receiveMessage", (msg) => {
-      if (
-        msg.recu_par !== currentUser.pseudo &&
-        msg.envoye_par !== currentUser.pseudo
-      )
-        return;
+  // ✅ Seul le destinataire doit ajouter à la liste
+  if (msg.recu_par !== currentUser.pseudo) return;
 
-      setConversations((prevConvs) => {
-        const index = prevConvs.findIndex(
-          (c) =>
-            c.messageInitial?.don_id === msg.don_id &&
-            (c.messageInitial?.envoye_par === msg.envoye_par ||
-              c.messageInitial?.recu_par === msg.envoye_par)
-        );
+  setConversations((prevConvs) => {
+    const index = prevConvs.findIndex(
+      (c) =>
+        c.messageInitial?.don_id === msg.don_id &&
+        (c.messageInitial?.envoye_par === msg.envoye_par ||
+         c.messageInitial?.recu_par === msg.envoye_par)
+    );
 
-        const newConv = {
-          interlocuteur: msg.envoye_par === currentUser.pseudo ? msg.recu_par : msg.envoye_par,
-          avatar: `https://ui-avatars.com/api/?name=${msg.envoye_par}`,
-          nomComplet: "",
-          dernierMessage: msg.contenu,
-          messageInitial: msg,
-          nonLus: msg.recu_par === currentUser.pseudo,
-        };
+    const newConv = {
+      interlocuteur: msg.envoye_par,
+      avatar: `https://ui-avatars.com/api/?name=${msg.envoye_par}`,
+      nomComplet: "",
+      dernierMessage: msg.contenu,
+      messageInitial: msg,
+      nonLus: true, // ✅ pour le destinataire
+    };
 
-        if (index !== -1) {
-          const updated = [...prevConvs];
-          updated.splice(index, 1); // retirer ancienne
-          const convs = [newConv, ...updated];
-          const unread = convs.filter((c) => c.nonLus).length;
-          setUnreadMessages(unread);
-          return convs;
-        } else {
-          const convs = [newConv, ...prevConvs];
-          const unread = convs.filter((c) => c.nonLus).length;
-          setUnreadMessages(unread);
-          return convs;
-        }
-      });
-    });
+    const updated = index !== -1
+      ? [newConv, ...prevConvs.filter((_, i) => i !== index)]
+      : [newConv, ...prevConvs];
+
+    const unread = updated.filter((c) => c.nonLus).length;
+    setUnreadMessages(unread);
+
+    return updated;
+  });
+});
+
 
     return () => socket.disconnect();
   }, [currentUser?.pseudo, setUnreadMessages]);
@@ -114,7 +111,7 @@ export default function ConversationList({ onSelectConversation }) {
 
     const id = message._id || `${conv.interlocuteur}-${message.don_id}`;
     setSelectedId(id);
-    setActiveConversationId(message.don_id); // 🔴 essentiel pour Header
+    setActiveConversationId(message.don_id);
 
     const formattedConv = {
       pseudo: recuPar,
@@ -133,12 +130,14 @@ export default function ConversationList({ onSelectConversation }) {
 
     // Marquer comme lu
     try {
-      await fetch(`https://diapo-app.onrender.com/api/messages/read/${message.don_id}/${currentUser.pseudo}/${recuPar}`, {
-        method: "PATCH",
-      });
+      await fetch(
+        `https://diapo-app.onrender.com/api/messages/read/${message.don_id}/${currentUser.pseudo}/${recuPar}`,
+        { method: "PATCH" }
+      );
 
-      setConversations((prev) =>
-        prev.map((c) => {
+      // Mettre à jour les conversations
+      setConversations((prevConversations) => {
+        const updatedConversations = prevConversations.map((c) => {
           if (
             c.messageInitial?.don_id === message.don_id &&
             (c.messageInitial?.envoye_par === recuPar || c.messageInitial?.recu_par === recuPar)
@@ -146,11 +145,13 @@ export default function ConversationList({ onSelectConversation }) {
             return { ...c, nonLus: false };
           }
           return c;
-        })
-      );
+        });
 
-      const newUnread = conversations.filter((c) => c.nonLus && c.messageInitial?.don_id !== message.don_id).length;
-      setUnreadMessages(newUnread);
+        const newUnread = updatedConversations.filter((c) => c.nonLus).length;
+        setUnreadMessages(newUnread);
+
+        return updatedConversations;
+      });
     } catch (err) {
       console.error("Erreur marquage comme lu", err);
     }

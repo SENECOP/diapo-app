@@ -9,6 +9,12 @@ const messageSchema = new mongoose.Schema({
     ref: 'Don', 
     required: true 
   },
+  conversation: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'Conversation',
+  required: true,
+},
+
 envoye_par: { type: String, required: true },
 recu_par:   { type: String, required: true },
 

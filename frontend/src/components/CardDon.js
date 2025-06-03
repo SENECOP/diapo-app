@@ -52,44 +52,58 @@ const CardDon = ({ don, onReservationSuccess }) => {
   };
 
   const handleTake = async (e) => {
-    e.stopPropagation();
+  e.stopPropagation();
 
-    if (!currentUser) {
-      navigate("/login");
+  if (!currentUser) {
+    navigate("/login");
+    return;
+  }
+
+  try {
+    const res = await fetch(`https://diapo-app.onrender.com/api/dons/${don._id}/reserver`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ preneur: currentUser._id }),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      console.error("Erreur réservation :", error);
       return;
     }
 
-    try {
-      const res = await fetch(`https://diapo-app.onrender.com/api/dons/${don._id}/reserver`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ preneur: currentUser._id }),
-      });
+    setEtatDon("réservé");
+    setPreneurDon(currentUser._id);
 
-      if (!res.ok) {
-        const error = await res.text();
-        console.error("Erreur réservation :", error);
-        return;
-      }
+    // ✅ Envoi du message automatique après la réservation
+    await fetch("https://diapo-app.onrender.com/api/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        sender: currentUser._id,
+        receiver: don.userId, // utilisateur qui a publié le don
+        content: `Bonjour ! Je viens de réserver votre don "${don.titre}". Merci ! 😊`,
+      }),
+    });
 
-      setEtatDon("réservé");
-      setPreneurDon(currentUser._id);
+    if (onReservationSuccess) onReservationSuccess();
 
-      if (onReservationSuccess) onReservationSuccess();
+    navigate("/message", {
+      state: { showReservationAlert: true },
+    });
+    localStorage.setItem("AlerteReservation", "true");
 
-      navigate("/message", {
-        state: { showReservationAlert: true },
-      });
-      localStorage.setItem("AlerteReservation", "true");
-
-    } catch (error) {
-      console.error("Erreur lors de la réservation :", error);
-      alert("❌ Une erreur est survenue.");
-    }
-  };
+  } catch (error) {
+    console.error("Erreur lors de la réservation :", error);
+    alert("❌ Une erreur est survenue.");
+  }
+};
 
   const estPris = etatDon === "réservé" || preneurDon === currentUser?._id;
 
