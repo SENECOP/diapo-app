@@ -1,17 +1,23 @@
-import { useEffect, useRef, useState, useContext } from "react";
+import { useEffect, useState, useContext } from "react";
 import { io } from "socket.io-client";
 import { UserContext } from "../../context/UserContext";
+import { MessageContext } from "../../context/MessageContext";
 
 export default function ConversationList({ onSelectConversation }) {
-  const socketRef = useRef(null);
   const [conversations, setConversations] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
 
   const { user: userFromContext } = useContext(UserContext);
+  const {
+    setUnreadMessages,
+    activeConversationId,
+    setActiveConversationId,
+  } = useContext(MessageContext);
+
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const currentUser = storedUser || userFromContext;
 
-  // 🔁 Chargement des conversations
+  // 🔁 Chargement initial des conversations
   useEffect(() => {
     const pseudo = currentUser?.pseudo;
     if (!pseudo) return;
@@ -21,12 +27,8 @@ export default function ConversationList({ onSelectConversation }) {
       .then((data) => {
         const formatted = data
           .map((conv) => {
-            const message = conv.messageInitial || conv.lastMessage || null;
-
-            if (!message || !message.don_id || !message.envoye_par || !message.recu_par) {
-              console.warn("❌ Conversation ignorée (message incomplet)", conv);
-              return null;
-            }
+            const message = conv.messageInitial;
+            if (!message?.don_id || !message.envoye_par || !message.recu_par) return null;
 
             return {
               interlocuteur: conv.interlocuteur || conv._id || "Inconnu",
@@ -40,11 +42,15 @@ export default function ConversationList({ onSelectConversation }) {
           .filter(Boolean);
 
         setConversations(formatted);
+
+        // Recalculer les non lus
+        const unreadCount = formatted.filter((c) => c.nonLus).length;
+        setUnreadMessages(unreadCount);
       })
       .catch((err) => console.error("Erreur chargement conversations", err));
-  }, [currentUser?.pseudo]);
+  }, [currentUser?.pseudo, setUnreadMessages]);
 
-  // 🔌 Mise à jour via socket
+  // 🔌 Socket - nouveaux messages
   useEffect(() => {
     if (!currentUser?.pseudo) return;
 
@@ -53,7 +59,6 @@ export default function ConversationList({ onSelectConversation }) {
       reconnection: true,
     });
 
-    socketRef.current = socket;
     socket.emit("userConnected", currentUser.pseudo);
 
     socket.on("receiveMessage", (msg) => {
@@ -71,47 +76,46 @@ export default function ConversationList({ onSelectConversation }) {
               c.messageInitial?.recu_par === msg.envoye_par)
         );
 
-        const updatedConv = {
-          interlocuteur:
-            msg.envoye_par === currentUser.pseudo
-              ? msg.recu_par
-              : msg.envoye_par,
+        const newConv = {
+          interlocuteur: msg.envoye_par === currentUser.pseudo ? msg.recu_par : msg.envoye_par,
           avatar: `https://ui-avatars.com/api/?name=${msg.envoye_par}`,
           nomComplet: "",
           dernierMessage: msg.contenu,
           messageInitial: msg,
-          nonLus: msg.recu_par === currentUser.pseudo, // 🔴 si c'est un message entrant
+          nonLus: msg.recu_par === currentUser.pseudo,
         };
 
         if (index !== -1) {
           const updated = [...prevConvs];
-          updated.splice(index, 1);
-          return [updatedConv, ...updated];
+          updated.splice(index, 1); // retirer ancienne
+          const convs = [newConv, ...updated];
+          const unread = convs.filter((c) => c.nonLus).length;
+          setUnreadMessages(unread);
+          return convs;
         } else {
-          return [updatedConv, ...prevConvs];
+          const convs = [newConv, ...prevConvs];
+          const unread = convs.filter((c) => c.nonLus).length;
+          setUnreadMessages(unread);
+          return convs;
         }
       });
     });
 
     return () => socket.disconnect();
-  }, [currentUser?.pseudo]);
+  }, [currentUser?.pseudo, setUnreadMessages]);
 
-  // 🎯 Sélection d'une conversation
-  const handleSelect = (conv) => {
+  // 🎯 Lorsqu'on sélectionne une conversation
+  const handleSelect = async (conv) => {
     const message = conv.messageInitial;
+    if (!message?.don_id || !message.envoye_par || !message.recu_par) return;
 
-    if (!message || !message.envoye_par || !message.recu_par) {
-      console.warn("Conversation mal formatée :", conv);
-      return;
-    }
-
-    const recuPar =
-      message.envoye_par === currentUser.pseudo
-        ? message.recu_par
-        : message.envoye_par;
+    const recuPar = message.envoye_par === currentUser.pseudo
+      ? message.recu_par
+      : message.envoye_par;
 
     const id = message._id || `${conv.interlocuteur}-${message.don_id}`;
     setSelectedId(id);
+    setActiveConversationId(message.don_id); // 🔴 essentiel pour Header
 
     const formattedConv = {
       pseudo: recuPar,
@@ -127,25 +131,30 @@ export default function ConversationList({ onSelectConversation }) {
     };
 
     onSelectConversation?.(formattedConv);
-    // Marquer les messages comme lus
-fetch(`https://diapo-app.onrender.com/api/messages/read/${message.don_id}/${currentUser.pseudo}/${recuPar}`, {
-  method: "PATCH",
-})
-  .then(() => {
-    setConversations((prev) =>
-      prev.map((c) => {
-        if (
-          c.messageInitial?.don_id === message.don_id &&
-          (c.messageInitial?.envoye_par === recuPar || c.messageInitial?.recu_par === recuPar)
-        ) {
-          return { ...c, nonLus: false };
-        }
-        return c;
-      })
-    );
-  })
-  .catch((err) => console.error("Erreur marquage comme lu", err));
 
+    // Marquer comme lu
+    try {
+      await fetch(`https://diapo-app.onrender.com/api/messages/read/${message.don_id}/${currentUser.pseudo}/${recuPar}`, {
+        method: "PATCH",
+      });
+
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (
+            c.messageInitial?.don_id === message.don_id &&
+            (c.messageInitial?.envoye_par === recuPar || c.messageInitial?.recu_par === recuPar)
+          ) {
+            return { ...c, nonLus: false };
+          }
+          return c;
+        })
+      );
+
+      const newUnread = conversations.filter((c) => c.nonLus && c.messageInitial?.don_id !== message.don_id).length;
+      setUnreadMessages(newUnread);
+    } catch (err) {
+      console.error("Erreur marquage comme lu", err);
+    }
   };
 
   return (
@@ -161,7 +170,6 @@ fetch(`https://diapo-app.onrender.com/api/messages/read/${message.don_id}/${curr
               conv.messageInitial?._id ||
               `${conv.interlocuteur}-${conv.messageInitial?.don_id}` ||
               `conv-${index}`;
-
             const isSelected = selectedId === id;
 
             return (
@@ -179,7 +187,7 @@ fetch(`https://diapo-app.onrender.com/api/messages/read/${message.don_id}/${curr
                 />
                 <div>
                   <div className="font-semibold flex items-center gap-1">
-                    {conv.nomComplet || conv.interlocuteur || "Utilisateur inconnu"}
+                    {conv.nomComplet || conv.interlocuteur}
                     {conv.nonLus && (
                       <span className="ml-1 w-2 h-2 bg-red-500 rounded-full inline-block" />
                     )}

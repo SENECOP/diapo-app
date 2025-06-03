@@ -43,6 +43,7 @@ const Header = () => {
       setUnreadMessages(0);
     }
   }, [location.pathname, setUnreadMessages]);
+  
 
   // 📥 Charger le nombre de messages non lus au démarrage
   useEffect(() => {
