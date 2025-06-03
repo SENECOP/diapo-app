@@ -12,7 +12,7 @@ const MessagePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, messageInitial, don } = location.state || {};
-  const { setUnreadMessages } = useContext(MessageContext);
+  const { setUnreadMessages, setActiveConversationId } = useContext(MessageContext);
   const [selectedConversation, setSelectedConversation] = useState(null);
 
   // 👉 Conversation initiale
@@ -46,6 +46,7 @@ const MessagePage = () => {
   // Sélection depuis la liste des conversations
   const handleSelectConversation = (conversation) => {
     setSelectedConversation(conversation);
+    setActiveConversationId(conversation.messageInitial?.don_id)
     setUnreadMessages((prev) => Math.max(prev - 1, 0));
   };
 

@@ -1,13 +1,17 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import { UserContext } from "../context/UserContext";
+import { MessageContext } from "../context/MessageContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiFilter, FiX, FiBell, FiMail, FiChevronDown } from "react-icons/fi";
 import { io } from "socket.io-client";
-import { MessageContext } from "../context/MessageContext";
 
 const Header = () => {
   const { user } = useContext(UserContext);
-  const { unreadMessages, setUnreadMessages } = useContext(MessageContext);
+  const {
+    unreadMessages,
+    setUnreadMessages,
+    activeConversationId, // 👈 conversation actuellement ouverte
+  } = useContext(MessageContext);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,12 +37,14 @@ const Header = () => {
   const categories = ["Technologie", "Vêtements", "Meuble"];
   const villes = ["Dakar", "Thiès", "Saint-Louis", "Mbour", "Yoff"];
 
+  // 🔁 Réinitialiser les messages non lus quand on est sur /message
   useEffect(() => {
     if (location.pathname === "/message") {
       setUnreadMessages(0);
     }
   }, [location.pathname, setUnreadMessages]);
 
+  // 📥 Charger le nombre de messages non lus au démarrage
   useEffect(() => {
     const fetchUnreadMessages = async () => {
       try {
@@ -56,6 +62,7 @@ const Header = () => {
     if (token) fetchUnreadMessages();
   }, [token, setUnreadMessages]);
 
+  // 🎧 Socket : détecter les nouveaux messages entrants
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user"));
     const socket = io("https://diapo-app.onrender.com", {
@@ -69,16 +76,18 @@ const Header = () => {
     socketRef.current = socket;
 
     socket.on("receiveMessage", (message) => {
-      console.log("Message reçu via socket :", message);
       if (message.recu_par === currentUser?.pseudo) {
-        setUnreadMessages((prev) => prev + 1);
+        // ✅ Incrémenter seulement si on ne regarde pas cette conversation
+        if (message.don_id !== activeConversationId) {
+          setUnreadMessages((prev) => prev + 1);
+        }
       }
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [setUnreadMessages]);
+  }, [setUnreadMessages, activeConversationId]);
 
   const toggleDropdown = (type) => {
     setDropdownOpen((prev) => ({ ...prev, [type]: !prev[type] }));

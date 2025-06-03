@@ -2,10 +2,7 @@ import { useEffect, useRef, useState, useContext } from "react";
 import { io } from "socket.io-client";
 import { UserContext } from "../../context/UserContext";
 
-export default function ConversationList({
-  conversations: initialConversations = [],
-  onSelectConversation,
-}) {
+export default function ConversationList({ onSelectConversation }) {
   const socketRef = useRef(null);
   const [conversations, setConversations] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -14,38 +11,46 @@ export default function ConversationList({
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const currentUser = storedUser || userFromContext;
 
+  // 🔁 Chargement des conversations
   useEffect(() => {
     const pseudo = currentUser?.pseudo;
-    if (!pseudo) {
-      console.warn("Aucun pseudo disponible pour récupérer les conversations.");
-      return;
-    }
+    if (!pseudo) return;
 
     fetch(`https://diapo-app.onrender.com/api/messages/conversations/${pseudo}`)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
-          const formatted = data.map((conv) => ({
-            interlocuteur: conv.interlocuteur,
-            avatar: `https://ui-avatars.com/api/?name=${conv.interlocuteur}`,
-            dernierMessage: conv.lastMessage?.contenu || "",
-            messageInitial: conv.lastMessage,
-            don: conv.lastMessage?.don || null,
-          }));
-          setConversations(formatted);
-        } else {
-          console.error("Réponse inattendue :", data);
-        }
+        const formatted = data
+          .map((conv) => {
+            const message = conv.messageInitial || conv.lastMessage || null;
+
+            if (!message || !message.don_id || !message.envoye_par || !message.recu_par) {
+              console.warn("❌ Conversation ignorée (message incomplet)", conv);
+              return null;
+            }
+
+            return {
+              interlocuteur: conv.interlocuteur || conv._id || "Inconnu",
+              nomComplet: conv.nomComplet || "",
+              avatar: `https://ui-avatars.com/api/?name=${conv.interlocuteur || conv._id}`,
+              dernierMessage: message.contenu || "",
+              messageInitial: message,
+              nonLus: conv.nonLus || false,
+            };
+          })
+          .filter(Boolean);
+
+        setConversations(formatted);
       })
       .catch((err) => console.error("Erreur chargement conversations", err));
-  }, [currentUser]);
+  }, [currentUser?.pseudo]);
 
-  // Gestion socket
+  // 🔌 Mise à jour via socket
   useEffect(() => {
     if (!currentUser?.pseudo) return;
 
     const socket = io("https://diapo-app.onrender.com", {
-      transports: ["websocket", "polling"],
+      transports: ["polling"],
+      reconnection: true,
     });
 
     socketRef.current = socket;
@@ -59,33 +64,31 @@ export default function ConversationList({
         return;
 
       setConversations((prevConvs) => {
-        const idx = prevConvs.findIndex(
+        const index = prevConvs.findIndex(
           (c) =>
             c.messageInitial?.don_id === msg.don_id &&
             (c.messageInitial?.envoye_par === msg.envoye_par ||
               c.messageInitial?.recu_par === msg.envoye_par)
         );
 
-        if (idx !== -1) {
+        const updatedConv = {
+          interlocuteur:
+            msg.envoye_par === currentUser.pseudo
+              ? msg.recu_par
+              : msg.envoye_par,
+          avatar: `https://ui-avatars.com/api/?name=${msg.envoye_par}`,
+          nomComplet: "",
+          dernierMessage: msg.contenu,
+          messageInitial: msg,
+          nonLus: msg.recu_par === currentUser.pseudo, // 🔴 si c'est un message entrant
+        };
+
+        if (index !== -1) {
           const updated = [...prevConvs];
-          updated[idx] = {
-            ...updated[idx],
-            dernierMessage: msg.contenu,
-            messageInitial: msg,
-          };
-          return [updated[idx], ...updated.filter((_, i) => i !== idx)];
+          updated.splice(index, 1);
+          return [updatedConv, ...updated];
         } else {
-          const newConv = {
-            interlocuteur:
-              msg.envoye_par === currentUser.pseudo
-                ? msg.recu_par
-                : msg.envoye_par,
-            avatar: `https://ui-avatars.com/api/?name=${msg.envoye_par}`,
-            dernierMessage: msg.contenu,
-            messageInitial: msg,
-            don: null,
-          };
-          return [newConv, ...prevConvs];
+          return [updatedConv, ...prevConvs];
         }
       });
     });
@@ -93,19 +96,34 @@ export default function ConversationList({
     return () => socket.disconnect();
   }, [currentUser?.pseudo]);
 
+  // 🎯 Sélection d'une conversation
   const handleSelect = (conv) => {
-    const msg = conv.messageInitial;
-    const recuPar =
-      msg.envoye_par === currentUser.pseudo ? msg.recu_par : msg.envoye_par;
+    const message = conv.messageInitial;
 
-    const id = msg._id || `${conv.interlocuteur}-${msg.don_id}`;
+    if (!message || !message.envoye_par || !message.recu_par) {
+      console.warn("Conversation mal formatée :", conv);
+      return;
+    }
+
+    const recuPar =
+      message.envoye_par === currentUser.pseudo
+        ? message.recu_par
+        : message.envoye_par;
+
+    const id = message._id || `${conv.interlocuteur}-${message.don_id}`;
     setSelectedId(id);
 
     const formattedConv = {
       pseudo: recuPar,
-      avatar: conv.avatar,
-      messageInitial: msg,
-      don: conv.don || null,
+      avatar: conv.avatar || `https://ui-avatars.com/api/?name=${recuPar}`,
+      messageInitial: {
+        don_id: message.don_id,
+        image: message.image || message.image_url || "",
+        description: message.description || "",
+        envoye_par: message.envoye_par,
+        recu_par: message.recu_par,
+        contenu: message.contenu || "",
+      },
     };
 
     onSelectConversation?.(formattedConv);
@@ -124,6 +142,7 @@ export default function ConversationList({
               conv.messageInitial?._id ||
               `${conv.interlocuteur}-${conv.messageInitial?.don_id}` ||
               `conv-${index}`;
+
             const isSelected = selectedId === id;
 
             return (
@@ -140,7 +159,12 @@ export default function ConversationList({
                   className="w-10 h-10 rounded-full"
                 />
                 <div>
-                  <div className="font-semibold">{conv.interlocuteur}</div>
+                  <div className="font-semibold flex items-center gap-1">
+                    {conv.nomComplet || conv.interlocuteur || "Utilisateur inconnu"}
+                    {conv.nonLus && (
+                      <span className="ml-1 w-2 h-2 bg-red-500 rounded-full inline-block" />
+                    )}
+                  </div>
                   <div className="text-sm text-gray-500 truncate max-w-xs">
                     {conv.dernierMessage || "Aucun message"}
                   </div>

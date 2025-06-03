@@ -1,9 +1,7 @@
 const Message = require('../models/Message');
 const mongoose = require('mongoose');
-const Don = require('../models/Don');
-const User = require('../models/User'); // Assure-toi que ce modèle est bien défini
 
-// Créer un nouveau message
+// ➤ Créer un nouveau message
 const createMessage = async (req, res) => {
   const { contenu, don_id, envoye_par, recu_par } = req.body;
 
@@ -22,11 +20,14 @@ const createMessage = async (req, res) => {
 
     res.status(201).json(newMessage);
   } catch (error) {
-    res.status(500).json({ message: 'Erreur lors de l\'enregistrement du message', error });
+    res.status(500).json({
+      message: 'Erreur lors de l\'enregistrement du message',
+      error,
+    });
   }
 };
 
-// Récupérer les messages entre deux utilisateurs pour un don
+// ➤ Récupérer les messages entre deux utilisateurs pour un don donné
 const getMessagesByDonAndUsers = async (req, res) => {
   const { donId, user1, user2 } = req.params;
 
@@ -35,9 +36,9 @@ const getMessagesByDonAndUsers = async (req, res) => {
       don_id: donId,
       $or: [
         { envoye_par: user1, recu_par: user2 },
-        { envoye_par: user2, recu_par: user1 }
-      ]
-    }).sort({ createdAt: 1 });
+        { envoye_par: user2, recu_par: user1 },
+      ],
+    }).sort({ envoye_le: 1 });
 
     res.status(200).json(messages);
   } catch (err) {
@@ -45,55 +46,106 @@ const getMessagesByDonAndUsers = async (req, res) => {
   }
 };
 
-// Récupérer la liste des conversations d'un utilisateur (par pseudo)
+// ➤ Récupérer toutes les conversations de l'utilisateur (groupées par don et interlocuteur)
 const getConversationsByPseudo = async (req, res) => {
-  const pseudo = req.params.pseudo;
+  const { pseudo } = req.params;
 
   try {
     const conversations = await Message.aggregate([
       {
         $match: {
-          $or: [
-            { envoye_par: pseudo },
-            { recu_par: pseudo },
-          ],
+          $or: [{ envoye_par: pseudo }, { recu_par: pseudo }],
+          don_id: { $ne: null },
+          envoye_par: { $ne: null },
+          recu_par: { $ne: null },
         },
       },
-      { $sort: { createdAt: -1 } },
+      {
+        $sort: { envoye_le: -1 },
+      },
       {
         $group: {
           _id: {
-            $cond: [
-              { $eq: ["$envoye_par", pseudo] },
-              "$recu_par",
-              "$envoye_par"
-            ],
+            don_id: "$don_id",
+            autreUser: {
+              $cond: [
+                { $eq: ["$envoye_par", pseudo] },
+                "$recu_par",
+                "$envoye_par"
+              ]
+            }
           },
           lastMessage: { $first: "$$ROOT" }
-        }
+        },
       },
       {
         $project: {
-          interlocuteur: "$_id",
-          lastMessage: 1,
+          interlocuteur: "$_id.autreUser",
+          dernierMessage: "$lastMessage.contenu",
+          messageInitial: {
+            $cond: [
+              { $ifNull: ["$lastMessage", false] },
+              "$lastMessage",
+              {
+                don_id: "$_id.don_id",
+                envoye_par: pseudo,
+                recu_par: "$_id.autreUser",
+                contenu: "",
+                envoye_le: new Date(),
+              }
+            ]
+          },
+          nonLus: {
+            $cond: [
+              {
+                $and: [
+                  { $eq: ["$lastMessage.recu_par", pseudo] },
+                  { $eq: ["$lastMessage.lu", false] }
+                ]
+              },
+              true,
+              false
+            ]
+          },
+          _id: 0
         }
+      },
+      {
+        $sort: { "messageInitial.envoye_le": -1 }
       }
     ]);
 
-    res.status(200).json(conversations);
+    res.json(conversations);
   } catch (error) {
-    console.error("Erreur serveur:", error);
-    res.status(500).json({ error: "Erreur lors du chargement des conversations." });
+    console.error("Erreur lors de la récupération des conversations :", error);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 };
 
-const getUnreadMessagesCount = (req, res) => {
-  res.status(200).json({ count: 0 });
+
+
+
+// ➤ Nombre de messages non lus pour un utilisateur
+const getUnreadMessagesCount = async (req, res) => {
+  try {
+    const pseudo = req.user.pseudo;
+
+    const unreadCount = await Message.countDocuments({
+      recu_par: pseudo,
+      lu: false,
+    });
+
+    res.json({ unreadCount });
+  } catch (error) {
+    console.error("Erreur fetch messages non lus :", error.message);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
 };
 
+// ✅ Export des fonctions
 module.exports = {
-  getMessagesByDonAndUsers,
   createMessage,
+  getMessagesByDonAndUsers,
   getConversationsByPseudo,
   getUnreadMessagesCount,
 };
