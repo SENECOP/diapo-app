@@ -10,7 +10,6 @@ export default function ConversationList({ onSelectConversation }) {
   const { user: userFromContext } = useContext(UserContext);
   const {
     setUnreadMessages,
-    activeConversationId,
     setActiveConversationId,
   } = useContext(MessageContext);
 
