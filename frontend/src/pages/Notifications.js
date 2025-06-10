@@ -172,7 +172,7 @@ const NotificationPage = () => {
             {/* Image du don */}
             <div className="flex justify-center">
               <img
-                src={selectedDon.image_url || "https://via.placeholder.com/400x250"}
+                src={selectedDon.image_url || "https://placehold.co/400x250"}
                 alt="Don"
                 className="rounded-lg shadow-lg max-h-64 object-cover"
               />

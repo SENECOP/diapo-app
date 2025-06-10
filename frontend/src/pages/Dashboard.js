@@ -36,24 +36,22 @@ useEffect(() => {
       if (notifications.length > 0) {
         notifications.forEach((notif) => {
           toast.info(
-            ({ closeToast }) => (
-              <NotificationCard
-                titre="Intérêt pour un Don"
-                message={notif.message}
-                onVoir={() => {
-                  closeToast();
-                  window.location.href = `/notifications`;
-                }}
-                onIgnorer={closeToast}
-              />
-            ),
-            {
-              position: "top-right",
-              autoClose: false,
-              closeOnClick: false,
-              draggable: false,
-            }
-          );
+          <NotificationCard
+            titre="Intérêt pour un Don"
+            message={notif.message}
+            onVoir={() => {
+              window.location.href = `/notifications`;
+            }}
+            onIgnorer={() => toast.dismiss()} // évite l'erreur
+          />,
+          {
+            position: "top-right",
+            autoClose: false,
+            closeOnClick: false,
+            draggable: false,
+          }
+        );
+
         });
         sessionStorage.setItem("notificationsShown", "true");
       }
