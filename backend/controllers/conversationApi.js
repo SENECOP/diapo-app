@@ -2,6 +2,8 @@ const Conversation = require('../models/conversation');
 
 // ➤ Créer une conversation si elle n'existe pas
 const createOrGetConversation = async (req, res) => {
+   console.log("REQ BODY =>", req.body);
+  console.log("USER FROM TOKEN =>", req.user);
   const { don_id, utilisateur_1, utilisateur_2 } = req.body;
 
   if (!don_id || !utilisateur_1 || !utilisateur_2) {
