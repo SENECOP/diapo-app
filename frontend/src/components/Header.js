@@ -35,7 +35,7 @@ const Header = () => {
     image: don.image_url,
     description: don.description,
     envoye_par: user.pseudo,
-    recu_par: don.proprietaire?.pseudo || ""
+    recu_par: don.proprietaire?.pseudo ?? ""
   } : null;
 
   const categories = ["Technologie", "Vêtements", "Meuble"];

@@ -34,8 +34,11 @@ export default function MessageBox({ conversation }) {
         msg.don_id === messageInitial.don_id &&
         (msg.envoye_par === user.pseudo || msg.recu_par === user.pseudo)
       ) {
-        setMessages((prev) => [...prev, msg]);
-      }
+        setMessages((prev) => {
+          if (prev.some(m => m._id === msg._id)) return prev;
+          return [...prev, msg];
+        });     
+       }
     });
 
     fetch(`${API_BASE_URL}/${messageInitial.don_id}/${user.pseudo}/${destinatairePseudo}`)
@@ -44,6 +47,7 @@ export default function MessageBox({ conversation }) {
       .catch((err) => console.error("Erreur fetch messages :", err));
 
     return () => {
+      socket.off("receiveMessage");
       socket.disconnect();
     };
   }, [user, messageInitial, destinatairePseudo]);

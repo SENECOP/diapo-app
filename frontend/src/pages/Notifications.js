@@ -230,8 +230,7 @@ const NotificationPage = () => {
       body: JSON.stringify({
         don_id: selectedDon._id,
         utilisateur_1: currentUser?.pseudo,
-        utilisateur_2: selectedDon.donateur?.pseudo,
-      }),
+        utilisateur_2: selectedDon.donateur?.pseudo}),
     });
 
     if (!response.ok) {
@@ -243,7 +242,18 @@ const NotificationPage = () => {
 
     // Redirige vers la messagerie si un ID est retourné
     if (data?._id) {
-      navigate(`/messages/${data._id}`);
+navigate(`/messages/${data._id}`, {
+  state: {
+    user: currentUser,
+    don: selectedDon,
+    messageInitial: {
+      contenu: "", // vide si nouveau
+      don_id: selectedDon._id,
+      envoye_par: currentUser?.pseudo,
+      recu_par: selectedDon.donateur?.pseudo,
+    }
+  }
+});
     } else {
       alert("Impossible de rediriger vers la messagerie.");
     }

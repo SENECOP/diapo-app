@@ -42,7 +42,7 @@ useEffect(() => {
             onVoir={() => {
               window.location.href = `/notifications`;
             }}
-            onIgnorer={() => toast.dismiss()} // évite l'erreur
+            onIgnorer={() => toast.dismiss()} 
           />,
           {
             position: "top-right",

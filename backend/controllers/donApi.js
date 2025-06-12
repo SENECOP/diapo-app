@@ -63,7 +63,7 @@ const getDons = async (req, res) => {
 // Obtenir un don par ID
 const getDonById = async (req, res) => {
   try {
-    const don = await Don.findById(req.params.id).populate("user", "pseudo ville_residence email");
+    const don = await Don.findById(req.params.id).populate("user", "pseudo ville_residence email, donateur");
 
     console.log("Détails du don avec donneur peuplé : ", don); 
     if (!don) return res.status(404).json({ message: "Don non trouvé" });
@@ -322,8 +322,7 @@ const getDonsDuDonateur = async (req, res) => {
 
 const marquerCommeVu = async (req, res) => {
   const { donId } = req.params;
-  const userId = req.user.id; // ou req.user._id si tu utilises JWT
-
+  const userId = req.user._id; 
   try {
     const don = await Don.findById(donId);
     if (!don) return res.status(404).json({ message: "Don non trouvé" });

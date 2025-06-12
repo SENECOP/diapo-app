@@ -18,7 +18,7 @@ const NotificationCard = ({ titre, message, onVoir, onIgnorer }) => {
         >
           Ignorer
         </button>
-        <button
+        <button 
           onClick={onVoir}
           className="text-sm bg-blue-700 text-white px-3 py-1 rounded hover:bg-blue-800"
         >
