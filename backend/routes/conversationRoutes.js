@@ -4,7 +4,11 @@ const conversationApi = require('../controllers/conversationApi');
 const verifyToken = require('../middlewares/authMiddleware');
 
 // ➤ Créer ou récupérer une conversation
-router.post('/conversations', verifyToken, conversationApi.createOrGetConversation);
+router.get('/', (req, res) => {
+  res.json({ message: 'Route conversations OK' });
+});
+
+router.post('/', verifyToken, conversationApi.createOrGetConversation);
 
 router.get("/conversation", async (req, res) => {
   const { don_id, utilisateur1, utilisateur2 } = req.query;
