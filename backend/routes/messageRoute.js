@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middlewares/authMiddleware');
 const Conversation = require('../models/conversation');
-const Message = require('../models/message');
+const Message = require('../models/Message');
 
 // Récupérer les conversations d'un utilisateur
 router.get('/user/:userId', verifyToken, async (req, res) => {

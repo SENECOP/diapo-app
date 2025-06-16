@@ -12,7 +12,7 @@ const MessagePage = () => {
   const [showAlert, setShowAlert] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, conversation: initialConversation, don } = location.state || {};
+  const {  conversation: initialConversation } = location.state || {};
   const { setUnreadMessages } = useContext(MessageContext);
   const [selectedConversation, setSelectedConversation] = useState(initialConversation || null);
   const currentUser = JSON.parse(localStorage.getItem('user'));

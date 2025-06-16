@@ -9,7 +9,7 @@ const authRoutes = require('./routes/authRoutes');
 const donRoutes = require('./routes/donRoutes');
 const notificationsRoutes = require('./routes/notificationsRoute');
 const messageRoute = require('./routes/messageRoute');
-const Message = require('./models/message');
+const Message = require('./models/Message');
 const Conversation = require('./models/conversation');
 const conversationRoutes = require('./routes/conversationRoutes');
 

@@ -1,6 +1,6 @@
 // controllers/conversationController.js
 const Conversation = require('../models/conversation');
-const Message = require('../models/message');
+const Message = require('../models/Message');
 
 exports.createOrGetConversation = async (req, res) => {
   try {

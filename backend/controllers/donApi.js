@@ -1,5 +1,5 @@
 const Don = require('../models/Don');
-const Message = require('../models/message');
+const Message = require('../models/Message');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const Conversation = require('../models/conversation');
