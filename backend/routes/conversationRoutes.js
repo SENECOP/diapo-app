@@ -3,28 +3,43 @@ const router = express.Router();
 const conversationApi = require('../controllers/conversationApi');
 const verifyToken = require('../middlewares/authMiddleware');
 
-// ➤ Créer ou récupérer une conversation
-router.get('/', verifyToken, (req, res) => {
-  res.json({ message: 'Route conversations OK' });
-});
-
+// Créer ou récupérer une conversation
 router.post('/', verifyToken, conversationApi.createOrGetConversation);
 
-router.get("/conversation", verifyToken, async (req, res) => {
-  const { don_id, utilisateur1, utilisateur2 } = req.query;
+// Récupérer une conversation spécifique
+router.get("/:id", verifyToken, async (req, res) => {
   try {
-    const conversation = await conversation.findOne({
-      don_id,
-      $or: [
-        { utilisateur_1: utilisateur1, utilisateur_2: utilisateur2 },
-        { utilisateur_1: utilisateur2, utilisateur_2: utilisateur1 }
-      ]
-    });
-    if (!conversation) return res.status(404).json({ message: "Conversation non trouvée" });
+    const conversation = await Conversation.findById(req.params.id)
+      .populate('participants', 'pseudo ville_residence')
+      .populate('don', 'titre description url_image')
+      .populate('messages');
+
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation non trouvée" });
+    }
+
     res.json(conversation);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
+router.get("/user/:userId", verifyToken, async (req, res) => {
+  try {
+    const conversations = await Conversation.find({
+      participants: req.params.userId
+    })
+    .populate("participants", "pseudo email")
+    .populate("lastMessage")
+    .sort({ updatedAt: -1 });
+
+    res.status(200).json(conversations);
+  } catch (err) {
+    console.error("Erreur:", err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+module.exports = router;
 
 module.exports = router;

@@ -1,10 +1,11 @@
 // context/UserContext.js
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
 
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [conversations, setConversations] = useState([]); // ✅ Ajouté
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -27,8 +28,19 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout, updateUser }}>
+    <UserContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        updateUser,
+        conversations,
+        setConversations, 
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
 };
+
+export const useUserContext = () => useContext(UserContext);

@@ -1,5 +1,5 @@
 const Don = require('../models/Don');
-const Message = require('../models/Message');
+const Message = require('../models/message');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const Conversation = require('../models/conversation');
@@ -24,7 +24,7 @@ const createDon = async (req, res) => {
       ville_don,
       url_image: imagePaths, // tableau d'URLs
       archived: false,
-      user: userId,
+      donateur: userId,
     });
 
     await newDon.save();
@@ -61,16 +61,29 @@ const getDons = async (req, res) => {
 
 
 // Obtenir un don par ID
+// Dans donApi.js
 const getDonById = async (req, res) => {
   try {
-    const don = await Don.findById(req.params.id).populate("user", "pseudo ville_residence email, donateur");
+    const don = await Don.findById(req.params.id)
+      .populate({
+        path: 'donateur',
+        select: '_id pseudo email' // Sélectionnez explicitement les champs nécessaires
+      })
+      .lean(); // Convertit en objet JavaScript simple
 
-    console.log("Détails du don avec donneur peuplé : ", don); 
-    if (!don) return res.status(404).json({ message: "Don non trouvé" });
-    
+    if (!don) {
+      return res.status(404).json({ message: "Don non trouvé" });
+    }
+
+    // Vérification de la présence du donateur
+    if (!don.donateur) {
+      console.error("Don sans donateur:", don._id);
+      return res.status(500).json({ message: "Erreur: Donateur manquant" });
+    }
+
     res.json(don);
   } catch (err) {
-    console.error(err);
+    console.error("Erreur getDonById:", err);
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -83,7 +96,7 @@ const updateDon = async (req, res) => {
       return res.status(404).json({ message: 'Don non trouvé' });
     }
 
-    if (don.user.toString() !== req.user._id.toString()) {
+    if (don.donateur.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Accès non autorisé" });
     }
 
@@ -114,7 +127,7 @@ const deleteDon = async (req, res) => {
       return res.status(404).json({ message: 'Don non trouvé' });
     }
 
-    if (don.user.toString() !== req.user._id.toString()) {
+    if (don.donateur.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Accès non autorisé" });
     }
 
@@ -135,7 +148,7 @@ const archiveDon = async (req, res) => {
       return res.status(404).json({ message: 'Don non trouvé' });
     }
 
-    if (don.user.toString() !== req.user._id.toString()) {
+    if (don.donateur.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Accès non autorisé" });
     }
 
@@ -196,7 +209,7 @@ const getArchivedDons = async (req, res) => {
       return res.status(401).json({ message: 'Utilisateur non authentifié' });
     }
 
-    const dons = await Don.find({ user: userId, archived: true }); // correction ici
+    const dons = await Don.find({ donateur: userId, archived: true }); // correction ici
     if (!dons || dons.length === 0) {
       return res.status(404).json({ message: 'Aucun don archivé trouvé' });
     }
@@ -238,7 +251,7 @@ const reserverDon = async (req, res) => {
   try {
     console.log("Données reçues pour réservation :", req.body);
 
-    const don = await Don.findById(req.params.id).populate("user");
+    const don = await Don.findById(req.params.id).populate("donateur");
     if (!don) return res.status(404).json({ message: "Don non trouvé" });
 
     if (don.preneur && don.preneur.toString() === req.user._id.toString()) {
@@ -256,7 +269,7 @@ const reserverDon = async (req, res) => {
 
     // ✅ Notification au donateur
     await Notification.create({
-      destinataire: don.user._id,
+      destinataire: don.donateur._id,
       emetteur: req.user._id,
       message: `${req.user.pseudo} est intéressé(e) par votre don "${don.titre}".`,
       don: don._id,
@@ -265,13 +278,13 @@ const reserverDon = async (req, res) => {
 
     // ✅ Vérifier s'il existe déjà une conversation entre les deux
     let conversation = await Conversation.findOne({
-      participants: { $all: [don.user._id, req.user._id] },
+      participants: { $all: [don.donateur._id, req.user._id] },
     });
 
     // ✅ Si aucune, la créer
     if (!conversation) {
       conversation = await Conversation.create({
-        participants: [don.user._id, req.user._id],
+        participants: [don.donateur._id, req.user._id],
       });
     }
 
@@ -296,7 +309,7 @@ const reserverDon = async (req, res) => {
       message: "Don réservé avec succès. Notification envoyée. Conversation démarrée.",
       don,
     });
-    io.to(don.user._id.toString()).emit("newNotification", {
+    io.to(don.donateur._id.toString()).emit("newNotification", {
   message: `${req.user.pseudo} est intéressé(e) par votre don "${don.titre}".`,
 });
 
@@ -311,7 +324,7 @@ const reserverDon = async (req, res) => {
 const getDonsDuDonateur = async (req, res) => {
   try {
     const userId = req.user._id; // récupéré depuis le token JWT via le middleware `auth`
-    const dons = await Don.find({ user: userId, archived: false }).sort({ createdAt: -1 });
+    const dons = await Don.find({ donateur: userId, archived: false }).sort({ createdAt: -1 });
 
     res.status(200).json(dons);
   } catch (error) {

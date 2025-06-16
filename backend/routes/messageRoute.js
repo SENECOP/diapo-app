@@ -1,29 +1,67 @@
 const express = require('express');
 const router = express.Router();
-const { getMessagesByDonAndUsers, createMessage, getUnreadMessagesCount, getConversationsByPseudo, markMessagesAsRead } = require('../controllers/messageApi');
 const verifyToken = require('../middlewares/authMiddleware');
 const Conversation = require('../models/conversation');
+const Message = require('../models/message');
 
-
-// GET /api/messages/:donId/:user1/:user2
-router.get("/conversations/:pseudo", getConversationsByPseudo);
-
-router.get("/unread", verifyToken, getUnreadMessagesCount);
-router.patch("/messages/read/:donId/:user1/:user2", markMessagesAsRead);
-
-router.get('/:userId', async (req, res) => {
+// Récupérer les conversations d'un utilisateur
+router.get('/user/:userId', verifyToken, async (req, res) => {
   try {
     const conversations = await Conversation.find({
-      participants: req.params.userId,
-    }).populate('participants', 'pseudo'); // optionnel : pour afficher les pseudos
+      participants: req.params.userId
+    })
+    .populate('participants', 'pseudo email')
+    .populate('don', 'titre description url_image')
+    .populate('lastMessage')
+    .sort({ updatedAt: -1 });
+
     res.status(200).json(conversations);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Erreur:", err);
+    res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
-router.get('/:donId/:user1/:user2', getMessagesByDonAndUsers);
-router.post('/', createMessage);
+// Récupérer les messages d'une conversation
+router.get('/:conversationId', verifyToken, async (req, res) => {
+  try {
+    const messages = await Message.find({
+      conversation: req.params.conversationId
+    })
+    .populate('sender', 'pseudo')
+    .sort({ createdAt: 1 });
 
+    res.status(200).json(messages);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// Envoyer un message
+router.post('/', verifyToken, async (req, res) => {
+  try {
+    const { conversation, content, don } = req.body;
+    const sender = req.user._id;
+
+    const message = new Message({
+      conversation,
+      sender,
+      content,
+      don
+    });
+
+    await message.save();
+
+    // Mettre à jour la conversation
+    await Conversation.findByIdAndUpdate(conversation, {
+      lastMessage: message._id,
+      updatedAt: Date.now()
+    });
+
+    res.status(201).json(message);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
 
 module.exports = router;

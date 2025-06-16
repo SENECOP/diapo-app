@@ -1,25 +1,38 @@
 const mongoose = require('mongoose');
 
 const conversationSchema = new mongoose.Schema({
-  don_id: {
+  participants: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }],
+  don: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Don',
-    required: true,
+    required: true
   },
-  utilisateur_1: {
-    type: String,
-    required: true,
+  messages: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Message'
+  }],
+  lastMessage: {  // Ajout de ce champ pour optimiser les requêtes
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Message'
   },
-  utilisateur_2: {
-    type: String,
-    required: true,
-  },
-  cree_le: {
+  createdAt: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
-}, { timestamps: true });
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
 
-conversationSchema.index({ don_id: 1, utilisateur_1: 1, utilisateur_2: 1 }, { unique: true });
+// Middleware pour mettre à jour la date de modification
+conversationSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
 
 module.exports = mongoose.model('Conversation', conversationSchema);
