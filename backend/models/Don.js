@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const donSchema = new mongoose.Schema(
   {
     titre: { type: String, required: true },
