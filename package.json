@@ -13,6 +13,7 @@
     "nodemon": "^3.1.9"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.8.2",
     "cors": "^2.8.5",
     "react-redux": "^9.2.0",
     "sweetalert2": "^11.19.1"

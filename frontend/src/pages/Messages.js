@@ -6,16 +6,33 @@ import Header from '../components/Header';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import { MessageContext } from "../context/MessageContext";
-import { socket } from '../socket';
 
 const MessagePage = () => {
   const [showAlert, setShowAlert] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const {  conversation: initialConversation } = location.state || {};
-  const { setUnreadMessages } = useContext(MessageContext);
-  const [selectedConversation, setSelectedConversation] = useState(initialConversation || null);
-  const currentUser = JSON.parse(localStorage.getItem('user'));
+  const { user, messageInitial, don } = location.state || {};
+  const { setUnreadMessages, setActiveConversationId } = useContext(MessageContext);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+
+  // 👉 Conversation initiale
+  const destinataire = messageInitial?.envoye_par === user?.pseudo
+    ? messageInitial?.recu_par
+    : messageInitial?.envoye_par;
+
+  // Sélection automatique si conversation initiale
+  useEffect(() => {
+    if (messageInitial && destinataire) {
+      setSelectedConversation({
+        pseudo: destinataire,
+        interlocuteur: destinataire,
+        messageInitial,
+        avatar: "https://ui-avatars.com/api/?name=" + destinataire,
+        dernierMessage: messageInitial.contenu || "",
+        don: don,
+      });
+    }
+  }, [messageInitial, destinataire, don]);
 
   // Alerte réservation
   useEffect(() => {
@@ -26,33 +43,15 @@ const MessagePage = () => {
     }
   }, []);
 
-  // Gestion des nouveaux messages en temps réel
-  useEffect(() => {
-    if (!socket || !selectedConversation) return;
-
-    const handleNewMessage = (message) => {
-      if (message.conversation === selectedConversation._id) {
-        setSelectedConversation(prev => ({
-          ...prev,
-          lastMessage: message
-        }));
-      }
-    };
-
-    socket.on('newMessage', handleNewMessage);
-    return () => {
-      socket.off('newMessage', handleNewMessage);
-    };
-  }, [selectedConversation]);
-
   // Sélection depuis la liste des conversations
   const handleSelectConversation = (conversation) => {
     setSelectedConversation(conversation);
+    setActiveConversationId(conversation.messageInitial?.don_id)
     setUnreadMessages((prev) => Math.max(prev - 1, 0));
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="p-4">
       <Header />
 
       <div className="bg-blue-700 text-white px-10 py-10 flex items-center h-[250px] space-x-4">
@@ -70,20 +69,14 @@ const MessagePage = () => {
 
       {showAlert && <AlerteReservation onClose={() => setShowAlert(false)} />}
 
-      <div className="flex flex-1">
-        <ConversationList 
-          currentUser={currentUser} 
-          onSelectConversation={handleSelectConversation} 
-        />
-        
+      <div className="flex h-screen">
+        {/* ❗️On ne passe plus les conversations en props (elles sont chargées dans ConversationList) */}
+        <ConversationList onSelectConversation={handleSelectConversation} />
         {selectedConversation ? (
-          <MessageBox 
-            conversation={selectedConversation} 
-            currentUser={currentUser} 
-          />
+          <MessageBox conversation={selectedConversation} />
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-500">
-            Sélectionnez une conversation
+            Sélectionne une conversation
           </div>
         )}
       </div>

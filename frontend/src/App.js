@@ -1,4 +1,6 @@
 import React from 'react';
+import { Provider } from 'react-redux';
+import store from './redux/store';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
@@ -19,7 +21,8 @@ import NotificationsPage from './pages/Notifications';
 
 const App = () => {
   return (
-    <UserProvider>
+   <Provider store={store}>
+     <UserProvider>
       <MessageProvider> 
         <Router>
           <Routes>
@@ -40,6 +43,7 @@ const App = () => {
         </Router>
       </MessageProvider>
     </UserProvider>
+   </Provider>
   );
 };
 

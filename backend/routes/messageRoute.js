@@ -4,14 +4,21 @@ const verifyToken = require('../middlewares/authMiddleware');
 const Conversation = require('../models/conversation');
 const Message = require('../models/Message');
 
-// Récupérer les conversations d'un utilisateur
-router.get('/user/:userId', verifyToken, async (req, res) => {
+// Récupérer les conversations d'un utilisateur (en utilisant utilisateur_1 et utilisateur_2)
+router.get('/user/:pseudo', verifyToken, async (req, res) => {
+  const pseudo = req.params.pseudo;
+
   try {
+    // On cherche toutes les conversations où pseudo est utilisateur_1 ou utilisateur_2
     const conversations = await Conversation.find({
-      participants: req.params.userId
+      $or: [
+        { utilisateur_1: pseudo },
+        { utilisateur_2: pseudo }
+      ]
     })
-    .populate('participants', 'pseudo email')
-    .populate('don', 'titre description url_image')
+    .populate('utilisateur_1', 'pseudo ')  // adapte selon ton modèle User
+    .populate('utilisateur_2', 'pseudo ')
+    .populate('don', 'titre description url_image')  // adapte si tu as un champ don dans Conversation
     .populate('lastMessage')
     .sort({ updatedAt: -1 });
 
